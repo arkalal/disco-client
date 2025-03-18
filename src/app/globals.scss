@@ -1,0 +1,32 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+:root {
+  --primary-color: #1a1d23;
+  --secondary-color: #8a8f98;
+  --border-color: #e5e7eb;
+  --background-color: #f9fafb;
+  --success-color: #10b981;
+  --new-badge-color: #ff4d4d;
+  --warning-color: #f59e0b;
+}

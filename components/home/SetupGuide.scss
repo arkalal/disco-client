@@ -7,21 +7,77 @@
   .guide-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 20px 24px;
     border-bottom: 1px solid #e5e7eb;
 
     .title-section {
-      h2 {
-        font-size: 18px;
-        color: #1a1d23;
-        font-weight: 600;
-        margin-bottom: 4px;
+      flex: 1;
+      margin-right: 16px;
+
+      .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+
+        h2 {
+          font-size: 18px;
+          color: #1a1d23;
+          font-weight: 600;
+          margin: 0;
+        }
+
+        .progress {
+          font-size: 14px;
+          color: #8a8f98;
+        }
       }
 
-      .progress {
-        font-size: 14px;
-        color: #8a8f98;
+      .progress-container {
+        width: 100%;
+
+        .progress-bar {
+          width: 100%;
+          height: 4px;
+          background: #f3f4f6;
+          border-radius: 2px;
+          overflow: hidden;
+          position: relative;
+
+          .progress-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+              90deg,
+              #ff4d4d 0%,
+              #ff8080 20%,
+              #ffb366 40%,
+              #4caf50 60%,
+              #2196f3 80%,
+              #9c27b0 100%
+            );
+            opacity: 0.15;
+          }
+
+          .progress-fill {
+            height: 100%;
+            background: linear-gradient(
+              90deg,
+              #ff4d4d 0%,
+              #ff8080 20%,
+              #ffb366 40%,
+              #4caf50 60%,
+              #2196f3 80%,
+              #9c27b0 100%
+            );
+            border-radius: 2px;
+            transition: width 0.3s ease;
+          }
+        }
       }
     }
 
@@ -52,23 +108,26 @@
   .steps-container {
     padding: 24px;
 
-    .step {
+    .steps-header {
+      display: flex;
+      gap: 16px;
       margin-bottom: 24px;
 
-      &:last-child {
-        margin-bottom: 0;
-      }
-
-      &.active {
-        .step-header {
-          margin-bottom: 16px;
-        }
-      }
-
-      .step-header {
+      .step-tab {
+        flex: 1;
         display: flex;
         align-items: center;
         gap: 12px;
+        padding: 16px;
+        border-radius: 12px;
+        background: #f9fafb;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &.active {
+          background: #fff;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
 
         .step-number {
           width: 24px;
@@ -89,81 +148,99 @@
           font-weight: 600;
         }
       }
+    }
 
-      .step-items {
-        padding-left: 36px;
+    .step-content {
+      padding-left: 8px;
 
-        .step-item {
+      .step-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .status-icon {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: 2px solid #e5e7eb;
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 12px 0;
-          border-bottom: 1px solid #e5e7eb;
+          justify-content: center;
+          color: #fff;
 
-          &:last-child {
-            border-bottom: none;
-          }
-
-          .status-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-
-            &.completed {
-              background: #10b981;
-              border-color: #10b981;
-            }
-          }
-
-          .item-label {
-            flex: 1;
-            font-size: 14px;
-            color: #1a1d23;
-          }
-
-          .explore-button {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: #f3f4f6;
-            border: none;
-            border-radius: 8px;
-            color: #1a1d23;
-            font-weight: 500;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-
-            &:hover {
-              background: #e5e7eb;
-            }
-
-            .arrow-icon {
-              font-size: 12px;
-            }
-          }
-
-          .access-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: #f3f4f6;
-            border-radius: 8px;
-            color: #6b7280;
-            font-size: 14px;
-
-            .star {
-              color: #f59e0b;
-            }
+          &.completed {
+            background: #10b981;
+            border-color: #10b981;
           }
         }
+
+        .item-label {
+          flex: 1;
+          font-size: 14px;
+          color: #1a1d23;
+        }
+
+        .explore-button {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          background: #f3f4f6;
+          border: none;
+          border-radius: 8px;
+          color: #1a1d23;
+          font-weight: 500;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: #e5e7eb;
+          }
+
+          .arrow-icon {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+
+    .access-insights {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(99, 102, 241, 0.15);
+      }
+
+      .star-icon {
+        color: #f59e0b;
+        font-size: 18px;
+      }
+
+      span {
+        flex: 1;
+        color: #4f46e5;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .arrow-icon {
+        color: #4f46e5;
+        font-size: 14px;
       }
     }
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BsCheck2, BsChevronRight } from "react-icons/bs";
+import { BsCheck2, BsChevronRight, BsStar } from "react-icons/bs";
 import { IoChevronUp } from "react-icons/io5";
 
 const SetupGuide = () => {
@@ -49,8 +49,16 @@ const SetupGuide = () => {
     <div className="setup-guide">
       <div className="guide-header">
         <div className="title-section">
-          <h2>Your Personalized Setup Guide</h2>
-          <span className="progress">1 of 10 Features Explored</span>
+          <div className="header-row">
+            <h2>Your Personalized Setup Guide</h2>
+            <span className="progress">1 of 10 Features Explored</span>
+          </div>
+          <div className="progress-container">
+            <div className="progress-bar">
+              <div className="progress-gradient"></div>
+              <div className="progress-fill" style={{ width: "10%" }}></div>
+            </div>
+          </div>
         </div>
         <button
           className="toggle-button"
@@ -62,46 +70,44 @@ const SetupGuide = () => {
 
       {isExpanded && (
         <div className="steps-container">
-          {steps.map((step) => (
-            <div
-              key={step.number}
-              className={`step ${step.number === currentStep ? "active" : ""}`}
-            >
-              <div className="step-header">
+          <div className="steps-header">
+            {steps.map((step) => (
+              <div
+                key={step.number}
+                className={`step-tab ${
+                  step.number === currentStep ? "active" : ""
+                }`}
+              >
                 <div className="step-number">{step.number}</div>
                 <h3>{step.title}</h3>
               </div>
+            ))}
+          </div>
 
-              {step.number === currentStep && (
-                <div className="step-items">
-                  {step.items.map((item) => (
-                    <div key={item.id} className="step-item">
-                      <div
-                        className={`status-icon ${
-                          item.completed ? "completed" : ""
-                        }`}
-                      >
-                        {item.completed ? <BsCheck2 /> : ""}
-                      </div>
-                      <span className="item-label">{item.label}</span>
-                      {item.id === "browse" && (
-                        <button className="explore-button">
-                          Explore Top Influencers
-                          <BsChevronRight className="arrow-icon" />
-                        </button>
-                      )}
-                      {item.id === "access" && (
-                        <div className="access-badge">
-                          <span className="star">★</span>
-                          Access Creator Insights from Instagram/YouTube
-                        </div>
-                      )}
-                    </div>
-                  ))}
+          <div className="step-content">
+            {steps[currentStep - 1].items.map((item) => (
+              <div key={item.id} className="step-item">
+                <div
+                  className={`status-icon ${item.completed ? "completed" : ""}`}
+                >
+                  {item.completed && <BsCheck2 />}
                 </div>
-              )}
-            </div>
-          ))}
+                <span className="item-label">{item.label}</span>
+                {item.id === "browse" && (
+                  <button className="explore-button">
+                    Explore Top Influencers
+                    <BsChevronRight className="arrow-icon" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="access-insights">
+            <BsStar className="star-icon" />
+            <span>Access Creator Insights from Instagram/YouTube</span>
+            <BsChevronRight className="arrow-icon" />
+          </div>
         </div>
       )}
     </div>

@@ -1,0 +1,126 @@
+.loginContainer {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background-color: #1a1d23;
+}
+
+.loginFormWrapper {
+  width: 60%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  position: relative;
+}
+
+.loginFormContainer {
+  width: 100%;
+  max-width: 850px;
+  min-height: 820px;
+  background-color: #fff;
+  border-radius: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 10px;
+  margin-right: 20px;
+}
+
+.loginForm {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.logoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.logoText {
+  font-size: 58px;
+  font-weight: 800;
+  color: #1a1d23;
+  font-family: Arial, sans-serif;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+
+.tagline {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #6c7280;
+  font-weight: 400;
+}
+
+.formTitle {
+  font-size: 22px;
+  color: #1a1d23;
+  margin-bottom: 30px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.formGroup {
+  margin-bottom: 25px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #1a1d23;
+    font-weight: 500;
+  }
+
+  input {
+    width: 100%;
+    padding: 16px 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: #1a1d23;
+    }
+
+    &::placeholder {
+      color: #8a8f98;
+    }
+  }
+}
+
+.continueButton {
+  width: 100%;
+  padding: 16px;
+  background-color: #1a1d23;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #333945;
+  }
+}
+
+.featureShowcaseContainer {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 1;
+}

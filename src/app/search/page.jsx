@@ -322,22 +322,24 @@ const SearchPage = () => {
         </div>
 
         <div className="influencer-lists-section">
-          <h2>✨ Influencer lists, curated for you!</h2>
+          <div className="section-header">
+            <h2>✨ Influencer lists, curated for you!</h2>
 
-          <div className="filters">
-            <div className="filter-dropdown">
-              <span>All Platforms</span>
-              <MdKeyboardArrowDown />
+            <div className="filters">
+              <div className="filter-dropdown">
+                <span>All Platforms</span>
+                <MdKeyboardArrowDown />
+              </div>
+
+              <div className="filter-dropdown">
+                <span>All Category</span>
+                <MdKeyboardArrowDown />
+              </div>
+
+              <button className="search-button">
+                <FiSearch />
+              </button>
             </div>
-
-            <div className="filter-dropdown">
-              <span>All Category</span>
-              <MdKeyboardArrowDown />
-            </div>
-
-            <button className="search-button">
-              <FiSearch />
-            </button>
           </div>
 
           <div className="card-grid">

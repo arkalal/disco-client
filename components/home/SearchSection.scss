@@ -1,25 +1,36 @@
 .search-section {
   padding: 40px;
   background-color: #f0f5fc;
-  border-radius: 20px;
-  text-align: center;
   margin-bottom: 40px;
+  margin-left: -32px;
+  margin-right: -32px;
+  margin-top: -32px;
+  position: relative;
+  text-align: center;
+  box-sizing: border-box;
+
+  @media screen and (min-width: 1024px) {
+    margin-left: calc(-32px - 220px);
+    padding-left: calc(32px + 220px);
+  }
 
   h1 {
     font-size: 32px;
     color: #1a1d23;
     font-weight: 600;
     margin-bottom: 24px;
+    text-align: center;
   }
 
   .search-container {
+    max-width: 800px;
+    margin: 0 auto 20px;
     display: flex;
     align-items: stretch;
     background: #fff;
     border-radius: 12px;
     padding: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
     position: relative;
 
     &.dropdown-open {
@@ -86,6 +97,8 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     cursor: pointer;
     transition: all 0.3s ease;
+    margin: 0 auto;
+    text-align: center;
 
     &:hover {
       transform: translateY(-2px);

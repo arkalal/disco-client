@@ -2,6 +2,8 @@
   display: flex;
   min-height: 100vh;
   width: 100%;
+  background-color: #fff;
+  overflow-x: hidden;
 
   .collapsible-sidebar {
     width: 60px;
@@ -190,13 +192,25 @@
     flex: 1;
     padding: 0 30px 30px;
     margin-left: 60px;
+    position: relative;
+    width: calc(100% - 220px);
+    overflow-x: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
 
     .search-header {
       padding: 40px;
       background-color: #f0f5fc;
-      border-radius: 20px;
+      width: 100vw;
+      margin-left: calc(-30px);
+      margin-right: -30px;
+      margin-top: -30px;
+      padding-left: 30px;
+      padding-right: 30px;
+      padding-top: 60px;
       text-align: center;
       margin-bottom: 40px;
+      position: relative;
 
       h1 {
         font-size: 32px;
@@ -206,13 +220,14 @@
       }
 
       .search-container {
+        max-width: 800px;
+        margin: 0 auto 20px;
         display: flex;
         align-items: stretch;
         background: #fff;
         border-radius: 12px;
         padding: 0;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
         position: relative;
 
         &.dropdown-open {
@@ -279,6 +294,7 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         cursor: pointer;
         transition: all 0.3s ease;
+        margin: 0 auto;
 
         &:hover {
           transform: translateY(-2px);
@@ -360,6 +376,20 @@
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 24px;
+        width: 100%;
+        overflow-x: hidden;
+
+        @media (max-width: 1440px) {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        @media (max-width: 1200px) {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+        }
 
         .category-card {
           background-color: #fff;
@@ -373,6 +403,8 @@
             rgba(255, 192, 203, 0.1) 0%,
             rgba(255, 255, 255, 0) 70%
           );
+          min-width: 0;
+          max-width: 100%;
 
           &:hover {
             transform: translateY(-3px);

@@ -17,7 +17,7 @@ const Sidebar = () => {
   const menuItems = [
     { id: "home", label: "Home", icon: IoHomeOutline },
     { id: "campaign-ideas", label: "Campaign Ideas", icon: BsLightbulb },
-    { id: "influencer-search", label: "Influencer Search", icon: BsSearch },
+    { id: "search", label: "Influencer Search", icon: BsSearch },
     {
       id: "influencer-comparison",
       label: "Influencer Comparison",

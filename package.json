@@ -13,15 +13,20 @@
     "@radix-ui/react-navigation-menu": "^1.2.5",
     "@radix-ui/react-progress": "^1.1.2",
     "@tabler/icons-react": "^3.31.0",
+    "bcryptjs": "^3.0.2",
     "framer-motion": "^12.5.0",
+    "mongoose": "^8.12.1",
     "next": "15.2.2",
+    "next-auth": "^5.0.0-beta.25",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "sass": "^1.85.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/bcrypt": "^5.0.2",
     "eslint": "^9",
     "eslint-config-next": "15.2.2"
   }

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { IoHomeOutline } from "react-icons/io5";
+import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+import { IoHomeOutline, IoLogOutOutline } from "react-icons/io5";
 import { BsLightbulb, BsSearch, BsBarChart } from "react-icons/bs";
 import { IconArrowsExchange } from "@tabler/icons-react";
 import { RiListCheck2 } from "react-icons/ri";
@@ -10,9 +12,23 @@ import { AiOutlineMessage } from "react-icons/ai";
 import { MdOutlineAnalytics } from "react-icons/md";
 import { VscGraph } from "react-icons/vsc";
 import { BiNotification } from "react-icons/bi";
+import { toast } from "react-hot-toast";
 
 const Sidebar = () => {
+  const router = useRouter();
+  const { data: session } = useSession();
   const [activeItem, setActiveItem] = useState("home");
+
+  const handleLogout = async () => {
+    try {
+      await signOut({ redirect: false });
+      toast.success("Logged out successfully");
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout");
+    }
+  };
 
   const menuItems = [
     { id: "home", label: "Home", icon: IoHomeOutline },
@@ -76,6 +92,15 @@ const Sidebar = () => {
           <span className="nav-label">Notifications</span>
         </Link>
       </div>
+
+      {session && (
+        <div className="logout">
+          <button className="nav-item logout-button" onClick={handleLogout}>
+            <IoLogOutOutline className="nav-icon" />
+            <span className="nav-label">Logout</span>
+          </button>
+        </div>
+      )}
 
       <div className="try-disco">
         <button className="try-button">

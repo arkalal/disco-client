@@ -1,4 +1,6 @@
 import "./globals.scss";
+import { Toaster } from "react-hot-toast";
+import SessionProvider from "../../components/SessionProvider";
 
 export const metadata = {
   title: "Disco - Influencer Marketing Platform",
@@ -9,7 +11,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SessionProvider>
+          <Toaster position="top-center" />
+          {children}
+        </SessionProvider>
+      </body>
     </html>
   );
 }

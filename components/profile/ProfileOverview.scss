@@ -640,6 +640,546 @@
     }
   }
 
+  /* Audience Section Styles */
+  .audience-section {
+    .audience-top-locations {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+
+      .location-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+
+        .location-header {
+          font-size: 12px;
+          color: #6b7280;
+          font-weight: 600;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+
+          .beta-tag {
+            background-color: #6b7280;
+            color: white;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+            text-transform: uppercase;
+          }
+        }
+
+        .location-name {
+          font-size: 20px;
+          font-weight: 600;
+          color: #1f2937;
+          margin-bottom: 8px;
+        }
+
+        .credibility-score {
+          font-size: 24px;
+          font-weight: 600;
+          color: #1f2937;
+        }
+
+        .location-stat {
+          font-size: 13px;
+          color: #6b7280;
+
+          .stat-value {
+            font-weight: 600;
+            color: #1f2937;
+          }
+        }
+      }
+    }
+
+    .audience-geography {
+      margin-bottom: 32px;
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+
+        h3 {
+          font-size: 14px;
+          color: #6b7280;
+          font-weight: 600;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .info-icon {
+            font-size: 14px;
+            color: #9ca3af;
+            cursor: pointer;
+          }
+        }
+
+        .geography-tabs {
+          display: flex;
+          gap: 8px;
+
+          .tab {
+            background: none;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            color: #6b7280;
+            font-size: 12px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+
+            &.active {
+              background-color: #f3f4f6;
+              color: #1f2937;
+              font-weight: 500;
+            }
+
+            &:hover:not(.active) {
+              background-color: #f9fafb;
+            }
+          }
+        }
+      }
+
+      .geography-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        .geography-item {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+
+          .geo-name {
+            width: 120px;
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 500;
+          }
+
+          .geo-bar-container {
+            flex: 1;
+            height: 8px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+
+            .geo-bar {
+              height: 100%;
+              background-color: #4338ca;
+              border-radius: 4px;
+            }
+          }
+
+          .geo-percentage {
+            width: 80px;
+            text-align: right;
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+
+    .audience-demographics {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 32px;
+
+      .audience-age,
+      .audience-gender {
+        flex: 1;
+      }
+
+      .section-header {
+        margin-bottom: 20px;
+
+        h3 {
+          font-size: 14px;
+          color: #6b7280;
+          font-weight: 600;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .info-icon {
+            font-size: 14px;
+            color: #9ca3af;
+            cursor: pointer;
+          }
+        }
+      }
+
+      .age-chart {
+        display: flex;
+        height: 350px;
+
+        .chart-y-axis {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: 250px;
+          margin-right: 16px;
+          padding-top: 30px;
+
+          .y-label {
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: right;
+            width: 30px;
+          }
+        }
+
+        .age-bars {
+          display: flex;
+          gap: 16px;
+          height: 100%;
+          width: 100%;
+          padding-top: 30px;
+
+          .age-bar-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            height: 250px;
+
+            .age-percentage {
+              font-size: 12px;
+              color: #1f2937;
+              font-weight: 500;
+              margin-bottom: 5px;
+            }
+
+            .age-bar {
+              width: 100%;
+              max-width: 40px;
+              background-color: #1e1b4b;
+              border-radius: 4px 4px 0 0;
+              margin-top: auto;
+
+              &.top-down {
+                border-radius: 4px 4px 0 0;
+              }
+            }
+
+            .age-label {
+              font-size: 12px;
+              color: #6b7280;
+              margin-top: 8px;
+            }
+          }
+        }
+      }
+
+      .audience-gender {
+        .gender-legends {
+          display: flex;
+          gap: 24px;
+          margin-bottom: 20px;
+
+          .gender-legend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+
+            &.female .color-dot {
+              background-color: #e879f9;
+            }
+
+            &.male .color-dot {
+              background-color: #3b82f6;
+            }
+
+            .color-dot {
+              width: 12px;
+              height: 12px;
+              border-radius: 50%;
+            }
+
+            .gender-label {
+              color: #4b5563;
+            }
+
+            .gender-percentage {
+              color: #6b7280;
+            }
+          }
+        }
+
+        .gender-chart {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 250px;
+
+          .chart-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+
+            .gender-donut {
+              width: 100%;
+              height: 100%;
+              border-radius: 50%;
+              background: conic-gradient(#3b82f6 65.04%, #e879f9 0%);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+
+              &::before {
+                content: "";
+                position: absolute;
+                width: 150px;
+                height: 150px;
+                background-color: white;
+                border-radius: 50%;
+              }
+
+              .donut-inner {
+                position: relative;
+                z-index: 1;
+                text-align: center;
+
+                .donut-value {
+                  font-size: 28px;
+                  font-weight: 700;
+                  color: #1f2937;
+                }
+
+                .donut-label {
+                  font-size: 12px;
+                  color: #6b7280;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .audience-interests {
+      margin-bottom: 32px;
+
+      .section-header {
+        margin-bottom: 20px;
+
+        h3 {
+          font-size: 14px;
+          color: #6b7280;
+          font-weight: 600;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .info-icon {
+            font-size: 14px;
+            color: #9ca3af;
+            cursor: pointer;
+          }
+        }
+      }
+
+      .interests-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        .interest-item {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+
+          .interest-name {
+            width: 250px;
+            font-size: 14px;
+            color: #1f2937;
+          }
+
+          .interest-bar-container {
+            flex: 1;
+            height: 8px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+
+            .interest-bar {
+              height: 100%;
+              background-color: #10b981;
+              border-radius: 4px;
+            }
+          }
+
+          .interest-percentage {
+            width: 60px;
+            text-align: right;
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+
+    .audience-language {
+      margin-bottom: 32px;
+
+      .section-header {
+        margin-bottom: 20px;
+
+        h3 {
+          font-size: 14px;
+          color: #6b7280;
+          font-weight: 600;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .info-icon {
+            font-size: 14px;
+            color: #9ca3af;
+            cursor: pointer;
+          }
+        }
+      }
+
+      .language-chart-container {
+        display: flex;
+        gap: 32px;
+
+        .language-donut-chart {
+          width: 300px;
+
+          .language-donut {
+            width: 250px;
+            height: 250px;
+            background: conic-gradient(
+              #8b5cf6 55%,
+              /* English */ #38bdf8 11.59%,
+              /* Indonesian */ #a78bfa 7.28%,
+              /* Arabic */ #fb7185 5.91%,
+              /* Persian */ #f87171 4.38%,
+              /* Russian */ #facc15 2.88%,
+              /* Hindi */ #34d399 1.71%,
+              /* Spanish */ #fb923c 1.71%,
+              /* Urdu */ #6366f1 1.55%,
+              /* Nepali */ #a3e635 1.32% /* Bengali */
+            );
+            border-radius: 50%;
+            position: relative;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &::before {
+              content: "";
+              position: absolute;
+              width: 150px;
+              height: 150px;
+              background-color: white;
+              border-radius: 50%;
+            }
+
+            .language-label {
+              position: relative;
+              z-index: 1;
+              font-size: 14px;
+              color: #6b7280;
+            }
+          }
+        }
+
+        .language-list {
+          flex: 1;
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+
+          .language-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .language-color {
+              width: 12px;
+              height: 12px;
+              border-radius: 50%;
+
+              &.english {
+                background-color: #8b5cf6;
+              }
+
+              &.hindi {
+                background-color: #facc15;
+              }
+
+              &.indonesian {
+                background-color: #38bdf8;
+              }
+
+              &.spanish {
+                background-color: #34d399;
+              }
+
+              &.arabic {
+                background-color: #a78bfa;
+              }
+
+              &.urdu {
+                background-color: #fb923c;
+              }
+
+              &.persian {
+                background-color: #fb7185;
+              }
+
+              &.nepali {
+                background-color: #6366f1;
+              }
+
+              &.russian {
+                background-color: #f87171;
+              }
+
+              &.bengali {
+                background-color: #a3e635;
+              }
+            }
+
+            .language-name {
+              flex: 1;
+              font-size: 14px;
+              color: #4b5563;
+            }
+
+            .language-percentage {
+              font-size: 14px;
+              color: #1f2937;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+  }
+
   /* Action Links Section */
   .action-links {
     display: flex;
@@ -685,6 +1225,34 @@
   }
 
   /* Media Queries */
+  @media (max-width: 1024px) {
+    .audience-section {
+      .audience-top-locations {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .audience-demographics {
+        flex-direction: column;
+      }
+
+      .audience-language {
+        .language-chart-container {
+          flex-direction: column;
+
+          .language-donut-chart {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+          }
+
+          .language-list {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+      }
+    }
+  }
+
   @media (max-width: 768px) {
     .metrics-section {
       .metric-row {
@@ -702,6 +1270,14 @@
         grid-template-columns: repeat(3, 1fr);
       }
     }
+
+    .audience-section {
+      .audience-language {
+        .language-list {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
   }
 
   @media (max-width: 480px) {
@@ -716,6 +1292,12 @@
 
       .engagement-stats {
         width: 100%;
+      }
+    }
+
+    .audience-section {
+      .audience-top-locations {
+        grid-template-columns: 1fr;
       }
     }
   }

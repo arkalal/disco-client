@@ -3,6 +3,7 @@
 import React from "react";
 import { FaInstagram } from "react-icons/fa";
 import { RiHeartLine } from "react-icons/ri";
+import { BsInfoCircle } from "react-icons/bs";
 import "./ProfileOverview.scss";
 
 const ProfileOverview = ({ profileData }) => {
@@ -396,8 +397,402 @@ const ProfileOverview = ({ profileData }) => {
       <div className="section-divider"></div>
       <div className="audience-section">
         <h2>AUDIENCE</h2>
-        <p>Audience demographics and insights will be displayed here.</p>
-        <div className="placeholder-demographics"></div>
+
+        {/* Top Cities, States, Countries, Gender, Age Group */}
+        <div className="audience-top-locations">
+          <div className="location-card">
+            <div className="location-header">TOP CITY</div>
+            <div className="location-name">Jakarta</div>
+            <div className="location-stat">
+              Audience from Jakarta is <span className="stat-value">13.6%</span>
+            </div>
+          </div>
+
+          <div className="location-card">
+            <div className="location-header">TOP STATE</div>
+            <div className="location-name">Maharashtra</div>
+            <div className="location-stat">
+              Audience from Maharashtra is{" "}
+              <span className="stat-value">20%</span>
+            </div>
+          </div>
+
+          <div className="location-card">
+            <div className="location-header">TOP COUNTRY</div>
+            <div className="location-name">India</div>
+            <div className="location-stat">
+              Audience from India is <span className="stat-value">56.99%</span>
+            </div>
+          </div>
+
+          <div className="location-card">
+            <div className="location-header">
+              AUDIENCE CREDIBILITY <span className="beta-tag">beta</span>
+            </div>
+            <div className="credibility-score">68.75 %</div>
+          </div>
+
+          <div className="location-card">
+            <div className="location-header">TOP GENDER</div>
+            <div className="location-name">Male</div>
+            <div className="location-stat">
+              Total male audience is <span className="stat-value">65.04%</span>
+            </div>
+          </div>
+
+          <div className="location-card">
+            <div className="location-header">TOP AGE GROUP</div>
+            <div className="location-name">25-34 Years</div>
+            <div className="location-stat">
+              Total audience in this age group is{" "}
+              <span className="stat-value">53.51%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Audience Geography */}
+        <div className="audience-geography">
+          <div className="section-header">
+            <h3>
+              AUDIENCE GEOGRAPHY <BsInfoCircle className="info-icon" />
+            </h3>
+            <div className="geography-tabs">
+              <button className="tab active">Cities</button>
+              <button className="tab">States</button>
+              <button className="tab">Countries</button>
+            </div>
+          </div>
+
+          <div className="geography-content">
+            <div className="geography-item">
+              <div className="geo-name">Jakarta</div>
+              <div className="geo-bar-container">
+                <div className="geo-bar" style={{ width: "13.6%" }}></div>
+              </div>
+              <div className="geo-percentage">13.6%</div>
+            </div>
+
+            <div className="geography-item">
+              <div className="geo-name">Mumbai</div>
+              <div className="geo-bar-container">
+                <div className="geo-bar" style={{ width: "10.98%" }}></div>
+              </div>
+              <div className="geo-percentage">10.98%</div>
+            </div>
+
+            <div className="geography-item">
+              <div className="geo-name">Kolkata</div>
+              <div className="geo-bar-container">
+                <div className="geo-bar" style={{ width: "7.87%" }}></div>
+              </div>
+              <div className="geo-percentage">7.87%</div>
+            </div>
+
+            <div className="geography-item">
+              <div className="geo-name">Delhi</div>
+              <div className="geo-bar-container">
+                <div className="geo-bar" style={{ width: "6.01%" }}></div>
+              </div>
+              <div className="geo-percentage">6.01%</div>
+            </div>
+
+            <div className="geography-item">
+              <div className="geo-name">Bandung</div>
+              <div className="geo-bar-container">
+                <div className="geo-bar" style={{ width: "4.87%" }}></div>
+              </div>
+              <div className="geo-percentage">4.87%</div>
+            </div>
+
+            <div className="geography-item">
+              <div className="geo-name">Ahmedabad</div>
+              <div className="geo-bar-container">
+                <div className="geo-bar" style={{ width: "4.14%" }}></div>
+              </div>
+              <div className="geo-percentage">4.14%</div>
+            </div>
+
+            <div className="geography-item">
+              <div className="geo-name">Pune</div>
+              <div className="geo-bar-container">
+                <div className="geo-bar" style={{ width: "3.73%" }}></div>
+              </div>
+              <div className="geo-percentage">3.73%</div>
+            </div>
+
+            <div className="geography-item">
+              <div className="geo-name">Dhaka</div>
+              <div className="geo-bar-container">
+                <div className="geo-bar" style={{ width: "3.72%" }}></div>
+              </div>
+              <div className="geo-percentage">3.71999999999999998%</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Age and Gender */}
+        <div className="audience-demographics">
+          <div className="audience-age">
+            <div className="section-header">
+              <h3>
+                AUDIENCE AGE GROUP <BsInfoCircle className="info-icon" />
+              </h3>
+            </div>
+
+            <div className="age-chart">
+              <div className="chart-y-axis">
+                <div className="y-label">50%</div>
+                <div className="y-label">25%</div>
+                <div className="y-label">0%</div>
+              </div>
+
+              <div className="age-bars">
+                <div className="age-bar-container">
+                  <div className="age-percentage">2.39%</div>
+                  <div className="age-bar" style={{ height: "2.39%" }}></div>
+                  <div className="age-label">13-17</div>
+                </div>
+
+                <div className="age-bar-container">
+                  <div className="age-percentage">27.5%</div>
+                  <div className="age-bar" style={{ height: "27.5%" }}></div>
+                  <div className="age-label">18-24</div>
+                </div>
+
+                <div className="age-bar-container">
+                  <div className="age-percentage">53.51%</div>
+                  <div className="age-bar" style={{ height: "53.51%" }}></div>
+                  <div className="age-label">25-34</div>
+                </div>
+
+                <div className="age-bar-container">
+                  <div className="age-percentage">13.77%</div>
+                  <div className="age-bar" style={{ height: "13.77%" }}></div>
+                  <div className="age-label">35-44</div>
+                </div>
+
+                <div className="age-bar-container">
+                  <div className="age-percentage">2.82%</div>
+                  <div className="age-bar" style={{ height: "2.82%" }}></div>
+                  <div className="age-label">45-64</div>
+                </div>
+
+                <div className="age-bar-container">
+                  <div className="age-percentage">0.02%</div>
+                  <div className="age-bar" style={{ height: "0.02%" }}></div>
+                  <div className="age-label">65+</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="audience-gender">
+            <div className="section-header">
+              <h3>
+                AUDIENCE GENDER <BsInfoCircle className="info-icon" />
+              </h3>
+            </div>
+
+            <div className="gender-legends">
+              <div className="gender-legend female">
+                <span className="color-dot"></span>
+                <span className="gender-label">Female</span>
+                <span className="gender-percentage">- 34.96%</span>
+              </div>
+
+              <div className="gender-legend male">
+                <span className="color-dot"></span>
+                <span className="gender-label">Male</span>
+                <span className="gender-percentage">- 65.04%</span>
+              </div>
+            </div>
+
+            <div className="gender-chart">
+              <div className="chart-container">
+                <div className="gender-donut">
+                  <div className="donut-inner">
+                    <div className="donut-value">65.04%</div>
+                    <div className="donut-label">Male Audience</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Audience Interests */}
+        <div className="audience-interests">
+          <div className="section-header">
+            <h3>
+              AUDIENCE INTEREST <BsInfoCircle className="info-icon" />
+            </h3>
+          </div>
+
+          <div className="interests-content">
+            <div className="interest-item">
+              <div className="interest-name">
+                Friends, Family & Relationships
+              </div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "9.2%" }}></div>
+              </div>
+              <div className="interest-percentage">9.2%</div>
+            </div>
+
+            <div className="interest-item">
+              <div className="interest-name">Restaurants, Food & Grocery</div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "5.53%" }}></div>
+              </div>
+              <div className="interest-percentage">5.53%</div>
+            </div>
+
+            <div className="interest-item">
+              <div className="interest-name">
+                Clothes, Shoes, Handbags & Accessories
+              </div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "8.33%" }}></div>
+              </div>
+              <div className="interest-percentage">8.33%</div>
+            </div>
+
+            <div className="interest-item">
+              <div className="interest-name">Travel, Tourism & Aviation</div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "5.2%" }}></div>
+              </div>
+              <div className="interest-percentage">5.2%</div>
+            </div>
+
+            <div className="interest-item">
+              <div className="interest-name">Camera & Photography</div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "8.22%" }}></div>
+              </div>
+              <div className="interest-percentage">8.22%</div>
+            </div>
+
+            <div className="interest-item">
+              <div className="interest-name">Art & Design</div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "5.03%" }}></div>
+              </div>
+              <div className="interest-percentage">5.03%</div>
+            </div>
+
+            <div className="interest-item">
+              <div className="interest-name">Television & Film</div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "6.38%" }}></div>
+              </div>
+              <div className="interest-percentage">6.38%</div>
+            </div>
+
+            <div className="interest-item">
+              <div className="interest-name">Cars & Motorbikes</div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "4.62%" }}></div>
+              </div>
+              <div className="interest-percentage">4.62%</div>
+            </div>
+
+            <div className="interest-item">
+              <div className="interest-name">Music</div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "6.02%" }}></div>
+              </div>
+              <div className="interest-percentage">6.02%</div>
+            </div>
+
+            <div className="interest-item">
+              <div className="interest-name">Electronics & Computers</div>
+              <div className="interest-bar-container">
+                <div className="interest-bar" style={{ width: "4.23%" }}></div>
+              </div>
+              <div className="interest-percentage">4.23%</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Audience Language */}
+        <div className="audience-language">
+          <div className="section-header">
+            <h3>
+              AUDIENCE LANGUAGE <BsInfoCircle className="info-icon" />
+            </h3>
+          </div>
+
+          <div className="language-chart-container">
+            <div className="language-donut-chart">
+              <div className="language-donut">
+                <div className="language-label">Audience Language</div>
+              </div>
+            </div>
+
+            <div className="language-list">
+              <div className="language-item">
+                <span className="language-color english"></span>
+                <span className="language-name">English</span>
+                <span className="language-percentage">55%</span>
+              </div>
+
+              <div className="language-item">
+                <span className="language-color hindi"></span>
+                <span className="language-name">Hindi</span>
+                <span className="language-percentage">2.88%</span>
+              </div>
+
+              <div className="language-item">
+                <span className="language-color indonesian"></span>
+                <span className="language-name">Indonesian</span>
+                <span className="language-percentage">11.59%</span>
+              </div>
+
+              <div className="language-item">
+                <span className="language-color spanish"></span>
+                <span className="language-name">Spanish</span>
+                <span className="language-percentage">1.71%</span>
+              </div>
+
+              <div className="language-item">
+                <span className="language-color arabic"></span>
+                <span className="language-name">Arabic</span>
+                <span className="language-percentage">7.28%</span>
+              </div>
+
+              <div className="language-item">
+                <span className="language-color urdu"></span>
+                <span className="language-name">Urdu</span>
+                <span className="language-percentage">1.71%</span>
+              </div>
+
+              <div className="language-item">
+                <span className="language-color persian"></span>
+                <span className="language-name">Persian</span>
+                <span className="language-percentage">5.91%</span>
+              </div>
+
+              <div className="language-item">
+                <span className="language-color nepali"></span>
+                <span className="language-name">Nepali</span>
+                <span className="language-percentage">1.55%</span>
+              </div>
+
+              <div className="language-item">
+                <span className="language-color russian"></span>
+                <span className="language-name">Russian</span>
+                <span className="language-percentage">4.38%</span>
+              </div>
+
+              <div className="language-item">
+                <span className="language-color bengali"></span>
+                <span className="language-name">Bengali</span>
+                <span className="language-percentage">1.32%</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Growth Section */}

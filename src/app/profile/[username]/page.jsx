@@ -216,7 +216,7 @@ export default function Profile({ params }) {
             <BsLightbulb className="nav-icon" />
             <span className="nav-label">Campaign Ideas</span>
           </Link>
-          <Link href="/search" className="nav-item active">
+          <Link href="/search" className="nav-item">
             <BsSearch className="nav-icon" />
             <span className="nav-label">Influencer Search</span>
           </Link>

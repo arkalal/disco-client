@@ -4,6 +4,7 @@ import React from "react";
 import { FaInstagram } from "react-icons/fa";
 import { RiHeartLine } from "react-icons/ri";
 import { BsInfoCircle } from "react-icons/bs";
+import { VscGraph } from "react-icons/vsc";
 import "./ProfileOverview.scss";
 
 const ProfileOverview = ({ profileData }) => {
@@ -798,9 +799,122 @@ const ProfileOverview = ({ profileData }) => {
       {/* Growth Section */}
       <div className="section-divider"></div>
       <div className="growth-section">
-        <h2>GROWTH</h2>
-        <p>Growth metrics and trends will be displayed here.</p>
-        <div className="placeholder-growth-chart"></div>
+        <h2 className="section-title">
+          <span className="icon">
+            <VscGraph />
+          </span>
+          GROWTH
+        </h2>
+
+        <div className="growth-metrics">
+          <div className="growth-metric-card">
+            <div className="metric-header">
+              <span className="metric-title">30D FOLLOWERS GROWTH RATE</span>
+              <span className="info-icon">ⓘ</span>
+            </div>
+            <div className="metric-value">
+              <span className="value">8.33%</span>
+              <span className="label good">Good</span>
+            </div>
+          </div>
+
+          <div className="growth-metric-card">
+            <div className="metric-header">
+              <span className="metric-title">30D FOLLOWERS GAIN</span>
+              <span className="info-icon">ⓘ</span>
+            </div>
+            <div className="metric-value">
+              <span className="value">97.2k</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="followers-growth">
+          <div className="followers-growth-header">
+            <div className="title">
+              <span>FOLLOWERS GROWTH</span>
+              <span className="info-icon">ⓘ</span>
+            </div>
+            <div className="time-filters">
+              <button className="time-filter active">All</button>
+              <button className="time-filter">1Y</button>
+              <button className="time-filter">6M</button>
+              <button className="time-filter">3M</button>
+              <button className="time-filter">1M</button>
+            </div>
+          </div>
+
+          <div className="growth-chart-container">
+            <div className="growth-chart">
+              {/* Interactive chart with hover functionality - no visible dots/lines */}
+              <div id="growthTooltip" className="chart-tooltip">
+                <div className="tooltip-content">
+                  <div className="tooltip-value">713,309 followers</div>
+                  <div className="tooltip-date">on 05 Dec 2023</div>
+                </div>
+              </div>
+              <div
+                className="chart-area"
+                onMouseMove={(e) => {
+                  // Basic functionality to show tooltip on hover
+                  const tooltip = document.getElementById("growthTooltip");
+                  const chartArea = e.currentTarget;
+                  const rect = chartArea.getBoundingClientRect();
+
+                  // Calculate position within chart (percentage)
+                  const x = e.clientX - rect.left;
+                  const xPercent = (x / rect.width) * 100;
+
+                  // Show tooltip at mouse position
+                  tooltip.style.display = "block";
+                  tooltip.style.left = x + "px";
+                  tooltip.style.top = e.clientY - rect.top - 70 + "px";
+
+                  // Update tooltip content based on x position
+                  let value, date;
+
+                  if (xPercent < 10) {
+                    value = "250,000 followers";
+                    date = "15 Mar 2022";
+                  } else if (xPercent < 30) {
+                    value = "370,000 followers";
+                    date = "15 Oct 2022";
+                  } else if (xPercent < 50) {
+                    value = "480,000 followers";
+                    date = "20 May 2023";
+                  } else if (xPercent < 70) {
+                    value = "610,000 followers";
+                    date = "19 Dec 2023";
+                  } else if (xPercent < 90) {
+                    value = "713,309 followers";
+                    date = "05 Dec 2023";
+                  } else {
+                    value = "890,000 followers";
+                    date = "20 Jul 2024";
+                  }
+
+                  tooltip.querySelector(".tooltip-value").textContent = value;
+                  tooltip.querySelector(".tooltip-date").textContent =
+                    "on " + date;
+                }}
+                onMouseLeave={() => {
+                  // Hide tooltip when not hovering
+                  const tooltip = document.getElementById("growthTooltip");
+                  tooltip.style.display = "none";
+                }}
+              >
+                {/* No SVG line chart or data points - just the background gradient */}
+              </div>
+              <div className="chart-dates">
+                <span>15 Mar 2022</span>
+                <span>15 Oct 2022</span>
+                <span>20 May 2023</span>
+                <span>19 Dec 2023</span>
+                <span>20 Jul 2024</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Brands Section */}

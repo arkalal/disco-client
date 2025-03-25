@@ -1,48 +1,62 @@
 "use client";
 
-import { MdLocationOn } from "react-icons/md";
+import React from "react";
+import Image from "next/image";
+import { IoLocationOutline } from "react-icons/io5";
+import { FiPlus, FiRefreshCw } from "react-icons/fi";
 import "./ProfileHeader.scss";
 
 const ProfileHeader = ({ profileData }) => {
   return (
-    <header className="profile-header">
-      <div className="profile-img-container">
-        <img
-          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrF_us_E4GVwoLVbaCVoSE84B4yA5WUCIUqQ&usqp=CAU"
-          alt={profileData.name}
-          className="profile-img"
-        />
+    <div className="profile-header-container">
+      <div className="header-top">
+        <button className="update-profile-btn">
+          <span>Update Profile</span>
+          <FiRefreshCw className="refresh-icon" />
+        </button>
       </div>
 
-      <div className="profile-info">
-        <h1 className="profile-name">{profileData.name}</h1>
-        <div className="profile-categories">
-          {profileData.category &&
-            profileData.category.map((cat, index) => (
-              <span key={index} className="category-tag">
-                {cat}
-              </span>
-            ))}
+      <div className="header-main">
+        <div className="left-content">
+          <div className="profile-avatar">
+            <Image
+              src="/images/srkking555_original_1742485823.1608632.JPEG"
+              alt={profileData?.name || "Profile Image"}
+              width={125}
+              height={125}
+              className="avatar-image"
+              priority
+            />
+          </div>
+          <div className="profile-details">
+            <h1 className="profile-name">
+              {profileData?.name || "Shah Rukh Khan"}
+            </h1>
+            <div className="profile-categories">
+              <div className="category-tag">Arts & Entertainment</div>
+              <div className="category-tag">Movies</div>
+            </div>
+            <p className="profile-bio">
+              {profileData?.bio ||
+                "This fan page is dedicated to the Actor SRK. Upcoming movie : King, PATHAAN 2 Upcoming web series : The Ba***ds of Boll..."}
+            </p>
+            <div className="profile-location">
+              <IoLocationOutline className="location-icon" />
+              <span>{profileData?.location || "India"}</span>
+            </div>
+          </div>
         </div>
-        <p className="profile-bio">{profileData.bio}</p>
-        <div className="profile-location">
-          <MdLocationOn />
-          <span>{profileData.location}</span>
-        </div>
-      </div>
 
-      <div className="profile-actions">
-        <button className="update-profile-btn">Update Profile</button>
-        <div className="action-buttons">
-          <button className="action-btn add-to-list-btn">
-            <span className="btn-icon">+</span>
-            Add to list
+        <div className="profile-actions">
+          <button className="add-to-list-btn">
+            <FiPlus />
+            <span>Add to list</span>
           </button>
-          <button className="action-btn message-btn">Message</button>
-          <button className="action-btn compare-btn">Compare</button>
+          <button className="message-btn">Message</button>
+          <button className="compare-btn">Compare</button>
         </div>
       </div>
-    </header>
+    </div>
   );
 };
 

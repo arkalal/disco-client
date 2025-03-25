@@ -15,14 +15,20 @@ export async function middleware(request) {
 
   // If user is not authenticated and trying to access a protected route
   if (!token && !isPublicPath) {
-    const url = new URL("/login", request.url);
-    return NextResponse.redirect(url);
+    // Create a new URL based on the current request URL to ensure proper domain handling
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    // Use status 303 for proper redirects
+    return NextResponse.redirect(loginUrl, { status: 303 });
   }
 
   // If user is authenticated and trying to access login page
   if (token && isPublicPath) {
-    const url = new URL("/home", request.url);
-    return NextResponse.redirect(url);
+    // Create a new URL based on the current request URL to ensure proper domain handling
+    const homeUrl = request.nextUrl.clone();
+    homeUrl.pathname = "/home";
+    // Use status 303 for proper redirects
+    return NextResponse.redirect(homeUrl, { status: 303 });
   }
 
   return NextResponse.next();

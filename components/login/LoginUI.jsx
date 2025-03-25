@@ -99,7 +99,10 @@ const LoginUI = () => {
       }
 
       toast.success("Logged in successfully!");
-      router.push("/home");
+
+      // Use window.location for more reliable redirect in production
+      // This bypasses client-side routing which can sometimes cause issues in deployment
+      window.location.href = "/home";
     } catch (error) {
       toast.error(error.message || "Login failed");
       console.error("Login error:", error);

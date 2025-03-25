@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { use } from "react";
 import Link from "next/link";
 // Icons
@@ -61,11 +61,44 @@ export default function Profile({ params }) {
   // Unwrap params with React.use()
   const unwrappedParams = use(params);
   const username = unwrappedParams?.username || "srkkingk555";
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("profile-summary");
+  const [profileSection, setProfileSection] = useState("platforms");
 
   // Handle tab change
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+
+    // If this is a section that should be scrolled to (not profile tabs)
+    if (
+      [
+        "overview",
+        "engagement",
+        "content",
+        "audience",
+        "growth",
+        "brands",
+      ].includes(tab)
+    ) {
+      // Find the section element
+      const sectionElement = document.querySelector(`[data-section="${tab}"]`);
+      if (sectionElement) {
+        // Scroll to the section with smooth behavior
+        sectionElement.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
+  // Handle profile section change
+  const handleProfileSectionChange = (section) => {
+    setProfileSection(section);
+    // Find the section element
+    const sectionElement = document.querySelector(
+      `[data-profile-section="${section}"]`
+    );
+    if (sectionElement) {
+      // Scroll to the section with smooth behavior
+      sectionElement.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   // Profile Tab Navigation section
@@ -75,9 +108,10 @@ export default function Profile({ params }) {
         <>
           <div
             className={`vertical-tab ${
-              activeTab === "platforms" ? "active" : ""
+              profileSection === "platforms" ? "active" : ""
             }`}
-            onClick={() => handleTabChange("platforms")}
+            onClick={() => handleProfileSectionChange("platforms")}
+            data-profile-section="platforms"
           >
             <span className="tab-icon">
               <IoPhonePortraitOutline />
@@ -86,9 +120,10 @@ export default function Profile({ params }) {
           </div>
           <div
             className={`vertical-tab ${
-              activeTab === "content" ? "active" : ""
+              profileSection === "content" ? "active" : ""
             }`}
-            onClick={() => handleTabChange("content")}
+            onClick={() => handleProfileSectionChange("content")}
+            data-profile-section="content"
           >
             <span className="tab-icon">
               <RiFileList3Line />
@@ -96,8 +131,11 @@ export default function Profile({ params }) {
             <span>Content</span>
           </div>
           <div
-            className={`vertical-tab ${activeTab === "brands" ? "active" : ""}`}
-            onClick={() => handleTabChange("brands")}
+            className={`vertical-tab ${
+              profileSection === "brands" ? "active" : ""
+            }`}
+            onClick={() => handleProfileSectionChange("brands")}
+            data-profile-section="brands"
           >
             <span className="tab-icon">
               <RiShoppingBag3Line />
@@ -114,6 +152,7 @@ export default function Profile({ params }) {
               activeTab === "overview" ? "active" : ""
             }`}
             onClick={() => handleTabChange("overview")}
+            data-section="overview"
           >
             <span className="tab-icon">
               <RiDashboardLine />
@@ -125,6 +164,7 @@ export default function Profile({ params }) {
               activeTab === "engagement" ? "active" : ""
             }`}
             onClick={() => handleTabChange("engagement")}
+            data-section="engagement"
           >
             <span className="tab-icon">
               <RiHeartLine />
@@ -136,6 +176,7 @@ export default function Profile({ params }) {
               activeTab === "content" ? "active" : ""
             }`}
             onClick={() => handleTabChange("content")}
+            data-section="content"
           >
             <span className="tab-icon">
               <RiFileList3Line />
@@ -147,6 +188,7 @@ export default function Profile({ params }) {
               activeTab === "audience" ? "active" : ""
             }`}
             onClick={() => handleTabChange("audience")}
+            data-section="audience"
           >
             <span className="tab-icon">
               <RiUserLine />
@@ -156,6 +198,7 @@ export default function Profile({ params }) {
           <div
             className={`vertical-tab ${activeTab === "growth" ? "active" : ""}`}
             onClick={() => handleTabChange("growth")}
+            data-section="growth"
           >
             <span className="tab-icon">
               <RiLineChartLine />
@@ -165,38 +208,283 @@ export default function Profile({ params }) {
           <div
             className={`vertical-tab ${activeTab === "brands" ? "active" : ""}`}
             onClick={() => handleTabChange("brands")}
+            data-section="brands"
           >
             <span className="tab-icon">
               <RiShoppingBag3Line />
             </span>
             <span>Brands</span>
           </div>
-          <div
-            className={`vertical-tab ${
-              activeTab === "download-pdf" ? "active" : ""
-            }`}
-            onClick={() => handleTabChange("download-pdf")}
-          >
-            <span className="tab-icon">
-              <RiDownload2Line />
-            </span>
-            <span>Download PDF</span>
-          </div>
-          <div
-            className={`vertical-tab ${
-              activeTab === "instagram-profile" ? "active" : ""
-            }`}
-            onClick={() => handleTabChange("instagram-profile")}
-          >
-            <span className="tab-icon">
-              <TbExternalLink />
-            </span>
-            <span>Go To Instagram Profile</span>
+
+          {/* Action buttons, not navigation tabs */}
+          <div className="action-buttons">
+            <button
+              className="action-button"
+              onClick={() => window.open("#", "_blank")}
+            >
+              <span className="button-icon">
+                <RiDownload2Line />
+              </span>
+              <span>Download PDF</span>
+            </button>
+            <button
+              className="action-button"
+              onClick={() =>
+                window.open(
+                  "https://instagram.com/" + profileData.username,
+                  "_blank"
+                )
+              }
+            >
+              <span className="button-icon">
+                <TbExternalLink />
+              </span>
+              <span>Go To Instagram Profile</span>
+            </button>
           </div>
         </>
       );
     }
   };
+
+  // Render profile summary content based on active section
+  const renderProfileSummaryContent = () => {
+    return (
+      <div className="profile-summary-content">
+        {/* Platforms Section */}
+        <div
+          className="profile-section platforms-section"
+          data-profile-section="platforms"
+        >
+          <div className="platform-user">
+            <div className="platform-header">
+              <div className="instagram-icon">
+                <FaInstagram size={22} />
+              </div>
+              <div className="platform-username">@{profileData.username}</div>
+              <div className="platform-influence-score">
+                {profileData.influenceScore}
+              </div>
+            </div>
+
+            <div className="platform-metrics">
+              <div className="metrics-grid">
+                <div className="metric-item">Followers</div>
+                <div className="metric-item">Avg. Likes</div>
+                <div className="metric-item">Avg. Comments</div>
+                <div className="metric-item">Avg. Reel Views</div>
+                <div className="metric-item">Estimated Reach</div>
+                <div className="metric-item">Engagement Rate</div>
+
+                <div className="metric-value">1.2m</div>
+                <div className="metric-value">17.7k</div>
+                <div className="metric-value">104</div>
+                <div className="metric-value">397.2k</div>
+                <div className="metric-value">184.1k</div>
+                <div className="metric-value">1.51%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div
+          className="profile-section content-section"
+          data-profile-section="content"
+        >
+          <div className="section-header">
+            <h3>CONTENT</h3>
+          </div>
+
+          <div className="content-categories">
+            <h4>CONTENT CATEGORIES</h4>
+            <div className="category-bar">
+              <div
+                className="category-bar-fill"
+                style={{
+                  width: "95.92%",
+                  backgroundColor: "#4338ca",
+                }}
+              ></div>
+            </div>
+
+            <div className="categories-list">
+              <div className="category-item">
+                <div className="category-icon">🎭</div>
+                <div className="category-details">
+                  <div className="category-name">Arts & Entertainment</div>
+                  <div className="category-bar">
+                    <div
+                      className="category-bar-fill"
+                      style={{
+                        width: "95.92%",
+                        backgroundColor: "#4338ca",
+                      }}
+                    ></div>
+                  </div>
+                  <div className="category-percentage">95.92%</div>
+                </div>
+              </div>
+
+              <div className="category-item">
+                <div className="category-icon">🎬</div>
+                <div className="category-details">
+                  <div className="category-name">
+                    Movies - Arts & Entertainment
+                  </div>
+                  <div className="category-bar">
+                    <div
+                      className="category-bar-fill"
+                      style={{
+                        width: "93.88%",
+                        backgroundColor: "#4338ca",
+                      }}
+                    ></div>
+                  </div>
+                  <div className="category-percentage">93.88%</div>
+                </div>
+              </div>
+
+              <div className="category-item">
+                <div className="category-icon">🏋️</div>
+                <div className="category-details">
+                  <div className="category-name">Health & Fitness</div>
+                  <div className="category-bar">
+                    <div
+                      className="category-bar-fill"
+                      style={{
+                        width: "2.04%",
+                        backgroundColor: "#38bdf8",
+                      }}
+                    ></div>
+                  </div>
+                  <div className="category-percentage">2.04%</div>
+                </div>
+              </div>
+
+              <div className="category-item">
+                <div className="category-icon">⚽</div>
+                <div className="category-details">
+                  <div className="category-name">Sports</div>
+                  <div className="category-bar">
+                    <div
+                      className="category-bar-fill"
+                      style={{
+                        width: "2.04%",
+                        backgroundColor: "#fb7185",
+                      }}
+                    ></div>
+                  </div>
+                  <div className="category-percentage">2.04%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Brands Section */}
+        <div
+          className="profile-section brands-section"
+          data-profile-section="brands"
+        >
+          <div className="section-header">
+            <div className="brands-icon">
+              <RiShoppingBag3Line />
+            </div>
+            <h3>BRANDS</h3>
+          </div>
+
+          <div className="brand-mentions">
+            <h4>BRAND MENTIONS</h4>
+            <div className="brand-filters">
+              <button className="brand-filter active">All</button>
+              <button className="brand-filter">Beverages</button>
+              <button className="brand-filter">Entertainment</button>
+              <button className="brand-filter">Sports</button>
+            </div>
+
+            <div className="brand-grid">
+              <div className="brand-card">
+                <div className="brand-logo">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/1920px-Netflix_2015_logo.svg.png"
+                    alt="Netflix"
+                  />
+                </div>
+                <div className="brand-name">netflix_in</div>
+                <div className="brand-handle">@netflix_in</div>
+                <div className="brand-posts">6 posts</div>
+              </div>
+
+              <div className="brand-card">
+                <div className="brand-logo">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/en/thumb/8/84/Indian_Premier_League_Official_Logo.svg/1200px-Indian_Premier_League_Official_Logo.svg.png"
+                    alt="Indian Super League"
+                  />
+                </div>
+                <div className="brand-name">indiansuperleague</div>
+                <div className="brand-handle">@indiansuperleague</div>
+                <div className="brand-posts">3 posts</div>
+              </div>
+
+              <div className="brand-card">
+                <div className="brand-logo">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/IIFA_Awards_Logo.svg/1200px-IIFA_Awards_Logo.svg.png"
+                    alt="IIFA"
+                  />
+                </div>
+                <div className="brand-name">iifa</div>
+                <div className="brand-handle">@iifa</div>
+                <div className="brand-posts">3 posts</div>
+              </div>
+
+              <div className="brand-card">
+                <div className="brand-logo">
+                  <img
+                    src="https://www.roarwithsimba.com/images/logo.svg"
+                    alt="Roar with Simba"
+                  />
+                </div>
+                <div className="brand-name">roarwithsimba</div>
+                <div className="brand-handle">@roarwithsimba</div>
+                <div className="brand-posts">1 post</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Set up scroll spy for profile summary sections
+  React.useEffect(() => {
+    if (activeTab === "profile-summary") {
+      const sections = document.querySelectorAll("[data-profile-section]");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const section = entry.target.getAttribute("data-profile-section");
+              setProfileSection(section);
+            }
+          });
+        },
+        { threshold: 0.5 }
+      );
+
+      sections.forEach((section) => {
+        observer.observe(section);
+      });
+
+      return () => {
+        sections.forEach((section) => {
+          observer.unobserve(section);
+        });
+      };
+    }
+  }, [activeTab]);
 
   return (
     <div className="search-page-container">
@@ -305,287 +593,16 @@ export default function Profile({ params }) {
             </div>
 
             <div className="profile-content-area">
-              {activeTab === "overview" && (
-                <ProfileOverview profileData={profileData} />
-              )}
-              {activeTab === "engagement" && (
-                <div className="engagement-content">
-                  <div className="engagement-header">
-                    <div className="engagement-icon">
-                      <RiHeartLine />
-                    </div>
-                    <h2>ENGAGEMENTS & VIEWS</h2>
-                  </div>
-
-                  <div className="content-types">
-                    <div className="content-type">
-                      <div className="instagram-icon">
-                        <FaInstagram size={20} />
-                      </div>
-                      <div className="content-label">Images</div>
-
-                      <div className="engagement-stats">
-                        <div className="stat-item">
-                          <div className="stat-label">AVG. LIKES</div>
-                          <div className="stat-value">17.4k</div>
-                        </div>
-                        <div className="stat-item">
-                          <div className="stat-label">AVG. COMMENTS</div>
-                          <div className="stat-value">108</div>
-                        </div>
-                        <div className="stat-item">
-                          <div className="stat-label">ENGAGEMENT RATE</div>
-                          <div className="stat-value">1.49%</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="content-type">
-                      <div className="reels-icon">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            d="M12 3C12.5523 3 13 3.44772 13 4C13 4.55228 12.5523 5 12 5C11.4477 5 11 4.55228 11 4C11 3.44772 11.4477 3 12 3Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            d="M18.3639 5.63604C18.7545 6.02656 18.7545 6.65973 18.3639 7.05025C17.9734 7.44078 17.3402 7.44078 16.9497 7.05025C16.5592 6.65973 16.5592 6.02656 16.9497 5.63604C17.3402 5.24551 17.9734 5.24551 18.3639 5.63604Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            d="M20 12C20 11.4477 20.4477 11 21 11C21.5523 11 22 11.4477 22 12C22 12.5523 21.5523 13 21 13C20.4477 13 20 12.5523 20 12Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            d="M18.3639 16.9497C18.7545 16.5592 19.3877 16.5592 19.7782 16.9497C20.1687 17.3402 20.1687 17.9734 19.7782 18.3639C19.3877 18.7545 18.7545 18.7545 18.3639 18.3639C17.9734 17.9734 17.9734 17.3402 18.3639 16.9497Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            d="M12 19C12.5523 19 13 19.4477 13 20C13 20.5523 12.5523 21 12 21C11.4477 21 11 20.5523 11 20C11 19.4477 11.4477 19 12 19Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            d="M5.63604 16.9497C6.02656 16.5592 6.65973 16.5592 7.05025 16.9497C7.44078 17.3402 7.44078 17.9734 7.05025 18.3639C6.65973 18.7545 6.02656 18.7545 5.63604 18.3639C5.24551 17.9734 5.24551 17.3402 5.63604 16.9497Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            d="M3 12C3 11.4477 3.44772 11 4 11C4.55228 11 5 11.4477 5 12C5 12.5523 4.55228 13 4 13C3.44772 13 3 12.5523 3 12Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            d="M5.63604 7.05025C5.24551 6.65973 5.24551 6.02656 5.63604 5.63604C6.02656 5.24551 6.65973 5.24551 7.05025 5.63604C7.44078 6.02656 7.44078 6.65973 7.05025 7.05025C6.65973 7.44078 6.02656 7.44078 5.63604 7.05025Z"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      </div>
-                      <div className="content-label">Reels</div>
-
-                      <div className="engagement-stats">
-                        <div className="stat-item">
-                          <div className="stat-label">AVG. VIEWS</div>
-                          <div className="stat-value">397.2k</div>
-                        </div>
-                        <div className="stat-item">
-                          <div className="stat-label">AVG. LIKES</div>
-                          <div className="stat-value">28.1k</div>
-                        </div>
-                        <div className="stat-item">
-                          <div className="stat-label">AVG. COMMENTS</div>
-                          <div className="stat-value">141</div>
-                        </div>
-                        <div className="stat-item">
-                          <div className="stat-label">ENGAGEMENT RATE</div>
-                          <div className="stat-value">2.40%</div>
-                        </div>
-                        <div className="stat-item">
-                          <div className="stat-label">VIEW RATE</div>
-                          <div className="stat-value">33.75%</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="engagement-metrics">
-                    <div className="metric-section">
-                      <div className="metric-header">
-                        <h3>LIKES - COMMENTS RATIO</h3>
-                        <div className="info-icon">i</div>
-                      </div>
-
-                      <div className="metric-value-container">
-                        <div className="metric-value">0.61</div>
-                        <div className="metric-badge">Average</div>
-                      </div>
-
-                      <div className="metric-description">
-                        Average ratio for similar influencers is around 0.96
-                      </div>
-                    </div>
-
-                    <div className="metric-section">
-                      <div className="metric-header">
-                        <h3>REEL VIEWS TO FOLLOWERS RATIO</h3>
-                        <div className="info-icon">i</div>
-                      </div>
-
-                      <div className="metric-value-container">
-                        <div className="metric-value">33.75</div>
-                        <div className="metric-badge good">Good</div>
-                      </div>
-
-                      <div className="metric-description">
-                        Similar accounts generate around 24.65 views per 100
-                        followers.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {activeTab === "platforms" && (
-                <div className="platforms-content">
-                  <div className="platform-user">
-                    <div className="instagram-icon">
-                      <FaInstagram size={22} />
-                    </div>
-                    <div className="platform-username">@srkkingk555</div>
-                    <div className="platform-influence-score">7.88</div>
-                  </div>
-
-                  <div className="platform-metrics">
-                    <div className="metrics-grid">
-                      <div className="metric-item">Followers</div>
-                      <div className="metric-item">Avg. Likes</div>
-                      <div className="metric-item">Avg. Comments</div>
-                      <div className="metric-item">Avg. Reel Views</div>
-                      <div className="metric-item">Estimated Reach</div>
-                      <div className="metric-item">Engagement Rate</div>
-
-                      <div className="metric-value">1.2m</div>
-                      <div className="metric-value">15.6k</div>
-                      <div className="metric-value">96</div>
-                      <div className="metric-value">397.2k</div>
-                      <div className="metric-value">174.7k</div>
-                      <div className="metric-value">1.33%</div>
-                    </div>
-                  </div>
-
-                  <div className="content-section">
-                    <div className="section-header">
-                      <h3>CONTENT</h3>
-                    </div>
-
-                    <div className="content-categories">
-                      <h4>CONTENT CATEGORIES</h4>
-                      <div className="category-bar">
-                        <div
-                          className="category-bar-fill"
-                          style={{
-                            width: "95.92%",
-                            backgroundColor: "#4338ca",
-                          }}
-                        ></div>
-                      </div>
-
-                      <div className="categories-list">
-                        <div className="category-item">
-                          <div className="category-icon">🎭</div>
-                          <div className="category-details">
-                            <div className="category-name">
-                              Arts & Entertainment
-                            </div>
-                            <div className="category-bar">
-                              <div
-                                className="category-bar-fill"
-                                style={{
-                                  width: "95.92%",
-                                  backgroundColor: "#4338ca",
-                                }}
-                              ></div>
-                            </div>
-                            <div className="category-percentage">95.92%</div>
-                          </div>
-                        </div>
-
-                        <div className="category-item">
-                          <div className="category-icon">🎬</div>
-                          <div className="category-details">
-                            <div className="category-name">
-                              Movies - Arts & Entertainment
-                            </div>
-                            <div className="category-bar">
-                              <div
-                                className="category-bar-fill"
-                                style={{
-                                  width: "93.88%",
-                                  backgroundColor: "#4338ca",
-                                }}
-                              ></div>
-                            </div>
-                            <div className="category-percentage">93.88%</div>
-                          </div>
-                        </div>
-
-                        <div className="category-item">
-                          <div className="category-icon">🏋️</div>
-                          <div className="category-details">
-                            <div className="category-name">
-                              Health & Fitness
-                            </div>
-                            <div className="category-bar">
-                              <div
-                                className="category-bar-fill"
-                                style={{
-                                  width: "2.04%",
-                                  backgroundColor: "#38bdf8",
-                                }}
-                              ></div>
-                            </div>
-                            <div className="category-percentage">2.04%</div>
-                          </div>
-                        </div>
-
-                        <div className="category-item">
-                          <div className="category-icon">⚽</div>
-                          <div className="category-details">
-                            <div className="category-name">Sports</div>
-                            <div className="category-bar">
-                              <div
-                                className="category-bar-fill"
-                                style={{
-                                  width: "2.04%",
-                                  backgroundColor: "#fb7185",
-                                }}
-                              ></div>
-                            </div>
-                            <div className="category-percentage">2.04%</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {(activeTab === "content" ||
+              {activeTab === "profile-summary" ? (
+                renderProfileSummaryContent()
+              ) : activeTab === "overview" ||
+                activeTab === "engagement" ||
+                activeTab === "content" ||
                 activeTab === "audience" ||
                 activeTab === "growth" ||
-                activeTab === "brands" ||
-                activeTab === "download-pdf" ||
-                activeTab === "instagram-profile") && (
+                activeTab === "brands" ? (
+                <ProfileOverview profileData={profileData} />
+              ) : (
                 <div className="tab-content">
                   <h2>
                     {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}{" "}

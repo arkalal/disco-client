@@ -1,10 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { FaInstagram } from "react-icons/fa";
 import { RiHeartLine } from "react-icons/ri";
 import { BsInfoCircle } from "react-icons/bs";
 import { VscGraph } from "react-icons/vsc";
+import {
+  AiOutlineInstagram,
+  AiOutlineEye,
+  AiOutlineHeart,
+  AiOutlineComment,
+} from "react-icons/ai";
+import { IoIosArrowForward } from "react-icons/io";
+import { RiShoppingBag3Line, RiFileList3Line } from "react-icons/ri";
 import "./ProfileOverview.scss";
 
 const ProfileOverview = ({ profileData }) => {
@@ -13,111 +21,212 @@ const ProfileOverview = ({ profileData }) => {
     background: `conic-gradient(#4338CA ${percentage}%, #e9e9e9 0%)`,
   };
 
+  // References to each section
+  const overviewRef = useRef(null);
+  const engagementRef = useRef(null);
+  const contentRef = useRef(null);
+  const audienceRef = useRef(null);
+  const growthRef = useRef(null);
+  const brandsRef = useRef(null);
+
+  // Function to handle scrolling to sections when tabs are clicked
+  const scrollToSection = (sectionName) => {
+    // Map section names to their respective refs
+    const sectionRefs = {
+      overview: overviewRef,
+      engagement: engagementRef,
+      content: contentRef,
+      audience: audienceRef,
+      growth: growthRef,
+      brands: brandsRef,
+    };
+
+    const ref = sectionRefs[sectionName];
+    if (ref && ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Set up scroll spy functionality
+  useEffect(() => {
+    // Create intersection observer to watch sections
+    const observerOptions = {
+      root: null, // viewport
+      rootMargin: "-100px 0px -300px 0px", // adjust margins to control when sections are considered "visible"
+      threshold: 0.1, // percentage of visibility needed
+    };
+
+    const handleIntersection = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          // Get section ID from the observed element's data attribute
+          const sectionId = entry.target.dataset.section;
+
+          // Find the tab in the left navigation and activate it
+          const tabElement = document.querySelector(
+            `.vertical-tab[data-section="${sectionId}"]`
+          );
+          if (tabElement) {
+            // Remove active class from all tabs
+            document.querySelectorAll(".vertical-tab").forEach((tab) => {
+              tab.classList.remove("active");
+            });
+
+            // Add active class to the corresponding tab
+            tabElement.classList.add("active");
+          }
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      handleIntersection,
+      observerOptions
+    );
+
+    // Observe all section elements
+    const sections = document.querySelectorAll("[data-section]");
+    sections.forEach((section) => {
+      observer.observe(section);
+    });
+
+    // Set up click handlers for the left navigation tabs
+    const setupTabClickHandlers = () => {
+      const tabs = document.querySelectorAll(".vertical-tab");
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const sectionId = tab.dataset.section;
+          if (sectionId) {
+            scrollToSection(sectionId);
+          }
+        });
+      });
+    };
+
+    // Setup tab click handlers after a short delay to ensure DOM is ready
+    setTimeout(setupTabClickHandlers, 500);
+
+    // Cleanup observer on component unmount
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
     <div className="profile-overview">
-      {/* Overview Section */}
-      <div className="announcement-banner">
-        <span className="new-badge">NEW</span>
-        <p>Introducing Audience Credibility</p>
-        <button className="learn-more-btn">Learn More</button>
-      </div>
+      {/* Overview Section with ref and data-section attribute */}
+      <div ref={overviewRef} data-section="overview">
+        <div className="announcement-banner">
+          <span className="new-badge">NEW</span>
+          <p>Introducing Audience Credibility</p>
+          <button className="learn-more-btn">Learn More</button>
+        </div>
 
-      <div className="metrics-section">
-        <div className="metric-row">
-          <div className="metric-card">
-            <div className="metric-label">FOLLOWERS</div>
-            <div className="metric-value">{profileData.followers}</div>
-          </div>
-          <div className="metric-card">
-            <div className="metric-label">
-              ENGAGEMENT RATE <span className="info-icon">i</span>
+        <div className="metrics-section">
+          <div className="metric-row">
+            <div className="metric-card">
+              <div className="metric-label">FOLLOWERS</div>
+              <div className="metric-value">{profileData.followers}</div>
             </div>
-            <div className="metric-value">
-              {profileData.engagementRate}{" "}
-              <span className="badge">Average</span>
+            <div className="metric-card">
+              <div className="metric-label">
+                ENGAGEMENT RATE <span className="info-icon">i</span>
+              </div>
+              <div className="metric-value">
+                {profileData.engagementRate}{" "}
+                <span className="badge">Average</span>
+              </div>
+            </div>
+            <div className="metric-card">
+              <div className="metric-label">ESTIMATED REACH</div>
+              <div className="metric-value">{profileData.estimatedReach}</div>
             </div>
           </div>
-          <div className="metric-card">
-            <div className="metric-label">ESTIMATED REACH</div>
-            <div className="metric-value">{profileData.estimatedReach}</div>
+        </div>
+
+        <div className="influence-section">
+          <div className="influence-header">
+            <h3>
+              INFLUENCE SCORE <span className="info-icon">i</span>
+            </h3>
+          </div>
+          <div className="score-container">
+            <div className="score-gauge" style={scoreGaugeStyle}>
+              <div className="score-value">{profileData.influenceScore}</div>
+            </div>
+            <div className="score-scale">
+              <div>1</div>
+              <div>10</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="insights-container">
+          <h3>INSIGHTS FOR YOU</h3>
+          <div className="insights-list">
+            <div className="insight-item positive">
+              <div className="insight-icon">+</div>
+              <div className="insight-text">
+                <div className="insight-title">
+                  Moderately engaging audience
+                </div>
+                <div className="insight-description">
+                  1.33% of the followers of this creator engages with their
+                  content.
+                </div>
+              </div>
+            </div>
+            <div className="insight-item positive">
+              <div className="insight-icon">+</div>
+              <div className="insight-text">
+                <div className="insight-title">High reel viewership</div>
+                <div className="insight-description">
+                  This Creator generates 33.75 views per 100 followers.
+                </div>
+              </div>
+            </div>
+            <div className="insight-item positive">
+              <div className="insight-icon">+</div>
+              <div className="insight-text">
+                <div className="insight-title">
+                  High ability to drive comments
+                </div>
+                <div className="insight-description">
+                  This creator drives 0.61 comments per 100 likes.
+                </div>
+              </div>
+            </div>
+            <div className="insight-item negative">
+              <div className="insight-icon">-</div>
+              <div className="insight-text">
+                <div className="insight-title">Posts content aggressively</div>
+                <div className="insight-description">
+                  This creator posts more than 68 times in last 30 days.
+                </div>
+              </div>
+            </div>
+            <div className="insight-item neutral">
+              <div className="insight-icon">!</div>
+              <div className="insight-text">
+                <div className="insight-title">
+                  Moderate Indian follower base
+                </div>
+                <div className="insight-description">
+                  This creator has about 56.99% follower base from India.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="influence-section">
-        <div className="influence-header">
-          <h3>
-            INFLUENCE SCORE <span className="info-icon">i</span>
-          </h3>
-        </div>
-        <div className="score-container">
-          <div className="score-gauge" style={scoreGaugeStyle}>
-            <div className="score-value">{profileData.influenceScore}</div>
-          </div>
-          <div className="score-scale">
-            <div>1</div>
-            <div>10</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="insights-container">
-        <h3>INSIGHTS FOR YOU</h3>
-        <div className="insights-list">
-          <div className="insight-item positive">
-            <div className="insight-icon">+</div>
-            <div className="insight-text">
-              <div className="insight-title">Moderately engaging audience</div>
-              <div className="insight-description">
-                1.33% of the followers of this creator engages with their
-                content.
-              </div>
-            </div>
-          </div>
-          <div className="insight-item positive">
-            <div className="insight-icon">+</div>
-            <div className="insight-text">
-              <div className="insight-title">High reel viewership</div>
-              <div className="insight-description">
-                This Creator generates 33.75 views per 100 followers.
-              </div>
-            </div>
-          </div>
-          <div className="insight-item positive">
-            <div className="insight-icon">+</div>
-            <div className="insight-text">
-              <div className="insight-title">
-                High ability to drive comments
-              </div>
-              <div className="insight-description">
-                This creator drives 0.61 comments per 100 likes.
-              </div>
-            </div>
-          </div>
-          <div className="insight-item negative">
-            <div className="insight-icon">-</div>
-            <div className="insight-text">
-              <div className="insight-title">Posts content aggressively</div>
-              <div className="insight-description">
-                This creator posts more than 68 times in last 30 days.
-              </div>
-            </div>
-          </div>
-          <div className="insight-item neutral">
-            <div className="insight-icon">!</div>
-            <div className="insight-text">
-              <div className="insight-title">Moderate Indian follower base</div>
-              <div className="insight-description">
-                This creator has about 56.99% follower base from India.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Engagement Section */}
+      {/* Engagement Section with ref and data-section attribute */}
       <div className="section-divider"></div>
-      <div className="engagement-content">
+      <div
+        ref={engagementRef}
+        data-section="engagement"
+        className="engagement-content"
+      >
         <div className="engagement-header">
           <div className="engagement-icon">
             <RiHeartLine />
@@ -386,17 +495,170 @@ const ProfileOverview = ({ profileData }) => {
         </div>
       </div>
 
-      {/* Content Section */}
+      {/* Content Section with ref and data-section attribute */}
       <div className="section-divider"></div>
-      <div className="content-section-full">
-        <h2>CONTENT</h2>
-        <p>Content analysis and statistics will be displayed here.</p>
-        <div className="placeholder-chart"></div>
+      <div
+        ref={contentRef}
+        data-section="content"
+        className="content-section-wrapper"
+      >
+        <h2 className="section-title">
+          <span className="icon">
+            <RiFileList3Line />
+          </span>
+          CONTENT
+        </h2>
+
+        <div className="content-header">
+          <div className="content-title">CONTENT</div>
+          <div className="content-view-all">View All</div>
+          <div className="content-tabs">
+            <button className="content-tab active">Top Posts</button>
+            <button className="content-tab">Recent Posts</button>
+            <button className="content-tab">Brand Posts</button>
+          </div>
+        </div>
+
+        <div className="content-posts-container">
+          <div className="posts-wrapper">
+            <div className="post-card">
+              <div className="post-image">
+                <img
+                  src="https://via.placeholder.com/350x536?text=Indian+Flag"
+                  alt="Post content"
+                />
+                <div className="post-overlay">
+                  <span className="post-type">
+                    <AiOutlineInstagram />
+                  </span>
+                </div>
+              </div>
+              <div className="post-metrics">
+                <div className="metric">
+                  <span className="icon">
+                    <AiOutlineEye />
+                  </span>
+                  <span className="count">2.3m</span>
+                </div>
+                <div className="metric">
+                  <span className="icon">
+                    <AiOutlineHeart />
+                  </span>
+                  <span className="count">1.4k</span>
+                </div>
+                <div className="post-date">15 Aug 24</div>
+              </div>
+            </div>
+
+            <div className="post-card">
+              <div className="post-image">
+                <img
+                  src="https://via.placeholder.com/350x536?text=Flag+Post"
+                  alt="Post content"
+                />
+                <div className="post-overlay">
+                  <span className="post-type">
+                    <AiOutlineInstagram />
+                  </span>
+                </div>
+              </div>
+              <div className="post-metrics">
+                <div className="metric">
+                  <span className="icon">
+                    <AiOutlineEye />
+                  </span>
+                  <span className="count">1.8m</span>
+                </div>
+                <div className="metric">
+                  <span className="icon">
+                    <AiOutlineHeart />
+                  </span>
+                  <span className="count">1.2k</span>
+                </div>
+                <div className="post-date">26 Jan 24</div>
+              </div>
+            </div>
+
+            <div className="post-card">
+              <div className="post-image">
+                <img
+                  src="https://via.placeholder.com/350x536?text=TV+Appearance"
+                  alt="Post content"
+                />
+                <div className="post-overlay">
+                  <span className="post-type">
+                    <AiOutlineInstagram />
+                  </span>
+                </div>
+              </div>
+              <div className="post-metrics">
+                <div className="metric">
+                  <span className="icon">
+                    <AiOutlineEye />
+                  </span>
+                  <span className="count">13.4m</span>
+                </div>
+                <div className="metric">
+                  <span className="icon">
+                    <AiOutlineHeart />
+                  </span>
+                  <span className="count">1.7m</span>
+                </div>
+                <div className="metric">
+                  <span className="icon">
+                    <AiOutlineComment />
+                  </span>
+                  <span className="count">113</span>
+                </div>
+                <div className="post-date">30 Jan 23</div>
+              </div>
+            </div>
+
+            <div className="post-card">
+              <div className="post-image">
+                <img
+                  src="https://via.placeholder.com/350x536?text=Group+Photo"
+                  alt="Post content"
+                />
+                <div className="post-overlay">
+                  <span className="post-type">
+                    <AiOutlineInstagram />
+                  </span>
+                </div>
+              </div>
+              <div className="post-metrics">
+                <div className="metric">
+                  <span className="icon">
+                    <AiOutlineEye />
+                  </span>
+                  <span className="count">1.7m</span>
+                </div>
+                <div className="metric">
+                  <span className="icon">
+                    <AiOutlineHeart />
+                  </span>
+                  <span className="count">2.3k</span>
+                </div>
+                <div className="post-date">04 Jun 24</div>
+              </div>
+            </div>
+          </div>
+
+          <button className="swipe-button right">
+            <span className="arrow-icon">
+              <IoIosArrowForward />
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* Audience Section */}
+      {/* Audience Section with ref and data-section attribute */}
       <div className="section-divider"></div>
-      <div className="audience-section">
+      <div
+        ref={audienceRef}
+        data-section="audience"
+        className="audience-section"
+      >
         <h2>AUDIENCE</h2>
 
         {/* Top Cities, States, Countries, Gender, Age Group */}
@@ -796,9 +1058,9 @@ const ProfileOverview = ({ profileData }) => {
         </div>
       </div>
 
-      {/* Growth Section */}
+      {/* Growth Section with ref and data-section attribute */}
       <div className="section-divider"></div>
-      <div className="growth-section">
+      <div ref={growthRef} data-section="growth" className="growth-section">
         <h2 className="section-title">
           <span className="icon">
             <VscGraph />
@@ -917,65 +1179,77 @@ const ProfileOverview = ({ profileData }) => {
         </div>
       </div>
 
-      {/* Brands Section */}
+      {/* Brands Section with ref and data-section attribute */}
       <div className="section-divider"></div>
-      <div className="brands-section">
-        <h2>BRANDS</h2>
-        <p>Brand collaborations and partnerships will be displayed here.</p>
-        <div className="brand-collaborations">
-          <div className="brand-card">Brand 1</div>
-          <div className="brand-card">Brand 2</div>
-          <div className="brand-card">Brand 3</div>
-        </div>
-      </div>
+      <div ref={brandsRef} data-section="brands" className="brands-section">
+        <h2 className="section-title">
+          <span className="icon">
+            <RiShoppingBag3Line />
+          </span>
+          BRANDS
+        </h2>
 
-      {/* Download PDF & Instagram Profile Links */}
-      <div className="section-divider"></div>
-      <div className="action-links">
-        <div className="action-link">
-          <button className="download-pdf-button">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 16L12 8"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M9 13L12 16L15 13"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M20 16V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V16"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Download PDF
-          </button>
-        </div>
-        <div className="action-link">
-          <a
-            href={`https://instagram.com/${profileData.username}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="instagram-link"
-          >
-            <FaInstagram size={16} />
-            Go To Instagram Profile
-          </a>
+        <div className="brand-mentions">
+          <div className="mentions-title">
+            BRAND MENTIONS <BsInfoCircle />
+          </div>
+
+          <div className="brand-filter-tabs">
+            <button className="brand-filter active">All</button>
+            <button className="brand-filter">Beverages</button>
+            <button className="brand-filter">Entertainment</button>
+            <button className="brand-filter">Sports</button>
+          </div>
+
+          <div className="brand-cards-container">
+            <div className="brand-card">
+              <div className="brand-logo">
+                <img
+                  src="https://via.placeholder.com/80x80?text=N"
+                  alt="Netflix"
+                />
+              </div>
+              <div className="brand-name">netflix_in</div>
+              <div className="brand-handle">@netflix_in</div>
+              <div className="brand-post-count">6 posts</div>
+            </div>
+
+            <div className="brand-card">
+              <div className="brand-logo">
+                <img
+                  src="https://via.placeholder.com/80x80?text=ISL"
+                  alt="Indian Super League"
+                />
+              </div>
+              <div className="brand-name">indiansuperleague</div>
+              <div className="brand-handle">@indiansuperleague</div>
+              <div className="brand-post-count">3 posts</div>
+            </div>
+
+            <div className="brand-card">
+              <div className="brand-logo">
+                <img
+                  src="https://via.placeholder.com/80x80?text=IIFA"
+                  alt="IIFA"
+                />
+              </div>
+              <div className="brand-name">iifa</div>
+              <div className="brand-handle">@iifa</div>
+              <div className="brand-post-count">3 posts</div>
+            </div>
+
+            <div className="brand-card">
+              <div className="brand-logo">
+                <img
+                  src="https://via.placeholder.com/80x80?text=RS"
+                  alt="Roar With Simba"
+                />
+              </div>
+              <div className="brand-name">roarwithsimba</div>
+              <div className="brand-handle">@roarwithsimba</div>
+              <div className="brand-post-count">1 post</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

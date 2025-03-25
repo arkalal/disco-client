@@ -500,89 +500,198 @@
     }
 
     .content-section {
-      margin-top: 30px;
+      margin-top: 40px;
+      padding: 0 0 30px;
 
-      .section-header {
+      .section-title {
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: #475569;
         margin-bottom: 20px;
 
-        h3 {
-          font-size: 13px;
-          font-weight: 600;
-          color: #6b7280;
-          text-transform: uppercase;
+        .icon {
+          margin-right: 8px;
+          display: flex;
+          align-items: center;
+          font-size: 18px;
         }
       }
 
-      .content-categories {
-        h4 {
-          font-size: 13px;
-          color: #6b7280;
-          margin-bottom: 16px;
+      .content-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+
+        .content-title {
+          font-size: 14px;
+          font-weight: 500;
+          color: #64748b;
         }
 
-        .category-bar {
-          height: 8px;
-          background-color: #f3f4f6;
-          border-radius: 4px;
-          overflow: hidden;
-          margin-bottom: 24px;
-
-          .category-bar-fill {
-            height: 100%;
-            border-radius: 4px;
-          }
+        .content-view-all {
+          color: #4338ca;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          margin-left: auto;
+          margin-right: 20px;
         }
 
-        .categories-list {
+        .content-tabs {
           display: flex;
-          flex-direction: column;
           gap: 16px;
 
-          .category-item {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+          .content-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            background-color: #f1f5f9;
+            color: #64748b;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
 
-            .category-icon {
-              width: 36px;
-              height: 36px;
-              background-color: #f3f4f6;
-              border-radius: 4px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 20px;
+            &.active {
+              background-color: #e2e8f0;
+              color: #334155;
+              font-weight: 500;
             }
 
-            .category-details {
-              flex: 1;
+            &:hover:not(.active) {
+              background-color: #e2e8f0;
+            }
+          }
+        }
+      }
 
-              .category-name {
-                font-size: 14px;
-                font-weight: 500;
-                color: #1f2937;
-                margin-bottom: 4px;
+      .content-posts-container {
+        position: relative;
+        margin-top: 24px;
+
+        .posts-wrapper {
+          display: flex;
+          gap: 16px;
+          overflow-x: hidden;
+
+          .post-card {
+            flex: 0 0 auto;
+            width: calc(25% - 12px);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+
+            &:hover {
+              transform: translateY(-4px);
+              box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .post-image {
+              position: relative;
+              width: 100%;
+              padding-top: 155%; // Adjust aspect ratio to match Instagram posts
+              overflow: hidden;
+
+              img {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
               }
 
-              .category-bar {
-                height: 6px;
-                background-color: #f3f4f6;
-                border-radius: 3px;
-                overflow: hidden;
-                margin-bottom: 4px;
+              .post-overlay {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                z-index: 1;
 
-                .category-bar-fill {
-                  height: 100%;
-                  border-radius: 3px;
+                .post-type {
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 32px;
+                  height: 32px;
+                  background-color: rgba(0, 0, 0, 0.6);
+                  border-radius: 50%;
+                  color: white;
+                  font-size: 18px;
+                }
+              }
+            }
+
+            .post-metrics {
+              display: flex;
+              align-items: center;
+              padding: 10px 12px;
+              background-color: #fff;
+
+              .metric {
+                display: flex;
+                align-items: center;
+                margin-right: 12px;
+
+                .icon {
+                  font-size: 15px;
+                  color: #64748b;
+                  margin-right: 4px;
+                }
+
+                .count {
+                  font-size: 13px;
+                  color: #334155;
+                  font-weight: 500;
                 }
               }
 
-              .category-percentage {
-                font-size: 13px;
-                color: #6b7280;
-                text-align: right;
+              .post-date {
+                margin-left: auto;
+                font-size: 12px;
+                color: #94a3b8;
+                font-weight: 400;
               }
             }
+          }
+        }
+
+        .swipe-button {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 40px;
+          height: 40px;
+          background-color: white;
+          border-radius: 50%;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 2;
+          transition: background-color 0.2s, transform 0.2s;
+
+          &:hover {
+            background-color: #f8fafc;
+            transform: translateY(-50%) scale(1.05);
+          }
+
+          &.right {
+            right: -20px;
+          }
+
+          &.left {
+            left: -20px;
+          }
+
+          .arrow-icon {
+            color: #334155;
+            font-size: 20px;
           }
         }
       }
@@ -1538,6 +1647,389 @@
             color: #64748b;
           }
         }
+      }
+    }
+  }
+}
+
+.brands-section {
+  margin-top: 40px;
+  padding: 0 0 30px;
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 20px;
+
+    .icon {
+      margin-right: 8px;
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+    }
+  }
+
+  .brand-mentions {
+    .mentions-title {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: #64748b;
+      margin-bottom: 20px;
+
+      svg {
+        margin-left: 8px;
+        font-size: 14px;
+        color: #94a3b8;
+      }
+    }
+
+    .brand-filter-tabs {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 30px;
+
+      .brand-filter {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        background-color: #f1f5f9;
+        color: #64748b;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &.active {
+          background-color: #e2e8f0;
+          color: #334155;
+          font-weight: 500;
+        }
+
+        &:hover:not(.active) {
+          background-color: #e2e8f0;
+        }
+      }
+    }
+
+    .brand-cards-container {
+      display: flex;
+      gap: 24px;
+
+      .brand-card {
+        flex: 1;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .brand-logo {
+          width: 64px;
+          height: 64px;
+          margin-bottom: 16px;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+          }
+        }
+
+        .brand-name {
+          font-size: 15px;
+          font-weight: 600;
+          color: #334155;
+          margin-bottom: 6px;
+        }
+
+        .brand-handle {
+          font-size: 13px;
+          color: #64748b;
+          margin-bottom: 14px;
+        }
+
+        .brand-post-count {
+          font-size: 12px;
+          color: #64748b;
+          padding: 4px 12px;
+          background-color: #f8fafc;
+          border-radius: 16px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .content-posts-container {
+    .posts-wrapper {
+      .post-card {
+        width: calc(33.33% - 12px);
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .brand-cards-container {
+    flex-wrap: wrap;
+
+    .brand-card {
+      flex: 0 0 calc(50% - 12px);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .content-view-all {
+      margin: 10px 0;
+    }
+
+    .content-tabs {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+  }
+
+  .content-posts-container {
+    .posts-wrapper {
+      .post-card {
+        width: calc(50% - 8px);
+      }
+    }
+  }
+
+  .brand-cards-container {
+    .brand-card {
+      flex: 0 0 100%;
+      margin-bottom: 16px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .content-posts-container {
+    .posts-wrapper {
+      .post-card {
+        width: 100%;
+        margin-bottom: 16px;
+      }
+    }
+  }
+}
+
+/* Content Section Wrapper styles */
+.content-section-wrapper {
+  margin-top: 40px;
+  padding: 0 0 30px;
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 20px;
+
+    .icon {
+      margin-right: 8px;
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+    }
+  }
+
+  .content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    .content-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #64748b;
+    }
+
+    .content-view-all {
+      color: #4338ca;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-left: auto;
+      margin-right: 20px;
+    }
+
+    .content-tabs {
+      display: flex;
+      gap: 16px;
+
+      .content-tab {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        background-color: #f1f5f9;
+        color: #64748b;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &.active {
+          background-color: #e2e8f0;
+          color: #334155;
+          font-weight: 500;
+        }
+
+        &:hover:not(.active) {
+          background-color: #e2e8f0;
+        }
+      }
+    }
+  }
+
+  .content-posts-container {
+    position: relative;
+    margin-top: 24px;
+
+    .posts-wrapper {
+      display: flex;
+      gap: 16px;
+      overflow-x: hidden;
+
+      .post-card {
+        flex: 0 0 auto;
+        width: calc(25% - 12px);
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-image {
+          position: relative;
+          width: 100%;
+          padding-top: 155%; // Adjust aspect ratio to match Instagram posts
+          overflow: hidden;
+
+          img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .post-overlay {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 1;
+
+            .post-type {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 32px;
+              height: 32px;
+              background-color: rgba(0, 0, 0, 0.6);
+              border-radius: 50%;
+              color: white;
+              font-size: 18px;
+            }
+          }
+        }
+
+        .post-metrics {
+          display: flex;
+          align-items: center;
+          padding: 10px 12px;
+          background-color: #fff;
+
+          .metric {
+            display: flex;
+            align-items: center;
+            margin-right: 12px;
+
+            .icon {
+              font-size: 15px;
+              color: #64748b;
+              margin-right: 4px;
+            }
+
+            .count {
+              font-size: 13px;
+              color: #334155;
+              font-weight: 500;
+            }
+          }
+
+          .post-date {
+            margin-left: auto;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 400;
+          }
+        }
+      }
+    }
+
+    .swipe-button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      background-color: white;
+      border-radius: 50%;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
+      transition: background-color 0.2s, transform 0.2s;
+
+      &:hover {
+        background-color: #f8fafc;
+        transform: translateY(-50%) scale(1.05);
+      }
+
+      &.right {
+        right: -20px;
+      }
+
+      &.left {
+        left: -20px;
+      }
+
+      .arrow-icon {
+        color: #334155;
+        font-size: 20px;
       }
     }
   }

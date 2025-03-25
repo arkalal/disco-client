@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { getNextAuthURL } from "../utils/auth-url";
 
 export async function middleware(request) {
   const token = await getToken({
@@ -8,6 +9,7 @@ export async function middleware(request) {
   });
 
   const { pathname } = request.nextUrl;
+  const baseUrl = getNextAuthURL();
 
   // Define public paths that don't require authentication
   const publicPaths = ["/login"];
@@ -15,20 +17,14 @@ export async function middleware(request) {
 
   // If user is not authenticated and trying to access a protected route
   if (!token && !isPublicPath) {
-    // Create a new URL based on the current request URL to ensure proper domain handling
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
-    // Use status 303 for proper redirects
-    return NextResponse.redirect(loginUrl, { status: 303 });
+    const url = new URL("/login", baseUrl);
+    return NextResponse.redirect(url);
   }
 
   // If user is authenticated and trying to access login page
   if (token && isPublicPath) {
-    // Create a new URL based on the current request URL to ensure proper domain handling
-    const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = "/home";
-    // Use status 303 for proper redirects
-    return NextResponse.redirect(homeUrl, { status: 303 });
+    const url = new URL("/home", baseUrl);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

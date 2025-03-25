@@ -3,6 +3,10 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "../utils/dbConnect";
 import User from "../models/User";
 import bcrypt from "bcryptjs";
+import { getNextAuthURL } from "../utils/auth-url";
+
+// This ensures NextAuth has the correct URL in all environments
+const nextAuthUrl = getNextAuthURL();
 
 export const {
   handlers: { GET, POST },
@@ -82,4 +86,8 @@ export const {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   debug: process.env.NODE_ENV === "development",
+  // Explicitly set the URL and trust host to handle Vercel deployments correctly
+  trustHost: true,
+  // Only set this if process.env.NEXTAUTH_URL is not available
+  ...(process.env.NEXTAUTH_URL ? {} : { url: nextAuthUrl }),
 });

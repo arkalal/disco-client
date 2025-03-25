@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { toast, Toaster } from "react-hot-toast";
 import styles from "./LoginUI.module.scss";
 import FeatureShowcase from "./FeatureShowcase";
+import { getCallbackURL } from "../../utils/auth-url";
 
 const LoginUI = () => {
   const router = useRouter();
@@ -92,6 +93,7 @@ const LoginUI = () => {
         email,
         password,
         redirect: false,
+        callbackUrl: getCallbackURL("/home"),
       });
 
       if (result?.error) {
@@ -100,9 +102,13 @@ const LoginUI = () => {
 
       toast.success("Logged in successfully!");
 
-      // Use window.location for more reliable redirect in production
-      // This bypasses client-side routing which can sometimes cause issues in deployment
-      window.location.href = "/home";
+      // Use the result.url if available, otherwise fall back to /home
+      if (result.url) {
+        // Handle external redirect correctly
+        window.location.href = result.url;
+      } else {
+        router.push("/home");
+      }
     } catch (error) {
       toast.error(error.message || "Login failed");
       console.error("Login error:", error);

@@ -1,29 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { toast, Toaster } from "react-hot-toast";
 import styles from "./LoginUI.module.scss";
 import FeatureShowcase from "./FeatureShowcase";
 
 const LoginUI = () => {
   const router = useRouter();
-  const { data: session, status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegisterForm, setIsRegisterForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [redirecting, setRedirecting] = useState(false);
-
-  // Check if user is already authenticated and redirect if needed
-  useEffect(() => {
-    if (session) {
-      router.push("/home");
-    }
-  }, [session, router]);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -108,23 +99,11 @@ const LoginUI = () => {
       }
 
       toast.success("Logged in successfully!");
-
-      // Set redirecting state to prevent multiple redirects
-      setRedirecting(true);
-
-      // Forcibly refresh the router cache before redirecting
-      router.refresh();
-
-      // Use the auth-redirect page as a bridge for more reliable redirection
-      setTimeout(() => {
-        // This auth-redirect page will handle the redirection logic
-        window.location.href = "/auth-redirect";
-      }, 500);
+      router.push("/home");
     } catch (error) {
       toast.error(error.message || "Login failed");
       console.error("Login error:", error);
       setLoading(false);
-      setRedirecting(false);
     }
   };
 
@@ -141,33 +120,6 @@ const LoginUI = () => {
     setPassword("");
     setErrors({});
   };
-
-  // If already redirecting, show loading indicator
-  if (redirecting) {
-    return (
-      <div className={styles.loginContainer}>
-        <div className={styles.loginFormWrapper}>
-          <div className={styles.loginFormContainer}>
-            <div className={styles.loginForm}>
-              <div className={styles.logoContainer}>
-                <div className={styles.logoText}>disco</div>
-                <p className={styles.tagline}>
-                  Data driven influencer marketing
-                </p>
-              </div>
-              <h2 className={styles.formTitle}>Redirecting to dashboard...</h2>
-              <div className={styles.loadingIndicator}>
-                Please wait while we redirect you
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.featureShowcaseContainer}>
-          <FeatureShowcase />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.loginContainer}>

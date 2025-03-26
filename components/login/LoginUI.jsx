@@ -6,7 +6,6 @@ import { signIn } from "next-auth/react";
 import { toast, Toaster } from "react-hot-toast";
 import styles from "./LoginUI.module.scss";
 import FeatureShowcase from "./FeatureShowcase";
-import { getCallbackURL } from "../../utils/auth-url";
 
 const LoginUI = () => {
   const router = useRouter();
@@ -74,10 +73,13 @@ const LoginUI = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrors({});
 
     if (!showPassword) {
-      // Validate email only in the first step
+      if (!email.trim()) {
+        setErrors({ email: "Email is required" });
+        setLoading(false);
+        return;
+      }
       if (!validateEmail(email)) {
         setErrors({ email: "Please enter a valid email address" });
         setLoading(false);
@@ -93,7 +95,7 @@ const LoginUI = () => {
         email,
         password,
         redirect: false,
-        callbackUrl: getCallbackURL("/home"),
+        callbackUrl: "/home",
       });
 
       if (result?.error) {
@@ -102,13 +104,10 @@ const LoginUI = () => {
 
       toast.success("Logged in successfully!");
 
-      // Use the result.url if available, otherwise fall back to /home
-      if (result.url) {
-        // Handle external redirect correctly
-        window.location.href = result.url;
-      } else {
-        router.push("/home");
-      }
+      // Add a small delay to ensure proper redirect handling
+      setTimeout(() => {
+        window.location.href = result?.url || "/home";
+      }, 500);
     } catch (error) {
       toast.error(error.message || "Login failed");
       console.error("Login error:", error);

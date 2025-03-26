@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { getNextAuthURL } from "../utils/auth-url";
 
 export async function middleware(request) {
   const token = await getToken({
@@ -9,7 +8,7 @@ export async function middleware(request) {
   });
 
   const { pathname } = request.nextUrl;
-  const baseUrl = getNextAuthURL();
+  const fullUrl = request.nextUrl.clone();
 
   // Define public paths that don't require authentication
   const publicPaths = ["/login"];
@@ -17,14 +16,14 @@ export async function middleware(request) {
 
   // If user is not authenticated and trying to access a protected route
   if (!token && !isPublicPath) {
-    const url = new URL("/login", baseUrl);
-    return NextResponse.redirect(url);
+    fullUrl.pathname = "/login";
+    return NextResponse.redirect(fullUrl);
   }
 
   // If user is authenticated and trying to access login page
   if (token && isPublicPath) {
-    const url = new URL("/home", baseUrl);
-    return NextResponse.redirect(url);
+    fullUrl.pathname = "/home";
+    return NextResponse.redirect(fullUrl);
   }
 
   return NextResponse.next();

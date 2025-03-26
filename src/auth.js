@@ -3,10 +3,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "../utils/dbConnect";
 import User from "../models/User";
 import bcrypt from "bcryptjs";
-import { getNextAuthURL } from "../utils/auth-url";
-
-// This ensures NextAuth has the correct URL in all environments
-const nextAuthUrl = getNextAuthURL();
 
 export const {
   handlers: { GET, POST },
@@ -76,9 +72,21 @@ export const {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Handle redirects with correct base URL for both local and production
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      } else if (new URL(url).origin === baseUrl) {
+        return url;
+      }
+      return baseUrl;
+    },
   },
   pages: {
     signIn: "/login",
+    // Setting explicit pages for other auth flows
+    signOut: "/login",
+    error: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET || "a-very-secure-secret-for-next-auth",
   session: {
@@ -86,8 +94,4 @@ export const {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   debug: process.env.NODE_ENV === "development",
-  // Explicitly set the URL and trust host to handle Vercel deployments correctly
-  trustHost: true,
-  // Only set this if process.env.NEXTAUTH_URL is not available
-  ...(process.env.NEXTAUTH_URL ? {} : { url: nextAuthUrl }),
 });

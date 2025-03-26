@@ -16,12 +16,11 @@ export default function AuthRedirect() {
     // If session exists, redirect to home
     if (status === "authenticated" && session) {
       console.log("User is authenticated, redirecting to /home");
-      // Use direct window location for reliable redirection
-      window.location.href = "/home";
+      router.push("/home");
     } else if (status === "unauthenticated") {
       console.log("User is not authenticated, redirecting to /login");
       // Use direct window location for reliable redirection
-      window.location.href = "/login";
+      router.push("/login");
     }
     // Don't redirect if still loading
   }, [session, status, router]);

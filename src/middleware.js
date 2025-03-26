@@ -8,7 +8,6 @@ export async function middleware(request) {
   });
 
   const { pathname } = request.nextUrl;
-  const fullUrl = request.nextUrl.clone();
 
   // Define public paths that don't require authentication
   const publicPaths = ["/login"];
@@ -16,17 +15,26 @@ export async function middleware(request) {
 
   // If user is not authenticated and trying to access a protected route
   if (!token && !isPublicPath) {
-    fullUrl.pathname = "/login";
-    return NextResponse.redirect(fullUrl);
+    const url = new URL("/login", request.url);
+    const response = NextResponse.redirect(url, { status: 303 });
+    // Disable cache for this response
+    response.headers.set("x-middleware-cache", "no-cache");
+    return response;
   }
 
   // If user is authenticated and trying to access login page
   if (token && isPublicPath) {
-    fullUrl.pathname = "/home";
-    return NextResponse.redirect(fullUrl);
+    const url = new URL("/home", request.url);
+    const response = NextResponse.redirect(url, { status: 303 });
+    // Disable cache for this response
+    response.headers.set("x-middleware-cache", "no-cache");
+    return response;
   }
 
-  return NextResponse.next();
+  // For all other requests, continue but disable cache
+  const response = NextResponse.next();
+  response.headers.set("x-middleware-cache", "no-cache");
+  return response;
 }
 
 export const config = {

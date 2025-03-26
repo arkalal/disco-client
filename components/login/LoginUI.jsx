@@ -20,10 +20,10 @@ const LoginUI = () => {
 
   // Check if user is already authenticated and redirect if needed
   useEffect(() => {
-    if (status === "authenticated" && session) {
+    if (session) {
       router.push("/home");
     }
-  }, [session, status, router]);
+  }, [session, router]);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

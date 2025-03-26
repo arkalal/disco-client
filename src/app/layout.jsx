@@ -1,6 +1,7 @@
 import "./globals.scss";
 import { Toaster } from "react-hot-toast";
 import SessionProvider from "../../components/SessionProvider";
+import AuthCheck from "../../components/auth/AuthCheck";
 
 export const metadata = {
   title: "Disco - Influencer Marketing Platform",
@@ -14,7 +15,7 @@ export default function RootLayout({ children }) {
       <body>
         <SessionProvider>
           <Toaster position="top-center" />
-          {children}
+          <AuthCheck>{children}</AuthCheck>
         </SessionProvider>
       </body>
     </html>

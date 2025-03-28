@@ -182,3 +182,23 @@
     cursor: not-allowed;
   }
 }
+
+.legalLinks {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.legalLink {
+  font-size: 12px;
+  color: #6c7280;
+  text-decoration: none;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #1a1d23;
+    text-decoration: underline;
+  }
+}

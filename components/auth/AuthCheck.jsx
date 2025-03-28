@@ -5,7 +5,13 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 // Public paths that don't require authentication
-const publicPaths = ["/login", "/register"];
+const publicPaths = [
+  "/login",
+  "/register",
+  "/privacy-policy",
+  "/terms/brands",
+  "/terms/influencers",
+];
 
 export default function AuthCheck({ children }) {
   const { data: session, status } = useSession();
@@ -22,8 +28,13 @@ export default function AuthCheck({ children }) {
       router.push("/login");
     }
 
-    // If the user is authenticated and on a public path, redirect to home
-    if (session && isPublicPath) {
+    // If the user is authenticated and on a public path like login/register, redirect to home
+    // But allow authenticated users to view privacy policy and terms pages
+    if (
+      session &&
+      isPublicPath &&
+      (pathname === "/login" || pathname === "/register")
+    ) {
       router.push("/home");
     }
   }, [session, status, isPublicPath, router, pathname]);

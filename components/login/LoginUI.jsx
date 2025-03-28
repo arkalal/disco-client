@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast, Toaster } from "react-hot-toast";
+import Link from "next/link";
 import styles from "./LoginUI.module.scss";
 import FeatureShowcase from "./FeatureShowcase";
 
@@ -222,6 +223,18 @@ const LoginUI = () => {
                 )}
               </div>
             </form>
+
+            <div className={styles.legalLinks}>
+              <Link href="/privacy-policy" className={styles.legalLink}>
+                Privacy Policy
+              </Link>
+              <Link href="/terms/brands" className={styles.legalLink}>
+                Terms for Brands
+              </Link>
+              <Link href="/terms/influencers" className={styles.legalLink}>
+                Terms for Influencers
+              </Link>
+            </div>
           </div>
         </div>
       </div>

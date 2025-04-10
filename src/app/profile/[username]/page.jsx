@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { use } from "react";
 import Link from "next/link";
 // Icons
@@ -39,30 +39,39 @@ import ProfileOverview from "../../../../components/profile/ProfileOverview";
 // Styles
 import "../profile-styles.scss";
 
-const profileData = {
-  username: "srkkingk555",
-  name: "Shah Rukh Khan",
-  bio: "This fan page is dedicated to the Actor SRK. Upcoming movie : King, PATHAAN 2 Upcoming web series : The Ba***ds of Boll...",
-  location: "India",
-  website: "www.redchillies.com",
-  category: ["Arts & Entertainment", "Movies"],
-  influenceScore: 7.88,
-  followers: "1.2m",
-  engagementRate: "1.33%",
-  estimatedReach: "174.7k",
-  insights: {
-    positive: "High engagement on promotional content",
-    negative: "Decreased activity in the last month",
-    neutral: "Most active between 6-9 PM IST",
-  },
-};
-
 export default function Profile({ params }) {
   // Unwrap params with React.use()
   const unwrappedParams = use(params);
   const username = unwrappedParams?.username || "srkkingk555";
   const [activeTab, setActiveTab] = useState("profile-summary");
   const [profileSection, setProfileSection] = useState("platforms");
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch profile data
+  useEffect(() => {
+    async function fetchProfileData() {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/instagram/${username}`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile data");
+        }
+
+        const data = await response.json();
+        setProfileData(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error loading profile:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    }
+
+    fetchProfileData();
+  }, [username]);
 
   // Handle tab change
   const handleTabChange = (tab) => {
@@ -100,6 +109,33 @@ export default function Profile({ params }) {
       sectionElement.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <p>Loading profile data...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="error-container">
+        <p>Error loading profile: {error}</p>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!profileData) {
+    return (
+      <div className="error-container">
+        <p>No profile data found for @{username}</p>
+      </div>
+    );
+  }
 
   // Profile Tab Navigation section
   const renderTabNavigation = () => {
@@ -141,6 +177,33 @@ export default function Profile({ params }) {
               <RiShoppingBag3Line />
             </span>
             <span>Brands</span>
+          </div>
+
+          {/* Action buttons, not navigation tabs */}
+          <div className="action-buttons">
+            <button
+              className="action-button"
+              onClick={() => window.open("#", "_blank")}
+            >
+              <span className="button-icon">
+                <RiDownload2Line />
+              </span>
+              <span>Download PDF</span>
+            </button>
+            <button
+              className="action-button"
+              onClick={() =>
+                window.open(
+                  "https://instagram.com/" + profileData.username,
+                  "_blank"
+                )
+              }
+            >
+              <span className="button-icon">
+                <TbExternalLink />
+              </span>
+              <span>Go To Instagram Profile</span>
+            </button>
           </div>
         </>
       );
@@ -276,12 +339,12 @@ export default function Profile({ params }) {
                 <div className="metric-item">Estimated Reach</div>
                 <div className="metric-item">Engagement Rate</div>
 
-                <div className="metric-value">1.2m</div>
-                <div className="metric-value">17.7k</div>
-                <div className="metric-value">104</div>
+                <div className="metric-value">{profileData.followers}</div>
+                <div className="metric-value">{profileData.avgLikes}</div>
+                <div className="metric-value">{profileData.avgComments}</div>
                 <div className="metric-value">397.2k</div>
-                <div className="metric-value">184.1k</div>
-                <div className="metric-value">1.51%</div>
+                <div className="metric-value">{profileData.estimatedReach}</div>
+                <div className="metric-value">{profileData.engagementRate}</div>
               </div>
             </div>
           </div>
@@ -309,75 +372,40 @@ export default function Profile({ params }) {
             </div>
 
             <div className="categories-list">
-              <div className="category-item">
-                <div className="category-icon">🎭</div>
-                <div className="category-details">
-                  <div className="category-name">Arts & Entertainment</div>
-                  <div className="category-bar">
-                    <div
-                      className="category-bar-fill"
-                      style={{
-                        width: "95.92%",
-                        backgroundColor: "#4338ca",
-                      }}
-                    ></div>
+              {profileData.categories &&
+                profileData.categories.map((category, index) => (
+                  <div className="category-item" key={index}>
+                    <div className="category-icon">
+                      {index === 0
+                        ? "🎭"
+                        : index === 1
+                        ? "🎬"
+                        : index === 2
+                        ? "🏋️"
+                        : "⚽"}
+                    </div>
+                    <div className="category-details">
+                      <div className="category-name">{category}</div>
+                      <div className="category-bar">
+                        <div
+                          className="category-bar-fill"
+                          style={{
+                            width: `${95 - index * 30}%`,
+                            backgroundColor:
+                              index < 2
+                                ? "#4338ca"
+                                : index === 2
+                                ? "#38bdf8"
+                                : "#fb7185",
+                          }}
+                        ></div>
+                      </div>
+                      <div className="category-percentage">
+                        {95 - index * 30}%
+                      </div>
+                    </div>
                   </div>
-                  <div className="category-percentage">95.92%</div>
-                </div>
-              </div>
-
-              <div className="category-item">
-                <div className="category-icon">🎬</div>
-                <div className="category-details">
-                  <div className="category-name">
-                    Movies - Arts & Entertainment
-                  </div>
-                  <div className="category-bar">
-                    <div
-                      className="category-bar-fill"
-                      style={{
-                        width: "93.88%",
-                        backgroundColor: "#4338ca",
-                      }}
-                    ></div>
-                  </div>
-                  <div className="category-percentage">93.88%</div>
-                </div>
-              </div>
-
-              <div className="category-item">
-                <div className="category-icon">🏋️</div>
-                <div className="category-details">
-                  <div className="category-name">Health & Fitness</div>
-                  <div className="category-bar">
-                    <div
-                      className="category-bar-fill"
-                      style={{
-                        width: "2.04%",
-                        backgroundColor: "#38bdf8",
-                      }}
-                    ></div>
-                  </div>
-                  <div className="category-percentage">2.04%</div>
-                </div>
-              </div>
-
-              <div className="category-item">
-                <div className="category-icon">⚽</div>
-                <div className="category-details">
-                  <div className="category-name">Sports</div>
-                  <div className="category-bar">
-                    <div
-                      className="category-bar-fill"
-                      style={{
-                        width: "2.04%",
-                        backgroundColor: "#fb7185",
-                      }}
-                    ></div>
-                  </div>
-                  <div className="category-percentage">2.04%</div>
-                </div>
-              </div>
+                ))}
             </div>
           </div>
         </div>
@@ -404,87 +432,27 @@ export default function Profile({ params }) {
             </div>
 
             <div className="brand-grid">
-              <div className="brand-card">
-                <div className="brand-logo">
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/1920px-Netflix_2015_logo.svg.png"
-                    alt="Netflix"
-                  />
-                </div>
-                <div className="brand-name">netflix_in</div>
-                <div className="brand-handle">@netflix_in</div>
-                <div className="brand-posts">6 posts</div>
-              </div>
-
-              <div className="brand-card">
-                <div className="brand-logo">
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/en/thumb/8/84/Indian_Premier_League_Official_Logo.svg/1200px-Indian_Premier_League_Official_Logo.svg.png"
-                    alt="Indian Super League"
-                  />
-                </div>
-                <div className="brand-name">indiansuperleague</div>
-                <div className="brand-handle">@indiansuperleague</div>
-                <div className="brand-posts">3 posts</div>
-              </div>
-
-              <div className="brand-card">
-                <div className="brand-logo">
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/IIFA_Awards_Logo.svg/1200px-IIFA_Awards_Logo.svg.png"
-                    alt="IIFA"
-                  />
-                </div>
-                <div className="brand-name">iifa</div>
-                <div className="brand-handle">@iifa</div>
-                <div className="brand-posts">3 posts</div>
-              </div>
-
-              <div className="brand-card">
-                <div className="brand-logo">
-                  <img
-                    src="https://www.roarwithsimba.com/images/logo.svg"
-                    alt="Roar with Simba"
-                  />
-                </div>
-                <div className="brand-name">roarwithsimba</div>
-                <div className="brand-handle">@roarwithsimba</div>
-                <div className="brand-posts">1 post</div>
-              </div>
+              {profileData.brandMentions &&
+                profileData.brandMentions.map((brand, index) => (
+                  <div className="brand-card" key={index}>
+                    <div className="brand-logo">
+                      <img src={brand.image} alt={brand.name} />
+                    </div>
+                    <div className="brand-name">{brand.name}</div>
+                    <div className="brand-handle">
+                      @{brand.url.split("/").pop()}
+                    </div>
+                    <div className="brand-posts">
+                      {Math.floor(Math.random() * 5) + 1} posts
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
         </div>
       </div>
     );
   };
-
-  // Set up scroll spy for profile summary sections
-  React.useEffect(() => {
-    if (activeTab === "profile-summary") {
-      const sections = document.querySelectorAll("[data-profile-section]");
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const section = entry.target.getAttribute("data-profile-section");
-              setProfileSection(section);
-            }
-          });
-        },
-        { threshold: 0.5 }
-      );
-
-      sections.forEach((section) => {
-        observer.observe(section);
-      });
-
-      return () => {
-        sections.forEach((section) => {
-          observer.unobserve(section);
-        });
-      };
-    }
-  }, [activeTab]);
 
   return (
     <div className="search-page-container">
@@ -582,7 +550,7 @@ export default function Profile({ params }) {
                 <div className="tab-icon instagram-icon">
                   <FaInstagram />
                 </div>
-                <span>@{username}</span>
+                <span>@{profileData.username}</span>
               </div>
             </div>
           </div>

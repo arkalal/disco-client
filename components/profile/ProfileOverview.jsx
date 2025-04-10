@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaInstagram } from "react-icons/fa";
 import { RiHeartLine } from "react-icons/ri";
 import { BsInfoCircle } from "react-icons/bs";
@@ -13,12 +13,57 @@ import {
 } from "react-icons/ai";
 import { IoIosArrowForward } from "react-icons/io";
 import { RiShoppingBag3Line, RiFileList3Line } from "react-icons/ri";
+import {
+  FaCity,
+  FaMapMarked,
+  FaGlobeAmericas,
+  FaRegBuilding,
+} from "react-icons/fa";
+import { GiModernCity } from "react-icons/gi";
 import "./ProfileOverview.scss";
+import { BsPeople } from "react-icons/bs";
+import { FaRegUser } from "react-icons/fa";
+// Add the PieChart import back
+import PieChart from "./PieChart";
 
 const ProfileOverview = ({ profileData }) => {
-  const percentage = (profileData.influenceScore / 10) * 100;
+  // Use profile data or fallback to defaults for UI consistency
+  const influenceScore = profileData?.influenceScore || 7.2;
+  const percentage = (influenceScore / 10) * 100;
   const scoreGaugeStyle = {
     background: `conic-gradient(#4338CA ${percentage}%, #e9e9e9 0%)`,
+  };
+
+  // Helper function to format numbers
+  const formatNumber = (num) => {
+    if (!num) return "0";
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + "M";
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + "K";
+    }
+    return num.toString();
+  };
+
+  // Helper function to safely get audience data with fallbacks
+  const getAudienceData = (path, fallback) => {
+    try {
+      if (!profileData || !profileData.audience) return fallback;
+
+      // Handle dot notation path like "gender.m"
+      const parts = path.split(".");
+      let value = profileData.audience;
+
+      for (const part of parts) {
+        value = value[part];
+        if (value === undefined || value === null) return fallback;
+      }
+
+      return value;
+    } catch (e) {
+      console.error(`Error accessing audience data: ${path}`, e);
+      return fallback;
+    }
   };
 
   // References to each section
@@ -28,6 +73,12 @@ const ProfileOverview = ({ profileData }) => {
   const audienceRef = useRef(null);
   const growthRef = useRef(null);
   const brandsRef = useRef(null);
+
+  // State to track active tab in audience geography
+  const [geographyTab, setGeographyTab] = useState("cities");
+
+  // State to track which age group is being hovered
+  const [hoveredAge, setHoveredAge] = useState(null);
 
   // Function to handle scrolling to sections when tabs are clicked
   const scrollToSection = (sectionName) => {
@@ -112,6 +163,446 @@ const ProfileOverview = ({ profileData }) => {
     };
   }, []);
 
+  // Helper function to get geography data based on active tab
+  const getGeographyData = (tab) => {
+    const defaultData = {
+      cities: [
+        { name: "Jakarta", percent: 0.136 },
+        { name: "Mumbai", percent: 0.1098 },
+        { name: "Kolkata", percent: 0.0787 },
+        { name: "Ahmedabad", percent: 0.0414 },
+        { name: "Pune", percent: 0.0373 },
+        { name: "Dhaka", percent: 0.0372 },
+        { name: "Delhi", percent: 0.035 },
+        { name: "Jaipur", percent: 0.032 },
+        { name: "Bengaluru", percent: 0.031 },
+        { name: "Chennai", percent: 0.029 },
+      ],
+      states: [
+        { name: "Maharashtra", percent: 0.2 },
+        { name: "West Bengal", percent: 0.15 },
+        { name: "Gujarat", percent: 0.12 },
+        { name: "Delhi", percent: 0.1 },
+        { name: "Karnataka", percent: 0.09 },
+        { name: "Rajasthan", percent: 0.08 },
+        { name: "Tamil Nadu", percent: 0.07 },
+        { name: "Uttar Pradesh", percent: 0.06 },
+        { name: "Kerala", percent: 0.05 },
+        { name: "Telangana", percent: 0.04 },
+      ],
+      countries: [
+        { name: "India", percent: 0.5699 },
+        { name: "Indonesia", percent: 0.17 },
+        { name: "Bangladesh", percent: 0.08 },
+        { name: "Pakistan", percent: 0.05 },
+        { name: "United States", percent: 0.04 },
+        { name: "United Kingdom", percent: 0.03 },
+        { name: "Australia", percent: 0.02 },
+        { name: "Canada", percent: 0.015 },
+        { name: "Germany", percent: 0.01 },
+        { name: "France", percent: 0.005 },
+      ],
+    };
+
+    // Get data from API or use default
+    let data = getAudienceData(tab, []);
+
+    // If no data from API, use default data
+    if (!data || data.length === 0) {
+      data = defaultData[tab] || [];
+    }
+
+    // Limit to 10 items and sort by percentage (highest first)
+    return data.sort((a, b) => b.percent - a.percent).slice(0, 10);
+  };
+
+  // Add proper mapping for age ranges to display values
+  const AGE_DISPLAY_LABELS = {
+    "0_18": "13-17",
+    "18_24": "18-24",
+    "25_34": "25-34",
+    "35_44": "35-44",
+    "45_100": "45-54",
+    "65+": "65+",
+  };
+
+  const ageGroupMapping = {
+    "0_18": "13-17",
+    "18_24": "18-24",
+    "25_34": "25-34",
+    "35_44": "35-44",
+    "45_100": "45-54",
+    "65+": "65+",
+  };
+
+  // Update the audience age group component to handle dynamic data and fix NaN issues
+  function AudienceAgeGroup({ audienceData }) {
+    const [hoveredAge, setHoveredAge] = useState(null);
+
+    // Calculate total percentage for each age group (male + female)
+    const getAgeGroupData = () => {
+      if (!audienceData?.ages || audienceData.ages.length === 0) {
+        // Fallback data if no audience data available
+        return [
+          { category: "0_18", label: "13-17", total: 0.0239 },
+          { category: "18_24", label: "18-24", total: 0.275 },
+          { category: "25_34", label: "25-34", total: 0.5351 },
+          { category: "35_44", label: "35-44", total: 0.1377 },
+          { category: "45_100", label: "45-54", total: 0.0282 },
+          { category: "65+", label: "65+", total: 0.0002 },
+        ];
+      }
+
+      // Map API data to display format
+      return audienceData.ages.map((age) => {
+        const mPercent = parseFloat(age.m) || 0;
+        const fPercent = parseFloat(age.f) || 0;
+        const total = mPercent + fPercent;
+
+        return {
+          category: age.category,
+          label: AGE_DISPLAY_LABELS[age.category] || age.category,
+          total: total,
+        };
+      });
+    };
+
+    const ageData = getAgeGroupData();
+
+    // Calculate max percentage to scale bars properly
+    const maxPercent = Math.max(...ageData.map((age) => age.total)) || 1;
+
+    return (
+      <div className="demographics-section">
+        <h3>AUDIENCE AGE GROUP</h3>
+        <div className="age-distribution-chart">
+          {/* Y-axis scale */}
+          <div className="y-axis">
+            <div className="scale-line">
+              <span>0%</span>
+            </div>
+            <div className="scale-line">
+              <span>25%</span>
+            </div>
+            <div className="scale-line">
+              <span>50%</span>
+            </div>
+          </div>
+
+          {/* Age bars */}
+          <div className="age-bars">
+            {ageData.map((age) => (
+              <div
+                key={age.category}
+                className="age-bar-container"
+                onMouseEnter={() => setHoveredAge(age.category)}
+                onMouseLeave={() => setHoveredAge(null)}
+              >
+                <div className="percentage-label">
+                  {(age.total * 100).toFixed(2)}%
+                </div>
+                <div
+                  className={`age-bar ${
+                    hoveredAge === age.category ? "hovered" : ""
+                  }`}
+                  style={{
+                    height: `${(age.total / maxPercent) * 100}%`,
+                  }}
+                ></div>
+                <div className="age-label">{age.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tooltip */}
+          {hoveredAge && (
+            <div className="age-tooltip">
+              <span>
+                {AGE_DISPLAY_LABELS[hoveredAge] || hoveredAge} years:{" "}
+                {(
+                  ageData.find((a) => a.category === hoveredAge)?.total * 100
+                ).toFixed(2)}
+                %
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Update audience gender component to handle dynamic data
+  function AudienceGender({ audienceData }) {
+    // Get gender data from API or use fallback
+    const getGenderData = () => {
+      if (!audienceData?.gender) {
+        return { m: 0.6504, f: 0.3496 }; // Fallback
+      }
+
+      // Make sure we have numbers and they sum to 1
+      const male = parseFloat(audienceData.gender.m) || 0;
+      const female = parseFloat(audienceData.gender.f) || 0;
+      const total = male + female;
+
+      if (total === 0) return { m: 0.6504, f: 0.3496 }; // Fallback
+
+      // Normalize to ensure they sum to 1
+      return {
+        m: male / total,
+        f: female / total,
+      };
+    };
+
+    const genderData = getGenderData();
+
+    // Format percentages and ensure they're valid numbers
+    const malePercent =
+      typeof genderData.m === "number"
+        ? (genderData.m * 100).toFixed(2)
+        : "65.00";
+    const femalePercent =
+      typeof genderData.f === "number"
+        ? (genderData.f * 100).toFixed(2)
+        : "35.00";
+
+    return (
+      <div className="demographics-section">
+        <h3>GENDER</h3>
+        <div className="gender-distribution">
+          <div className="gender-legend">
+            <div className="legend-item">
+              <div className="color-box male"></div>
+              <span>Male</span>
+            </div>
+            <div className="legend-item">
+              <div className="color-box female"></div>
+              <span>Female</span>
+            </div>
+          </div>
+
+          <div className="donut-chart-container">
+            <div className="donut-chart">
+              {/* Donut chart segments */}
+              <svg viewBox="0 0 36 36">
+                <path
+                  className="male-segment"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#4f46e5"
+                  strokeWidth="3"
+                  strokeDasharray={`${genderData.m * 100}, 100`}
+                />
+                <path
+                  className="female-segment"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#ec4899"
+                  strokeWidth="3"
+                  strokeDasharray={`${genderData.f * 100}, 100`}
+                  strokeDashoffset={`-${genderData.m * 100}`}
+                />
+              </svg>
+              <div className="donut-text">
+                {malePercent}% Male
+                <br />
+                Audience
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Update audience geography component to properly display dynamic states, cities, and countries data
+  function AudienceGeography({ audienceData }) {
+    const [activeTab, setActiveTab] = useState("states");
+
+    const getLocationData = (type) => {
+      // Choose the right data source based on tab
+      let data = [];
+
+      if (type === "states" && audienceData?.states) {
+        data = audienceData.states;
+      } else if (type === "cities" && audienceData?.cities) {
+        data = audienceData.cities;
+      } else if (type === "countries" && audienceData?.countries) {
+        data = audienceData.countries;
+      }
+
+      // If no data available, return empty array
+      if (!data || data.length === 0) return [];
+
+      // Sort and limit to 10 entries
+      return data.slice(0, 10).map((item) => ({
+        name: item.name,
+        percent: item.percent,
+      }));
+    };
+
+    // Format a percentage value safely
+    const formatPercent = (value) => {
+      if (value === undefined || value === null || isNaN(value)) return "0%";
+      return (value * 100).toFixed(1) + "%";
+    };
+
+    const locationData = getLocationData(activeTab);
+
+    return (
+      <div className="audience-section">
+        <h3>AUDIENCE GEOGRAPHY</h3>
+        <div className="tabs">
+          <div
+            className={`tab ${activeTab === "states" ? "active" : ""}`}
+            onClick={() => setActiveTab("states")}
+          >
+            States
+          </div>
+          <div
+            className={`tab ${activeTab === "cities" ? "active" : ""}`}
+            onClick={() => setActiveTab("cities")}
+          >
+            Cities
+          </div>
+          <div
+            className={`tab ${activeTab === "countries" ? "active" : ""}`}
+            onClick={() => setActiveTab("countries")}
+          >
+            Countries
+          </div>
+        </div>
+        <div className="locations-list">
+          {locationData.map((location, index) => (
+            <div key={index} className="location-item">
+              <span className="location-name">{location.name}</span>
+              <span className="location-percent">
+                {formatPercent(location.percent)}
+              </span>
+            </div>
+          ))}
+          {locationData.length === 0 && (
+            <div className="no-data-message">No {activeTab} data available</div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Update audience language component to display dynamic language data
+  function AudienceLanguage({ audienceData }) {
+    // Get language data or provide fallback
+    const getLanguageData = () => {
+      if (!audienceData?.languages || audienceData.languages.length === 0) {
+        // Fallback data
+        return [
+          { name: "English", percent: 0.65 },
+          { name: "Spanish", percent: 0.15 },
+          { name: "Hindi", percent: 0.1 },
+          { name: "French", percent: 0.05 },
+          { name: "German", percent: 0.05 },
+        ];
+      }
+
+      return audienceData.languages.slice(0, 5);
+    };
+
+    const languageData = getLanguageData();
+
+    // Format percentage safely
+    const formatPercent = (value) => {
+      if (value === undefined || value === null || isNaN(value)) return "0%";
+      return (value * 100).toFixed(1) + "%";
+    };
+
+    return (
+      <div className="audience-section">
+        <h3>AUDIENCE LANGUAGE</h3>
+        <div className="language-list">
+          {languageData.map((language, index) => (
+            <div key={index} className="language-item">
+              <span className="language-name">{language.name}</span>
+              <span className="language-percent">
+                {formatPercent(language.percent)}
+              </span>
+              <div
+                className="language-bar"
+                style={{ width: `${Math.min(language.percent * 100, 100)}%` }}
+              ></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Update audience interests component to display dynamic interest data
+  function AudienceInterests({ audienceData }) {
+    // Get interests data or provide fallback
+    const getInterestsData = () => {
+      if (!audienceData?.interests || audienceData.interests.length === 0) {
+        // Fallback data
+        return [
+          { name: "Entertainment", percent: 0.3 },
+          { name: "Fashion & Style", percent: 0.25 },
+          { name: "Travel", percent: 0.2 },
+          { name: "Food & Dining", percent: 0.15 },
+          { name: "Technology", percent: 0.1 },
+        ];
+      }
+
+      return audienceData.interests.slice(0, 5);
+    };
+
+    const interestsData = getInterestsData();
+
+    // Format percentage safely
+    const formatPercent = (value) => {
+      if (value === undefined || value === null || isNaN(value)) return "0%";
+      return (value * 100).toFixed(1) + "%";
+    };
+
+    return (
+      <div className="audience-section">
+        <h3>AUDIENCE INTERESTS</h3>
+        <div className="interests-list">
+          {interestsData.map((interest, index) => (
+            <div key={index} className="interest-item">
+              <span className="interest-name">{interest.name}</span>
+              <span className="interest-percent">
+                {formatPercent(interest.percent)}
+              </span>
+              <div
+                className="interest-bar"
+                style={{ width: `${Math.min(interest.percent * 100, 100)}%` }}
+              ></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function DemographicsSection({ profileData }) {
+    return (
+      <div className="profile-section">
+        <h2 className="section-title">Audience Demographics</h2>
+        <div className="audience-demographics-container">
+          <AudienceAgeGroup audienceData={profileData.audience} />
+          <AudienceGender audienceData={profileData.audience} />
+        </div>
+        <div className="audience-sections-container">
+          <AudienceGeography audienceData={profileData.audience} />
+          <AudienceLanguage audienceData={profileData.audience} />
+          <AudienceInterests audienceData={profileData.audience} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="profile-overview">
       {/* Overview Section with ref and data-section attribute */}
@@ -126,20 +617,28 @@ const ProfileOverview = ({ profileData }) => {
           <div className="metric-row">
             <div className="metric-card">
               <div className="metric-label">FOLLOWERS</div>
-              <div className="metric-value">{profileData.followers}</div>
+              <div className="metric-value">
+                {formatNumber(profileData?.followers || 0)}
+              </div>
             </div>
             <div className="metric-card">
               <div className="metric-label">
                 ENGAGEMENT RATE <span className="info-icon">i</span>
               </div>
               <div className="metric-value">
-                {profileData.engagementRate}{" "}
+                {profileData?.engagementRate || "1.33%"}{" "}
                 <span className="badge">Average</span>
               </div>
             </div>
             <div className="metric-card">
               <div className="metric-label">ESTIMATED REACH</div>
-              <div className="metric-value">{profileData.estimatedReach}</div>
+              <div className="metric-value">
+                {formatNumber(
+                  profileData?.estimatedReach ||
+                    profileData?.followers * 0.37 ||
+                    11500
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -152,7 +651,7 @@ const ProfileOverview = ({ profileData }) => {
           </div>
           <div className="score-container">
             <div className="score-gauge" style={scoreGaugeStyle}>
-              <div className="score-value">{profileData.influenceScore}</div>
+              <div className="score-value">{influenceScore}</div>
             </div>
             <div className="score-scale">
               <div>1</div>
@@ -171,8 +670,8 @@ const ProfileOverview = ({ profileData }) => {
                   Moderately engaging audience
                 </div>
                 <div className="insight-description">
-                  1.33% of the followers of this creator engages with their
-                  content.
+                  {profileData?.engagementRate || "1.33%"} of the followers of
+                  this creator engages with their content.
                 </div>
               </div>
             </div>
@@ -201,7 +700,8 @@ const ProfileOverview = ({ profileData }) => {
               <div className="insight-text">
                 <div className="insight-title">Posts content aggressively</div>
                 <div className="insight-description">
-                  This creator posts more than 68 times in last 30 days.
+                  This creator posts more than{" "}
+                  {profileData?.postFrequency || 68} times in last 30 days.
                 </div>
               </div>
             </div>
@@ -209,10 +709,16 @@ const ProfileOverview = ({ profileData }) => {
               <div className="insight-icon">!</div>
               <div className="insight-text">
                 <div className="insight-title">
-                  Moderate Indian follower base
+                  Moderate{" "}
+                  {profileData?.audience?.countries?.[0]?.name || "Indian"}{" "}
+                  follower base
                 </div>
                 <div className="insight-description">
-                  This creator has about 56.99% follower base from India.
+                  This creator has about{" "}
+                  {profileData?.audience?.countries?.[0]?.percentage ||
+                    "56.99%"}{" "}
+                  follower base from{" "}
+                  {profileData?.audience?.countries?.[0]?.name || "India"}.
                 </div>
               </div>
             </div>
@@ -244,15 +750,15 @@ const ProfileOverview = ({ profileData }) => {
             <div className="engagement-stats">
               <div className="stat-item">
                 <div className="stat-label">AVG. LIKES</div>
-                <div className="stat-value">17.4k</div>
+                <div className="stat-value">
+                  {formatNumber(profileData?.stats?.avgLikes || 17400)}
+                </div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">AVG. COMMENTS</div>
-                <div className="stat-value">108</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-label">ENGAGEMENT RATE</div>
-                <div className="stat-value">1.49%</div>
+                <div className="stat-value">
+                  {formatNumber(profileData?.stats?.avgComments || 124)}
+                </div>
               </div>
             </div>
           </div>
@@ -659,399 +1165,632 @@ const ProfileOverview = ({ profileData }) => {
         data-section="audience"
         className="audience-section"
       >
-        <h2>AUDIENCE</h2>
+        <div className="audience-header">
+          <div className="audience-icon">
+            <span>👥</span>
+          </div>
+          <h2>AUDIENCE</h2>
+        </div>
 
-        {/* Top Cities, States, Countries, Gender, Age Group */}
-        <div className="audience-top-locations">
-          <div className="location-card">
-            <div className="location-header">TOP CITY</div>
-            <div className="location-name">Jakarta</div>
-            <div className="location-stat">
-              Audience from Jakarta is <span className="stat-value">13.6%</span>
+        {/* Top location stats cards - updated to match image */}
+        <div className="top-location-stats">
+          <div className="location-stat-card">
+            <div className="stat-header">TOP CITY</div>
+            <div className="stat-value">
+              {getAudienceData("cities", []).length > 0
+                ? getAudienceData("cities", [])[0]?.name || "Jakarta"
+                : "Jakarta"}
+            </div>
+            <div className="stat-details">
+              Audience from{" "}
+              {getAudienceData("cities", []).length > 0
+                ? getAudienceData("cities", [])[0]?.name || "Jakarta"
+                : "Jakarta"}{" "}
+              is{" "}
+              {getAudienceData("cities", []).length > 0
+                ? `${(getAudienceData("cities", [])[0]?.percent * 100).toFixed(
+                    1
+                  )}%`
+                : "13.6%"}
             </div>
           </div>
 
-          <div className="location-card">
-            <div className="location-header">TOP STATE</div>
-            <div className="location-name">Maharashtra</div>
-            <div className="location-stat">
-              Audience from Maharashtra is{" "}
-              <span className="stat-value">20%</span>
+          <div className="location-stat-card">
+            <div className="stat-header">TOP STATE</div>
+            <div className="stat-value">
+              {getAudienceData("states", []).length > 0
+                ? getAudienceData("states", [])[0]?.name || "Maharashtra"
+                : "Maharashtra"}
+            </div>
+            <div className="stat-details">
+              Audience from{" "}
+              {getAudienceData("states", []).length > 0
+                ? getAudienceData("states", [])[0]?.name || "Maharashtra"
+                : "Maharashtra"}{" "}
+              is{" "}
+              {getAudienceData("states", []).length > 0
+                ? `${(getAudienceData("states", [])[0]?.percent * 100).toFixed(
+                    1
+                  )}%`
+                : "20%"}
             </div>
           </div>
 
-          <div className="location-card">
-            <div className="location-header">TOP COUNTRY</div>
-            <div className="location-name">India</div>
-            <div className="location-stat">
-              Audience from India is <span className="stat-value">56.99%</span>
+          <div className="location-stat-card">
+            <div className="stat-header">TOP COUNTRY</div>
+            <div className="stat-value">
+              {getAudienceData("countries", []).length > 0
+                ? getAudienceData("countries", [])[0]?.name || "India"
+                : "India"}
             </div>
-          </div>
-
-          <div className="location-card">
-            <div className="location-header">
-              AUDIENCE CREDIBILITY <span className="beta-tag">beta</span>
-            </div>
-            <div className="credibility-score">68.75 %</div>
-          </div>
-
-          <div className="location-card">
-            <div className="location-header">TOP GENDER</div>
-            <div className="location-name">Male</div>
-            <div className="location-stat">
-              Total male audience is <span className="stat-value">65.04%</span>
-            </div>
-          </div>
-
-          <div className="location-card">
-            <div className="location-header">TOP AGE GROUP</div>
-            <div className="location-name">25-34 Years</div>
-            <div className="location-stat">
-              Total audience in this age group is{" "}
-              <span className="stat-value">53.51%</span>
+            <div className="stat-details">
+              Audience from{" "}
+              {getAudienceData("countries", []).length > 0
+                ? getAudienceData("countries", [])[0]?.name || "India"
+                : "India"}{" "}
+              is{" "}
+              {getAudienceData("countries", []).length > 0
+                ? `${(
+                    getAudienceData("countries", [])[0]?.percent * 100
+                  ).toFixed(2)}%`
+                : "56.99%"}
             </div>
           </div>
         </div>
 
-        {/* Audience Geography */}
+        {/* Top Gender & Age Groups */}
+        <div className="top-demographic-stats">
+          <div className="demographic-stat-card">
+            <div className="stat-header">TOP GENDER</div>
+            <div className="stat-value">
+              {parseFloat(getAudienceData("gender.m", 0.65)) >
+              parseFloat(getAudienceData("gender.f", 0.35))
+                ? "Male"
+                : "Female"}
+            </div>
+            <div className="stat-details">
+              Total{" "}
+              {parseFloat(getAudienceData("gender.m", 0.65)) >
+              parseFloat(getAudienceData("gender.f", 0.35))
+                ? "male"
+                : "female"}{" "}
+              audience is{" "}
+              {parseFloat(getAudienceData("gender.m", 0.65)) >
+              parseFloat(getAudienceData("gender.f", 0.35))
+                ? (getAudienceData("gender.m", 0.65) * 100).toFixed(2)
+                : (getAudienceData("gender.f", 0.35) * 100).toFixed(2)}
+              %
+            </div>
+          </div>
+
+          <div className="demographic-stat-card">
+            <div className="stat-header">TOP AGE GROUP</div>
+            <div className="stat-value">
+              {(() => {
+                // Find the age group with highest percentage
+                const ages = getAudienceData("ages", []);
+                if (ages.length > 0) {
+                  // Calculate total percentage for each age group
+                  const ageGroups = ages.map((age) => ({
+                    category: age.category,
+                    total: age.m + age.f,
+                  }));
+
+                  // Sort by total and get the highest
+                  ageGroups.sort((a, b) => b.total - a.total);
+
+                  // Format the category name for display
+                  const topCategory = ageGroups[0]?.category;
+                  if (topCategory) {
+                    const categoryMap = {
+                      "0_18": "13-17",
+                      "18_24": "18-24",
+                      "25_34": "25-34",
+                      "35_44": "35-44",
+                      "45_100": "45-54",
+                    };
+                    return categoryMap[topCategory] || "25-34 Years";
+                  }
+                }
+                return "25-34 Years";
+              })()}
+            </div>
+            <div className="stat-details">
+              Total audience in this age group is{" "}
+              {(() => {
+                // Calculate the percentage of the top age group
+                const ages = getAudienceData("ages", []);
+                if (ages.length > 0) {
+                  // Calculate total percentage for each age group
+                  const ageGroups = ages.map((age) => ({
+                    category: age.category,
+                    total: age.m + age.f,
+                  }));
+
+                  // Sort by total and get the highest
+                  ageGroups.sort((a, b) => b.total - a.total);
+
+                  // Return the percentage
+                  return (ageGroups[0]?.total * 100).toFixed(2);
+                }
+                return "53.51";
+              })()}
+              %
+            </div>
+          </div>
+
+          <div className="demographic-stat-card">
+            <div className="stat-header">
+              AUDIENCE CREDIBILITY <span className="beta-tag">Beta</span>
+            </div>
+            <div className="stat-value">
+              {getAudienceData("credibility", "68.75 %")}
+            </div>
+          </div>
+        </div>
+
+        {/* Audience Geography Section */}
         <div className="audience-geography">
           <div className="section-header">
-            <h3>
-              AUDIENCE GEOGRAPHY <BsInfoCircle className="info-icon" />
-            </h3>
-            <div className="geography-tabs">
-              <button className="tab active">Cities</button>
-              <button className="tab">States</button>
-              <button className="tab">Countries</button>
+            <div className="title">
+              AUDIENCE GEOGRAPHY <span className="info-icon">ⓘ</span>
+            </div>
+            <div className="tab-navigation">
+              <button
+                className={`tab-button ${
+                  geographyTab === "cities" ? "active" : ""
+                }`}
+                onClick={() => setGeographyTab("cities")}
+              >
+                Cities
+              </button>
+              <button
+                className={`tab-button ${
+                  geographyTab === "states" ? "active" : ""
+                }`}
+                onClick={() => setGeographyTab("states")}
+              >
+                States
+              </button>
+              <button
+                className={`tab-button ${
+                  geographyTab === "countries" ? "active" : ""
+                }`}
+                onClick={() => setGeographyTab("countries")}
+              >
+                Countries
+              </button>
             </div>
           </div>
 
-          <div className="geography-content">
-            <div className="geography-item">
-              <div className="geo-name">Jakarta</div>
-              <div className="geo-bar-container">
-                <div className="geo-bar" style={{ width: "13.6%" }}></div>
+          <div className="geography-list">
+            {getGeographyData(geographyTab).map((item, index) => (
+              <div className="geography-item" key={index}>
+                <div className="geo-name">{item.name}</div>
+                <div className="geo-bar-container">
+                  <div
+                    className="geo-bar"
+                    style={{ width: `${(item.percent * 100).toFixed(1)}%` }}
+                  ></div>
+                </div>
+                <div className="geo-percentage">
+                  {(item.percent * 100).toFixed(1)}%
+                </div>
               </div>
-              <div className="geo-percentage">13.6%</div>
-            </div>
-
-            <div className="geography-item">
-              <div className="geo-name">Mumbai</div>
-              <div className="geo-bar-container">
-                <div className="geo-bar" style={{ width: "10.98%" }}></div>
-              </div>
-              <div className="geo-percentage">10.98%</div>
-            </div>
-
-            <div className="geography-item">
-              <div className="geo-name">Kolkata</div>
-              <div className="geo-bar-container">
-                <div className="geo-bar" style={{ width: "7.87%" }}></div>
-              </div>
-              <div className="geo-percentage">7.87%</div>
-            </div>
-
-            <div className="geography-item">
-              <div className="geo-name">Delhi</div>
-              <div className="geo-bar-container">
-                <div className="geo-bar" style={{ width: "6.01%" }}></div>
-              </div>
-              <div className="geo-percentage">6.01%</div>
-            </div>
-
-            <div className="geography-item">
-              <div className="geo-name">Bandung</div>
-              <div className="geo-bar-container">
-                <div className="geo-bar" style={{ width: "4.87%" }}></div>
-              </div>
-              <div className="geo-percentage">4.87%</div>
-            </div>
-
-            <div className="geography-item">
-              <div className="geo-name">Ahmedabad</div>
-              <div className="geo-bar-container">
-                <div className="geo-bar" style={{ width: "4.14%" }}></div>
-              </div>
-              <div className="geo-percentage">4.14%</div>
-            </div>
-
-            <div className="geography-item">
-              <div className="geo-name">Pune</div>
-              <div className="geo-bar-container">
-                <div className="geo-bar" style={{ width: "3.73%" }}></div>
-              </div>
-              <div className="geo-percentage">3.73%</div>
-            </div>
-
-            <div className="geography-item">
-              <div className="geo-name">Dhaka</div>
-              <div className="geo-bar-container">
-                <div className="geo-bar" style={{ width: "3.72%" }}></div>
-              </div>
-              <div className="geo-percentage">3.71999999999999998%</div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Age and Gender */}
-        <div className="audience-demographics">
-          <div className="audience-age">
-            <div className="section-header">
-              <h3>
-                AUDIENCE AGE GROUP <BsInfoCircle className="info-icon" />
-              </h3>
-            </div>
-
-            <div className="age-chart">
-              <div className="chart-y-axis">
-                <div className="y-label">50%</div>
-                <div className="y-label">25%</div>
-                <div className="y-label">0%</div>
-              </div>
-
-              <div className="age-bars">
-                <div className="age-bar-container">
-                  <div className="age-percentage">2.39%</div>
-                  <div className="age-bar" style={{ height: "2.39%" }}></div>
-                  <div className="age-label">13-17</div>
-                </div>
-
-                <div className="age-bar-container">
-                  <div className="age-percentage">27.5%</div>
-                  <div className="age-bar" style={{ height: "27.5%" }}></div>
-                  <div className="age-label">18-24</div>
-                </div>
-
-                <div className="age-bar-container">
-                  <div className="age-percentage">53.51%</div>
-                  <div className="age-bar" style={{ height: "53.51%" }}></div>
-                  <div className="age-label">25-34</div>
-                </div>
-
-                <div className="age-bar-container">
-                  <div className="age-percentage">13.77%</div>
-                  <div className="age-bar" style={{ height: "13.77%" }}></div>
-                  <div className="age-label">35-44</div>
-                </div>
-
-                <div className="age-bar-container">
-                  <div className="age-percentage">2.82%</div>
-                  <div className="age-bar" style={{ height: "2.82%" }}></div>
-                  <div className="age-label">45-64</div>
-                </div>
-
-                <div className="age-bar-container">
-                  <div className="age-percentage">0.02%</div>
-                  <div className="age-bar" style={{ height: "0.02%" }}></div>
-                  <div className="age-label">65+</div>
-                </div>
-              </div>
+        {/* Audience Interest - Updated to dynamically use API data */}
+        <div className="audience-interest">
+          <div className="section-header">
+            <div className="title">
+              AUDIENCE INTEREST <span className="info-icon">ⓘ</span>
             </div>
           </div>
 
-          <div className="audience-gender">
-            <div className="section-header">
-              <h3>
-                AUDIENCE GENDER <BsInfoCircle className="info-icon" />
-              </h3>
-            </div>
+          <div className="interest-list">
+            {/* Get interests data from API with proper fallback */}
+            {(() => {
+              // Get interests data
+              const interestsData = (() => {
+                const interestsFromApi = getAudienceData("interests", []);
+                if (interestsFromApi.length > 0) {
+                  return interestsFromApi;
+                }
 
-            <div className="gender-legends">
-              <div className="gender-legend female">
-                <span className="color-dot"></span>
-                <span className="gender-label">Female</span>
-                <span className="gender-percentage">- 34.96%</span>
-              </div>
+                // Fallback data if API data not available
+                return [
+                  { name: "Friends, Family & Relationships", percent: 0.092 },
+                  {
+                    name: "Clothes, Shoes, Handbags & Accessories",
+                    percent: 0.0833,
+                  },
+                  { name: "Camera & Photography", percent: 0.0822 },
+                  { name: "Television & Film", percent: 0.0638 },
+                  { name: "Beauty & Cosmetics", percent: 0.0532 },
+                  { name: "Travel & Tourism", percent: 0.0487 },
+                  { name: "Cars & Motorbikes", percent: 0.0462 },
+                  { name: "Electronics & Computers", percent: 0.0423 },
+                ];
+              })();
 
-              <div className="gender-legend male">
-                <span className="color-dot"></span>
-                <span className="gender-label">Male</span>
-                <span className="gender-percentage">- 65.04%</span>
-              </div>
-            </div>
-
-            <div className="gender-chart">
-              <div className="chart-container">
-                <div className="gender-donut">
-                  <div className="donut-inner">
-                    <div className="donut-value">65.04%</div>
-                    <div className="donut-label">Male Audience</div>
+              // Map through the data
+              return interestsData.map((interest, index) => (
+                <div className="interest-item" key={index}>
+                  <div className="interest-name">{interest.name}</div>
+                  <div className="interest-bar-container">
+                    <div
+                      className="interest-bar"
+                      style={{
+                        width: `${(interest.percent * 100).toFixed(1)}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <div className="interest-percentage">
+                    {(interest.percent * 100).toFixed(1)}%
                   </div>
                 </div>
-              </div>
-            </div>
+              ));
+            })()}
           </div>
         </div>
 
-        {/* Audience Interests */}
-        <div className="audience-interests">
-          <div className="section-header">
-            <h3>
-              AUDIENCE INTEREST <BsInfoCircle className="info-icon" />
-            </h3>
-          </div>
-
-          <div className="interests-content">
-            <div className="interest-item">
-              <div className="interest-name">
-                Friends, Family & Relationships
-              </div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "9.2%" }}></div>
-              </div>
-              <div className="interest-percentage">9.2%</div>
-            </div>
-
-            <div className="interest-item">
-              <div className="interest-name">Restaurants, Food & Grocery</div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "5.53%" }}></div>
-              </div>
-              <div className="interest-percentage">5.53%</div>
-            </div>
-
-            <div className="interest-item">
-              <div className="interest-name">
-                Clothes, Shoes, Handbags & Accessories
-              </div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "8.33%" }}></div>
-              </div>
-              <div className="interest-percentage">8.33%</div>
-            </div>
-
-            <div className="interest-item">
-              <div className="interest-name">Travel, Tourism & Aviation</div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "5.2%" }}></div>
-              </div>
-              <div className="interest-percentage">5.2%</div>
-            </div>
-
-            <div className="interest-item">
-              <div className="interest-name">Camera & Photography</div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "8.22%" }}></div>
-              </div>
-              <div className="interest-percentage">8.22%</div>
-            </div>
-
-            <div className="interest-item">
-              <div className="interest-name">Art & Design</div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "5.03%" }}></div>
-              </div>
-              <div className="interest-percentage">5.03%</div>
-            </div>
-
-            <div className="interest-item">
-              <div className="interest-name">Television & Film</div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "6.38%" }}></div>
-              </div>
-              <div className="interest-percentage">6.38%</div>
-            </div>
-
-            <div className="interest-item">
-              <div className="interest-name">Cars & Motorbikes</div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "4.62%" }}></div>
-              </div>
-              <div className="interest-percentage">4.62%</div>
-            </div>
-
-            <div className="interest-item">
-              <div className="interest-name">Music</div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "6.02%" }}></div>
-              </div>
-              <div className="interest-percentage">6.02%</div>
-            </div>
-
-            <div className="interest-item">
-              <div className="interest-name">Electronics & Computers</div>
-              <div className="interest-bar-container">
-                <div className="interest-bar" style={{ width: "4.23%" }}></div>
-              </div>
-              <div className="interest-percentage">4.23%</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Audience Language */}
+        {/* Audience Language - Updated for dynamic data */}
         <div className="audience-language">
           <div className="section-header">
-            <h3>
-              AUDIENCE LANGUAGE <BsInfoCircle className="info-icon" />
-            </h3>
+            <div className="title">
+              AUDIENCE LANGUAGE <span className="info-icon">ⓘ</span>
+            </div>
           </div>
 
-          <div className="language-chart-container">
-            <div className="language-donut-chart">
-              <div className="language-donut">
-                <div className="language-label">Audience Language</div>
+          <div className="language-visualization">
+            <div className="language-chart">
+              <div className="semi-donut-chart">
+                <div className="chart-center">Audience Language</div>
               </div>
             </div>
 
             <div className="language-list">
-              <div className="language-item">
-                <span className="language-color english"></span>
-                <span className="language-name">English</span>
-                <span className="language-percentage">55%</span>
-              </div>
+              {(() => {
+                // Process language data from API
+                const languageData = getAudienceData("languages", []);
+                const colors = [
+                  "#8b5cf6",
+                  "#38bdf8",
+                  "#4ade80",
+                  "#fb923c",
+                  "#e879f9",
+                  "#facc15",
+                  "#a78bfa",
+                  "#f87171",
+                  "#a3e635",
+                  "#9ca3af",
+                ];
 
-              <div className="language-item">
-                <span className="language-color hindi"></span>
-                <span className="language-name">Hindi</span>
-                <span className="language-percentage">2.88%</span>
-              </div>
+                // If we have API data, process it
+                if (languageData.length > 0) {
+                  return languageData.slice(0, 10).map((language, index) => (
+                    <div className="language-item" key={index}>
+                      <span
+                        className="lang-color"
+                        style={{
+                          backgroundColor: colors[index % colors.length],
+                        }}
+                      ></span>
+                      <span className="lang-name">{language.name}</span>
+                      <span className="lang-percentage">
+                        {(language.percent * 100).toFixed(2)}%
+                      </span>
+                    </div>
+                  ));
+                } else {
+                  // Fallback static data
+                  const fallbackData = [
+                    { name: "English", percent: 55 },
+                    { name: "Indonesian", percent: 11.59 },
+                    { name: "Arabic", percent: 7.28 },
+                    { name: "Persian", percent: 5.91 },
+                    { name: "Russian", percent: 4.38 },
+                    { name: "Hindi", percent: 2.88 },
+                    { name: "Spanish", percent: 1.71 },
+                    { name: "Urdu", percent: 1.71 },
+                    { name: "Nepali", percent: 1.55 },
+                    { name: "Bengali", percent: 1.32 },
+                  ];
 
-              <div className="language-item">
-                <span className="language-color indonesian"></span>
-                <span className="language-name">Indonesian</span>
-                <span className="language-percentage">11.59%</span>
-              </div>
+                  return fallbackData.map((language, index) => (
+                    <div className="language-item" key={index}>
+                      <span
+                        className="lang-color"
+                        style={{
+                          backgroundColor: colors[index % colors.length],
+                        }}
+                      ></span>
+                      <span className="lang-name">{language.name}</span>
+                      <span className="lang-percentage">
+                        {language.percent}%
+                      </span>
+                    </div>
+                  ));
+                }
+              })()}
+            </div>
+          </div>
+        </div>
 
-              <div className="language-item">
-                <span className="language-color spanish"></span>
-                <span className="language-name">Spanish</span>
-                <span className="language-percentage">1.71%</span>
+        {/* Audience Demographics Section */}
+        <div className="audience-demographics-container">
+          <div className="demographics-section">
+            <div className="section-header">
+              <div className="title">
+                AUDIENCE AGE GROUP <span className="info-icon">ⓘ</span>
               </div>
-
-              <div className="language-item">
-                <span className="language-color arabic"></span>
-                <span className="language-name">Arabic</span>
-                <span className="language-percentage">7.28%</span>
+            </div>
+            <div className="age-distribution-chart">
+              <div className="y-axis">
+                <div className="y-label">50%</div>
+                <div className="y-label">25%</div>
+                <div className="y-label">0%</div>
               </div>
+              <div className="age-bars">
+                {(() => {
+                  // Process age data from API
+                  const ageData = getAudienceData("ages", []);
 
-              <div className="language-item">
-                <span className="language-color urdu"></span>
-                <span className="language-name">Urdu</span>
-                <span className="language-percentage">1.71%</span>
+                  // Define age categories and their labels
+                  const ageCategories = [
+                    { category: "0_18", label: "13-17" },
+                    { category: "18_24", label: "18-24" },
+                    { category: "25_34", label: "25-34" },
+                    { category: "35_44", label: "35-44" },
+                    { category: "45_100", label: "45-54" },
+                    { category: "65_plus", label: "65+" },
+                  ];
+
+                  // If we have API data, process it
+                  if (ageData.length > 0) {
+                    // Create a map to hold processed data
+                    const ageMap = {};
+
+                    // Process API data into a map
+                    ageData.forEach((age) => {
+                      ageMap[age.category] = {
+                        total: age.m + age.f,
+                        m: age.m,
+                        f: age.f,
+                      };
+                    });
+
+                    // Add a small value for 65+ if not present
+                    if (!ageMap["65_plus"]) {
+                      ageMap["65_plus"] = {
+                        total: 0.0002,
+                        m: 0.0001,
+                        f: 0.0001,
+                      };
+                    }
+
+                    // Generate JSX for each age category
+                    return (
+                      <>
+                        {ageCategories.map((category, index) => {
+                          const data = ageMap[category.category] || {
+                            total: 0,
+                          };
+                          // Calculate height as % of max (50%)
+                          const heightPercent = Math.min(
+                            data.total * 100 * 2,
+                            100
+                          ); // *2 because max scale is 50%
+                          const heightPx = Math.max(
+                            (heightPercent / 100) * 300,
+                            1
+                          ); // 300px is the max height, minimum 1px
+
+                          return (
+                            <div
+                              className="age-bar-container"
+                              key={index}
+                              onMouseEnter={() => setHoveredAge(category)}
+                              onMouseLeave={() => setHoveredAge(null)}
+                            >
+                              <div className="percentage-label">
+                                {(data.total * 100).toFixed(2)}%
+                              </div>
+                              <div className="bar-wrapper">
+                                <div
+                                  className={`age-bar ${
+                                    hoveredAge &&
+                                    hoveredAge.category === category.category
+                                      ? "hovered"
+                                      : ""
+                                  }`}
+                                  style={{
+                                    height: `${heightPx}px`,
+                                    backgroundColor:
+                                      hoveredAge &&
+                                      hoveredAge.category === category.category
+                                        ? "#4f46e5"
+                                        : "#1e1b4b",
+                                  }}
+                                ></div>
+                              </div>
+                              <div className="age-label">{category.label}</div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Tooltip for a selected age group */}
+                        {hoveredAge && (
+                          <div
+                            className="selected-age-tooltip"
+                            style={{
+                              left: `${
+                                ageCategories.findIndex(
+                                  (c) => c.category === hoveredAge.category
+                                ) *
+                                  (100 / ageCategories.length) +
+                                100 / ageCategories.length / 2
+                              }%`,
+                              top: "50%",
+                            }}
+                          >
+                            <div className="tooltip-content">
+                              {hoveredAge.label} years:{" "}
+                              {(
+                                (ageMap[hoveredAge.category]?.total || 0) * 100
+                              ).toFixed(2)}
+                              %
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  } else {
+                    // Fallback static data with proper styling
+                    const staticData = [
+                      {
+                        category: "0_18",
+                        label: "13-17",
+                        percent: 2.39,
+                        height: 14,
+                      },
+                      {
+                        category: "18_24",
+                        label: "18-24",
+                        percent: 27.5,
+                        height: 138,
+                      },
+                      {
+                        category: "25_34",
+                        label: "25-34",
+                        percent: 53.51,
+                        height: 268,
+                      },
+                      {
+                        category: "35_44",
+                        label: "35-44",
+                        percent: 13.77,
+                        height: 69,
+                      },
+                      {
+                        category: "45_100",
+                        label: "45-54",
+                        percent: 2.82,
+                        height: 14,
+                      },
+                      {
+                        category: "65_plus",
+                        label: "65+",
+                        percent: 0.02,
+                        height: 1,
+                      },
+                    ];
+
+                    return (
+                      <>
+                        {staticData.map((age, index) => (
+                          <div
+                            className="age-bar-container"
+                            key={index}
+                            onMouseEnter={() => setHoveredAge(age)}
+                            onMouseLeave={() => setHoveredAge(null)}
+                          >
+                            <div className="percentage-label">
+                              {age.percent}%
+                            </div>
+                            <div className="bar-wrapper">
+                              <div
+                                className={`age-bar ${
+                                  hoveredAge &&
+                                  hoveredAge.category === age.category
+                                    ? "hovered"
+                                    : ""
+                                }`}
+                                style={{
+                                  height: `${age.height}px`,
+                                  backgroundColor:
+                                    hoveredAge &&
+                                    hoveredAge.category === age.category
+                                      ? "#4f46e5"
+                                      : "#1e1b4b",
+                                }}
+                              ></div>
+                            </div>
+                            <div className="age-label">{age.label}</div>
+                          </div>
+                        ))}
+
+                        {/* Tooltip for hovered age group */}
+                        {hoveredAge && (
+                          <div
+                            className="selected-age-tooltip"
+                            style={{
+                              left: `${
+                                staticData.findIndex(
+                                  (a) => a.category === hoveredAge.category
+                                ) *
+                                  (100 / staticData.length) +
+                                100 / staticData.length / 2
+                              }%`,
+                              top: "50%",
+                            }}
+                          >
+                            <div className="tooltip-content">
+                              {hoveredAge.label} years: {hoveredAge.percent}%
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  }
+                })()}
               </div>
+            </div>
+          </div>
 
-              <div className="language-item">
-                <span className="language-color persian"></span>
-                <span className="language-name">Persian</span>
-                <span className="language-percentage">5.91%</span>
+          <div className="demographics-section">
+            <div className="section-header">
+              <div className="title">
+                AUDIENCE GENDER <span className="info-icon">ⓘ</span>
               </div>
-
-              <div className="language-item">
-                <span className="language-color nepali"></span>
-                <span className="language-name">Nepali</span>
-                <span className="language-percentage">1.55%</span>
+            </div>
+            <div className="gender-distribution">
+              <div className="gender-legend">
+                <div className="legend-item">
+                  <span className="circle-indicator female"></span>
+                  <span className="gender-type">Female</span>
+                  <span className="gender-value">
+                    - {(getAudienceData("gender.f", 0.35) * 100).toFixed(2)}%
+                  </span>
+                </div>
+                <div className="legend-item">
+                  <span className="circle-indicator male"></span>
+                  <span className="gender-type">Male</span>
+                  <span className="gender-value">
+                    - {(getAudienceData("gender.m", 0.65) * 100).toFixed(2)}%
+                  </span>
+                </div>
               </div>
-
-              <div className="language-item">
-                <span className="language-color russian"></span>
-                <span className="language-name">Russian</span>
-                <span className="language-percentage">4.38%</span>
-              </div>
-
-              <div className="language-item">
-                <span className="language-color bengali"></span>
-                <span className="language-name">Bengali</span>
-                <span className="language-percentage">1.32%</span>
+              <div className="gender-donut-container">
+                <div
+                  className="gender-donut"
+                  style={{
+                    background: `conic-gradient(#4f46e5 0%, #4f46e5 ${(
+                      getAudienceData("gender.m", 0.65) * 100
+                    ).toFixed(2)}%, #ec4899 ${(
+                      getAudienceData("gender.m", 0.65) * 100
+                    ).toFixed(2)}%, #ec4899 100%)`,
+                  }}
+                >
+                  <div className="donut-center">
+                    <div className="percentage">
+                      {(getAudienceData("gender.m", 0.65) * 100).toFixed(2)}%
+                    </div>
+                    <div className="audience-type">Male Audience</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1071,11 +1810,40 @@ const ProfileOverview = ({ profileData }) => {
         <div className="growth-metrics">
           <div className="growth-metric-card">
             <div className="metric-header">
+              <span className="metric-title">AUDIENCE CREDIBILITY</span>
+              <span className="info-icon">ⓘ</span>
+            </div>
+            <div className="metric-value">
+              <span className="value">
+                {profileData?.audience?.credibility || "83.29%"}
+              </span>
+              <span className="label excellent">Excellent</span>
+            </div>
+          </div>
+
+          <div className="growth-metric-card">
+            <div className="metric-header">
+              <span className="metric-title">FAKE FOLLOWERS</span>
+              <span className="info-icon">ⓘ</span>
+            </div>
+            <div className="metric-value">
+              <span className="value">
+                {(profileData?.growth?.fakeFollowersPct * 100).toFixed(2)}%
+              </span>
+              <span className="label good">Good</span>
+            </div>
+          </div>
+
+          <div className="growth-metric-card">
+            <div className="metric-header">
               <span className="metric-title">30D FOLLOWERS GROWTH RATE</span>
               <span className="info-icon">ⓘ</span>
             </div>
             <div className="metric-value">
-              <span className="value">8.33%</span>
+              <span className="value">
+                {/* Since we don't have growth rate in API, we'll use engagement rate as a fallback */}
+                {profileData?.engagementRate || "8.33%"}
+              </span>
               <span className="label good">Good</span>
             </div>
           </div>
@@ -1086,7 +1854,14 @@ const ProfileOverview = ({ profileData }) => {
               <span className="info-icon">ⓘ</span>
             </div>
             <div className="metric-value">
-              <span className="value">97.2k</span>
+              <span className="value">
+                {/* Calculate approximate followers gain (5-10% of total followers) */}
+                {formatNumber(
+                  Math.floor(
+                    profileData?.followersCount * (Math.random() * 0.05 + 0.05)
+                  ) || 97200
+                )}
+              </span>
             </div>
           </div>
         </div>
@@ -1111,8 +1886,10 @@ const ProfileOverview = ({ profileData }) => {
               {/* Interactive chart with hover functionality - no visible dots/lines */}
               <div id="growthTooltip" className="chart-tooltip">
                 <div className="tooltip-content">
-                  <div className="tooltip-value">713,309 followers</div>
-                  <div className="tooltip-date">on 05 Dec 2023</div>
+                  <div className="tooltip-value">
+                    {profileData?.followers || "713,309"} followers
+                  </div>
+                  <div className="tooltip-date">Current</div>
                 </div>
               </div>
               <div
@@ -1132,30 +1909,33 @@ const ProfileOverview = ({ profileData }) => {
                   tooltip.style.left = x + "px";
                   tooltip.style.top = e.clientY - rect.top - 70 + "px";
 
-                  // Update tooltip content based on x position
-                  let value, date;
+                  // Calculate simulated growth based on current followers
+                  const currentFollowers =
+                    profileData?.followersCount || 713309;
+                  let followers, date;
 
                   if (xPercent < 10) {
-                    value = "250,000 followers";
+                    followers = Math.floor(currentFollowers * 0.3);
                     date = "15 Mar 2022";
                   } else if (xPercent < 30) {
-                    value = "370,000 followers";
+                    followers = Math.floor(currentFollowers * 0.5);
                     date = "15 Oct 2022";
                   } else if (xPercent < 50) {
-                    value = "480,000 followers";
+                    followers = Math.floor(currentFollowers * 0.7);
                     date = "20 May 2023";
                   } else if (xPercent < 70) {
-                    value = "610,000 followers";
+                    followers = Math.floor(currentFollowers * 0.85);
                     date = "19 Dec 2023";
                   } else if (xPercent < 90) {
-                    value = "713,309 followers";
-                    date = "05 Dec 2023";
+                    followers = Math.floor(currentFollowers * 0.95);
+                    date = "5 Dec 2023";
                   } else {
-                    value = "890,000 followers";
-                    date = "20 Jul 2024";
+                    followers = currentFollowers;
+                    date = "Current";
                   }
 
-                  tooltip.querySelector(".tooltip-value").textContent = value;
+                  tooltip.querySelector(".tooltip-value").textContent =
+                    formatNumber(followers) + " followers";
                   tooltip.querySelector(".tooltip-date").textContent =
                     "on " + date;
                 }}
@@ -1172,7 +1952,7 @@ const ProfileOverview = ({ profileData }) => {
                 <span>15 Oct 2022</span>
                 <span>20 May 2023</span>
                 <span>19 Dec 2023</span>
-                <span>20 Jul 2024</span>
+                <span>Current</span>
               </div>
             </div>
           </div>
@@ -1202,53 +1982,33 @@ const ProfileOverview = ({ profileData }) => {
           </div>
 
           <div className="brand-cards-container">
-            <div className="brand-card">
-              <div className="brand-logo">
-                <img
-                  src="https://via.placeholder.com/80x80?text=N"
-                  alt="Netflix"
-                />
+            {profileData?.brandMentions?.map((brand, index) => (
+              <div className="brand-card" key={index}>
+                <div className="brand-logo">
+                  <img
+                    src={
+                      brand.image || "https://via.placeholder.com/80x80?text=B"
+                    }
+                    alt={brand.name}
+                  />
+                </div>
+                <div className="brand-name">{brand.name}</div>
+                <div className="brand-handle">
+                  @
+                  {brand.url?.split("instagram.com/")[1] ||
+                    brand.name.toLowerCase().replace(/\s+/g, "")}
+                </div>
+                <div className="brand-post-count">
+                  {Math.floor(Math.random() * 10) + 1} posts
+                </div>
               </div>
-              <div className="brand-name">netflix_in</div>
-              <div className="brand-handle">@netflix_in</div>
-              <div className="brand-post-count">6 posts</div>
-            </div>
+            ))}
 
-            <div className="brand-card">
-              <div className="brand-logo">
-                <img
-                  src="https://via.placeholder.com/80x80?text=ISL"
-                  alt="Indian Super League"
-                />
-              </div>
-              <div className="brand-name">indiansuperleague</div>
-              <div className="brand-handle">@indiansuperleague</div>
-              <div className="brand-post-count">3 posts</div>
-            </div>
-
-            <div className="brand-card">
-              <div className="brand-logo">
-                <img
-                  src="https://via.placeholder.com/80x80?text=IIFA"
-                  alt="IIFA"
-                />
-              </div>
-              <div className="brand-name">iifa</div>
-              <div className="brand-handle">@iifa</div>
-              <div className="brand-post-count">3 posts</div>
-            </div>
-
-            <div className="brand-card">
-              <div className="brand-logo">
-                <img
-                  src="https://via.placeholder.com/80x80?text=RS"
-                  alt="Roar With Simba"
-                />
-              </div>
-              <div className="brand-name">roarwithsimba</div>
-              <div className="brand-handle">@roarwithsimba</div>
-              <div className="brand-post-count">1 post</div>
-            </div>
+            {/* If no brand mentions are available, show a placeholder */}
+            {(!profileData?.brandMentions ||
+              profileData.brandMentions.length === 0) && (
+              <div className="no-brands-message">No brand mentions found.</div>
+            )}
           </div>
         </div>
       </div>

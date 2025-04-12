@@ -74,15 +74,26 @@ const BrandMentions = () => {
         ))}
       </div>
 
-      <div className="brand-grid">
-        {filteredBrands.map((brand) => (
-          <div key={brand.id} className="brand-card">
-            <img src={brand.logo} alt={brand.name} className="brand-logo" />
-            <div className="brand-name">{brand.name}</div>
-            <div className="brand-username">{brand.username}</div>
-            <div className="post-count">{brand.posts} posts</div>
-          </div>
-        ))}
+      <div className="brands-container">
+        <div className="brands-scroll-container">
+          {filteredBrands.map((brand) => (
+            <div key={brand.id} className="brand-card">
+              <div className="brand-logo">
+                <img
+                  src={brand.logo}
+                  alt={brand.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/60?text=Brand";
+                  }}
+                />
+              </div>
+              <div className="brand-name">{brand.name}</div>
+              <div className="brand-username">{brand.username}</div>
+              <div className="post-count">{brand.posts} posts</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

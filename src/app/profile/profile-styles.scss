@@ -1335,3 +1335,88 @@
     }
   }
 }
+
+// Add new styles for the brands section
+.brands-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  margin: 20px 0;
+}
+
+.brands-scroll-container {
+  display: flex;
+  overflow-x: auto;
+  padding: 10px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+  gap: 15px;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 6px;
+  }
+}
+
+.brand-card {
+  min-width: 220px;
+  flex: 0 0 auto;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .brand-logo {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+  }
+
+  .brand-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #111;
+  }
+
+  .brand-handle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 15px;
+  }
+
+  .brand-posts {
+    font-size: 13px;
+    color: #666;
+  }
+}

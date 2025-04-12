@@ -431,22 +431,32 @@ export default function Profile({ params }) {
               <button className="brand-filter">Sports</button>
             </div>
 
-            <div className="brand-grid">
-              {profileData.brandMentions &&
-                profileData.brandMentions.map((brand, index) => (
-                  <div className="brand-card" key={index}>
-                    <div className="brand-logo">
-                      <img src={brand.image} alt={brand.name} />
+            <div className="brands-container">
+              <div className="brands-scroll-container">
+                {profileData.brandMentions &&
+                  profileData.brandMentions.map((brand, index) => (
+                    <div className="brand-card" key={index}>
+                      <div className="brand-logo">
+                        <img
+                          src={brand.image}
+                          alt={brand.name}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                              "https://via.placeholder.com/60?text=Brand";
+                          }}
+                        />
+                      </div>
+                      <div className="brand-name">{brand.name}</div>
+                      <div className="brand-handle">
+                        @{brand.url.split("/").pop()}
+                      </div>
+                      <div className="brand-posts">
+                        {Math.floor(Math.random() * 5) + 1} posts
+                      </div>
                     </div>
-                    <div className="brand-name">{brand.name}</div>
-                    <div className="brand-handle">
-                      @{brand.url.split("/").pop()}
-                    </div>
-                    <div className="brand-posts">
-                      {Math.floor(Math.random() * 5) + 1} posts
-                    </div>
-                  </div>
-                ))}
+                  ))}
+              </div>
             </div>
           </div>
         </div>

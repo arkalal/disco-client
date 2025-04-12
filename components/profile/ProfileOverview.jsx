@@ -36,13 +36,14 @@ const ProfileOverview = ({ profileData }) => {
 
   // Helper function to format numbers
   const formatNumber = (num) => {
-    if (!num) return "0";
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + "M";
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + "K";
+    if (!num || isNaN(parseFloat(num))) return "0";
+    const number = parseFloat(num);
+    if (number >= 1000000) {
+      return (number / 1000000).toFixed(1) + "M";
+    } else if (number >= 1000) {
+      return (number / 1000).toFixed(1) + "K";
     }
-    return num.toString();
+    return number.toString();
   };
 
   // Helper function to safely get audience data with fallbacks
@@ -446,8 +447,9 @@ const ProfileOverview = ({ profileData }) => {
 
     // Format a percentage value safely
     const formatPercent = (value) => {
-      if (value === undefined || value === null || isNaN(value)) return "0%";
-      return (value * 100).toFixed(1) + "%";
+      if (value === undefined || value === null || isNaN(parseFloat(value)))
+        return "0%";
+      return (parseFloat(value) * 100).toFixed(1) + "%";
     };
 
     const locationData = getLocationData(activeTab);
@@ -514,8 +516,9 @@ const ProfileOverview = ({ profileData }) => {
 
     // Format percentage safely
     const formatPercent = (value) => {
-      if (value === undefined || value === null || isNaN(value)) return "0%";
-      return (value * 100).toFixed(1) + "%";
+      if (value === undefined || value === null || isNaN(parseFloat(value)))
+        return "0%";
+      return (parseFloat(value) * 100).toFixed(1) + "%";
     };
 
     return (
@@ -524,14 +527,16 @@ const ProfileOverview = ({ profileData }) => {
         <div className="language-list">
           {languageData.map((language, index) => (
             <div key={index} className="language-item">
-              <span className="language-name">{language.name}</span>
-              <span className="language-percent">
+              <span
+                className="lang-color"
+                style={{
+                  backgroundColor: colors[index % colors.length],
+                }}
+              ></span>
+              <span className="lang-name">{language.name}</span>
+              <span className="lang-percentage">
                 {formatPercent(language.percent)}
               </span>
-              <div
-                className="language-bar"
-                style={{ width: `${Math.min(language.percent * 100, 100)}%` }}
-              ></div>
             </div>
           ))}
         </div>
@@ -561,8 +566,9 @@ const ProfileOverview = ({ profileData }) => {
 
     // Format percentage safely
     const formatPercent = (value) => {
-      if (value === undefined || value === null || isNaN(value)) return "0%";
-      return (value * 100).toFixed(1) + "%";
+      if (value === undefined || value === null || isNaN(parseFloat(value)))
+        return "0%";
+      return (parseFloat(value) * 100).toFixed(1) + "%";
     };
 
     return (
@@ -577,7 +583,12 @@ const ProfileOverview = ({ profileData }) => {
               </span>
               <div
                 className="interest-bar"
-                style={{ width: `${Math.min(interest.percent * 100, 100)}%` }}
+                style={{
+                  width: `${Math.min(
+                    parseFloat(interest.percent || 0) * 100,
+                    100
+                  )}%`,
+                }}
               ></div>
             </div>
           ))}
@@ -602,6 +613,63 @@ const ProfileOverview = ({ profileData }) => {
       </div>
     );
   }
+
+  // Add this new function inside the ProfileOverview component
+  const handlePostsScroll = (direction) => {
+    const postsContainer = document.querySelector(".posts-wrapper");
+    if (!postsContainer) return;
+
+    const scrollAmount = direction === "right" ? 440 : -440; // 2 cards width approximately
+    postsContainer.scrollBy({ left: scrollAmount, behavior: "smooth" });
+
+    // Check scroll position after animation completes
+    setTimeout(() => {
+      updateArrowVisibility(postsContainer);
+    }, 400);
+  };
+
+  // Add this new function to update arrow visibility
+  const updateArrowVisibility = (container) => {
+    if (!container) return;
+
+    const leftArrow = document.querySelector(".swipe-button.left");
+    const rightArrow = document.querySelector(".swipe-button.right");
+
+    if (leftArrow && rightArrow) {
+      // Show left arrow only if scrolled right
+      leftArrow.classList.toggle("visible", container.scrollLeft > 0);
+
+      // Show right arrow only if can scroll more to the right
+      const canScrollMore =
+        container.scrollWidth > container.clientWidth + container.scrollLeft;
+      rightArrow.classList.toggle("visible", canScrollMore);
+    }
+  };
+
+  // Add useEffect for initializing scroll behavior
+  useEffect(() => {
+    const postsContainer = document.querySelector(".posts-wrapper");
+    if (postsContainer) {
+      // Set initial arrow visibility
+      updateArrowVisibility(postsContainer);
+
+      // Update arrows on scroll
+      postsContainer.addEventListener("scroll", () => {
+        updateArrowVisibility(postsContainer);
+      });
+
+      // Also update on window resize
+      window.addEventListener("resize", () => {
+        updateArrowVisibility(postsContainer);
+      });
+
+      // Clean up event listeners
+      return () => {
+        postsContainer.removeEventListener("scroll", updateArrowVisibility);
+        window.removeEventListener("resize", updateArrowVisibility);
+      };
+    }
+  }, []);
 
   return (
     <div className="profile-overview">
@@ -751,13 +819,13 @@ const ProfileOverview = ({ profileData }) => {
               <div className="stat-item">
                 <div className="stat-label">AVG. LIKES</div>
                 <div className="stat-value">
-                  {formatNumber(profileData?.stats?.avgLikes || 17400)}
+                  {formatNumber(profileData?.avgLikes || 17400)}
                 </div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">AVG. COMMENTS</div>
                 <div className="stat-value">
-                  {formatNumber(profileData?.stats?.avgComments || 124)}
+                  {formatNumber(profileData?.avgComments || 124)}
                 </div>
               </div>
             </div>
@@ -821,23 +889,48 @@ const ProfileOverview = ({ profileData }) => {
             <div className="engagement-stats">
               <div className="stat-item">
                 <div className="stat-label">AVG. VIEWS</div>
-                <div className="stat-value">397.2k</div>
+                <div className="stat-value">
+                  {formatNumber(profileData?.avgVideoViews || 397200)}
+                </div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">AVG. LIKES</div>
-                <div className="stat-value">28.1k</div>
+                <div className="stat-value">
+                  {formatNumber(profileData?.avgVideoLikes || 28100)}
+                </div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">AVG. COMMENTS</div>
-                <div className="stat-value">141</div>
+                <div className="stat-value">
+                  {formatNumber(profileData?.avgVideoComments || 141)}
+                </div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">ENGAGEMENT RATE</div>
-                <div className="stat-value">2.40%</div>
+                <div className="stat-value">
+                  {profileData?.engagementRate || "2.40%"}
+                </div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">VIEW RATE</div>
-                <div className="stat-value">33.75%</div>
+                <div className="stat-value">
+                  {(() => {
+                    // Calculate view rate if possible
+                    if (
+                      profileData?.avgVideoViews &&
+                      profileData?.followersCount
+                    ) {
+                      return (
+                        (
+                          (profileData.avgVideoViews /
+                            profileData.followersCount) *
+                          100
+                        ).toFixed(2) + "%"
+                      );
+                    }
+                    return "33.75%";
+                  })()}
+                </div>
               </div>
             </div>
           </div>
@@ -851,7 +944,18 @@ const ProfileOverview = ({ profileData }) => {
             </div>
 
             <div className="metric-value-container">
-              <div className="metric-value">0.61</div>
+              <div className="metric-value">
+                {(() => {
+                  // Calculate ratio if possible
+                  if (profileData?.avgLikes && profileData?.avgComments) {
+                    const ratio =
+                      parseFloat(profileData.avgComments) /
+                      parseFloat(profileData.avgLikes);
+                    return isNaN(ratio) ? "0.61" : ratio.toFixed(2);
+                  }
+                  return "0.61";
+                })()}
+              </div>
               <div className="metric-badge">Average</div>
             </div>
 
@@ -867,135 +971,26 @@ const ProfileOverview = ({ profileData }) => {
             </div>
 
             <div className="metric-value-container">
-              <div className="metric-value">33.75</div>
+              <div className="metric-value">
+                {(() => {
+                  // Calculate reel views to followers ratio
+                  if (
+                    profileData?.avgVideoViews &&
+                    profileData?.followersCount
+                  ) {
+                    return (
+                      (profileData.avgVideoViews / profileData.followersCount) *
+                      100
+                    ).toFixed(2);
+                  }
+                  return "33.75";
+                })()}
+              </div>
               <div className="metric-badge good">Good</div>
             </div>
 
             <div className="metric-description">
               Similar accounts generate around 24.65 views per 100 followers.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Platform Section */}
-      <div className="section-divider"></div>
-      <div className="platforms-content">
-        <div className="platform-user">
-          <div className="instagram-icon">
-            <FaInstagram size={22} />
-          </div>
-          <div className="platform-username">@{profileData.username}</div>
-          <div className="platform-influence-score">
-            {profileData.influenceScore}
-          </div>
-        </div>
-
-        <div className="platform-metrics">
-          <div className="metrics-grid">
-            <div className="metric-item">Followers</div>
-            <div className="metric-item">Avg. Likes</div>
-            <div className="metric-item">Avg. Comments</div>
-            <div className="metric-item">Avg. Reel Views</div>
-            <div className="metric-item">Estimated Reach</div>
-            <div className="metric-item">Engagement Rate</div>
-
-            <div className="metric-value">1.2m</div>
-            <div className="metric-value">15.6k</div>
-            <div className="metric-value">96</div>
-            <div className="metric-value">397.2k</div>
-            <div className="metric-value">174.7k</div>
-            <div className="metric-value">1.33%</div>
-          </div>
-        </div>
-
-        <div className="content-section">
-          <div className="section-header">
-            <h3>CONTENT</h3>
-          </div>
-
-          <div className="content-categories">
-            <h4>CONTENT CATEGORIES</h4>
-            <div className="category-bar">
-              <div
-                className="category-bar-fill"
-                style={{
-                  width: "95.92%",
-                  backgroundColor: "#4338ca",
-                }}
-              ></div>
-            </div>
-
-            <div className="categories-list">
-              <div className="category-item">
-                <div className="category-icon">🎭</div>
-                <div className="category-details">
-                  <div className="category-name">Arts & Entertainment</div>
-                  <div className="category-bar">
-                    <div
-                      className="category-bar-fill"
-                      style={{
-                        width: "95.92%",
-                        backgroundColor: "#4338ca",
-                      }}
-                    ></div>
-                  </div>
-                  <div className="category-percentage">95.92%</div>
-                </div>
-              </div>
-
-              <div className="category-item">
-                <div className="category-icon">🎬</div>
-                <div className="category-details">
-                  <div className="category-name">
-                    Movies - Arts & Entertainment
-                  </div>
-                  <div className="category-bar">
-                    <div
-                      className="category-bar-fill"
-                      style={{
-                        width: "93.88%",
-                        backgroundColor: "#4338ca",
-                      }}
-                    ></div>
-                  </div>
-                  <div className="category-percentage">93.88%</div>
-                </div>
-              </div>
-
-              <div className="category-item">
-                <div className="category-icon">🏋️</div>
-                <div className="category-details">
-                  <div className="category-name">Health & Fitness</div>
-                  <div className="category-bar">
-                    <div
-                      className="category-bar-fill"
-                      style={{
-                        width: "2.04%",
-                        backgroundColor: "#38bdf8",
-                      }}
-                    ></div>
-                  </div>
-                  <div className="category-percentage">2.04%</div>
-                </div>
-              </div>
-
-              <div className="category-item">
-                <div className="category-icon">⚽</div>
-                <div className="category-details">
-                  <div className="category-name">Sports</div>
-                  <div className="category-bar">
-                    <div
-                      className="category-bar-fill"
-                      style={{
-                        width: "2.04%",
-                        backgroundColor: "#fb7185",
-                      }}
-                    ></div>
-                  </div>
-                  <div className="category-percentage">2.04%</div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1027,134 +1022,378 @@ const ProfileOverview = ({ profileData }) => {
 
         <div className="content-posts-container">
           <div className="posts-wrapper">
-            <div className="post-card">
-              <div className="post-image">
-                <img
-                  src="https://via.placeholder.com/350x536?text=Indian+Flag"
-                  alt="Post content"
-                />
-                <div className="post-overlay">
-                  <span className="post-type">
-                    <AiOutlineInstagram />
-                  </span>
-                </div>
-              </div>
-              <div className="post-metrics">
-                <div className="metric">
-                  <span className="icon">
-                    <AiOutlineEye />
-                  </span>
-                  <span className="count">2.3m</span>
-                </div>
-                <div className="metric">
-                  <span className="icon">
-                    <AiOutlineHeart />
-                  </span>
-                  <span className="count">1.4k</span>
-                </div>
-                <div className="post-date">15 Aug 24</div>
-              </div>
-            </div>
+            {(() => {
+              // Get posts from profile data or use placeholders
+              const posts = profileData?.recentPosts || [];
 
-            <div className="post-card">
-              <div className="post-image">
-                <img
-                  src="https://via.placeholder.com/350x536?text=Flag+Post"
-                  alt="Post content"
-                />
-                <div className="post-overlay">
-                  <span className="post-type">
-                    <AiOutlineInstagram />
-                  </span>
-                </div>
-              </div>
-              <div className="post-metrics">
-                <div className="metric">
-                  <span className="icon">
-                    <AiOutlineEye />
-                  </span>
-                  <span className="count">1.8m</span>
-                </div>
-                <div className="metric">
-                  <span className="icon">
-                    <AiOutlineHeart />
-                  </span>
-                  <span className="count">1.2k</span>
-                </div>
-                <div className="post-date">26 Jan 24</div>
-              </div>
-            </div>
+              // Limit to 4 posts to fit the container properly
+              const displayCount = 4;
 
-            <div className="post-card">
-              <div className="post-image">
-                <img
-                  src="https://via.placeholder.com/350x536?text=TV+Appearance"
-                  alt="Post content"
-                />
-                <div className="post-overlay">
-                  <span className="post-type">
-                    <AiOutlineInstagram />
-                  </span>
-                </div>
-              </div>
-              <div className="post-metrics">
-                <div className="metric">
-                  <span className="icon">
-                    <AiOutlineEye />
-                  </span>
-                  <span className="count">13.4m</span>
-                </div>
-                <div className="metric">
-                  <span className="icon">
-                    <AiOutlineHeart />
-                  </span>
-                  <span className="count">1.7m</span>
-                </div>
-                <div className="metric">
-                  <span className="icon">
-                    <AiOutlineComment />
-                  </span>
-                  <span className="count">113</span>
-                </div>
-                <div className="post-date">30 Jan 23</div>
-              </div>
-            </div>
+              // If we have real posts, use them
+              if (posts && posts.length > 0) {
+                return posts.slice(0, displayCount).map((post, index) => {
+                  // Format date
+                  const postDate = post.date ? new Date(post.date) : new Date();
+                  const formattedDate = postDate.toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "2-digit",
+                  });
 
-            <div className="post-card">
-              <div className="post-image">
-                <img
-                  src="https://via.placeholder.com/350x536?text=Group+Photo"
-                  alt="Post content"
-                />
-                <div className="post-overlay">
-                  <span className="post-type">
-                    <AiOutlineInstagram />
-                  </span>
-                </div>
-              </div>
-              <div className="post-metrics">
-                <div className="metric">
-                  <span className="icon">
-                    <AiOutlineEye />
-                  </span>
-                  <span className="count">1.7m</span>
-                </div>
-                <div className="metric">
-                  <span className="icon">
-                    <AiOutlineHeart />
-                  </span>
-                  <span className="count">2.3k</span>
-                </div>
-                <div className="post-date">04 Jun 24</div>
-              </div>
-            </div>
+                  return (
+                    <div className="post-card" key={index}>
+                      <div className="post-image">
+                        <img
+                          src={
+                            post.image ||
+                            `https://via.placeholder.com/350x536?text=Post+${
+                              index + 1
+                            }`
+                          }
+                          alt="Post content"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://via.placeholder.com/350x536?text=Post+${
+                              index + 1
+                            }`;
+                          }}
+                        />
+                        <div className="post-overlay">
+                          <span className="post-type">
+                            <AiOutlineInstagram />
+                          </span>
+                        </div>
+                      </div>
+                      <div className="post-metrics">
+                        {post.views && (
+                          <div className="metric">
+                            <span className="icon">
+                              <AiOutlineEye />
+                            </span>
+                            <span className="count">
+                              {formatNumber(post.views)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="metric">
+                          <span className="icon">
+                            <AiOutlineHeart />
+                          </span>
+                          <span className="count">
+                            {formatNumber(post.likes || 0)}
+                          </span>
+                        </div>
+                        {post.comments && (
+                          <div className="metric">
+                            <span className="icon">
+                              <AiOutlineComment />
+                            </span>
+                            <span className="count">
+                              {formatNumber(post.comments)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="post-date">{formattedDate}</div>
+                      </div>
+                    </div>
+                  );
+                });
+              } else {
+                // Use placeholder data if no real posts - limit to 4 posts
+                const placeholderPosts = [
+                  {
+                    image:
+                      "https://via.placeholder.com/350x536?text=Indian+Flag",
+                    views: "2.3m",
+                    likes: "1.4k",
+                    date: "2024-08-15",
+                    type: "image",
+                  },
+                  {
+                    image: "https://via.placeholder.com/350x536?text=Flag+Post",
+                    views: "1.8m",
+                    likes: "1.2k",
+                    date: "2024-01-26",
+                    type: "image",
+                  },
+                  {
+                    image:
+                      "https://via.placeholder.com/350x536?text=TV+Appearance",
+                    views: "13.4m",
+                    likes: "1.7m",
+                    comments: "113",
+                    date: "2023-01-30",
+                    type: "video",
+                  },
+                  {
+                    image:
+                      "https://via.placeholder.com/350x536?text=Group+Photo",
+                    views: "1.7m",
+                    likes: "2.3k",
+                    date: "2024-06-04",
+                    type: "image",
+                  },
+                ];
+
+                return placeholderPosts
+                  .slice(0, displayCount)
+                  .map((post, index) => {
+                    // Format date
+                    const postDate = post.date
+                      ? new Date(post.date)
+                      : new Date();
+                    const formattedDate = postDate.toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "2-digit",
+                    });
+
+                    return (
+                      <div className="post-card" key={index}>
+                        <div className="post-image">
+                          <img src={post.image} alt="Post content" />
+                          <div className="post-overlay">
+                            <span className="post-type">
+                              <AiOutlineInstagram />
+                            </span>
+                          </div>
+                        </div>
+                        <div className="post-metrics">
+                          <div className="metric">
+                            <span className="icon">
+                              <AiOutlineEye />
+                            </span>
+                            <span className="count">{post.views}</span>
+                          </div>
+                          <div className="metric">
+                            <span className="icon">
+                              <AiOutlineHeart />
+                            </span>
+                            <span className="count">{post.likes}</span>
+                          </div>
+                          {post.comments && (
+                            <div className="metric">
+                              <span className="icon">
+                                <AiOutlineComment />
+                              </span>
+                              <span className="count">{post.comments}</span>
+                            </div>
+                          )}
+                          <div className="post-date">{formattedDate}</div>
+                        </div>
+                      </div>
+                    );
+                  });
+              }
+            })()}
           </div>
 
-          <button className="swipe-button right">
+          <button
+            className="swipe-button left"
+            onClick={() => handlePostsScroll("left")}
+          >
+            <span className="arrow-icon">
+              <IoIosArrowForward style={{ transform: "rotate(180deg)" }} />
+            </span>
+          </button>
+
+          <button
+            className="swipe-button right visible"
+            onClick={() => handlePostsScroll("right")}
+          >
             <span className="arrow-icon">
               <IoIosArrowForward />
             </span>
           </button>
+        </div>
+      </div>
+
+      {/* Platform Section */}
+      <div className="section-divider"></div>
+      <div className="platforms-content">
+        <div className="platform-user">
+          <div className="instagram-icon">
+            <FaInstagram size={22} />
+          </div>
+          <div className="platform-username">@{profileData.username}</div>
+          <div className="platform-influence-score">
+            {profileData.influenceScore}
+          </div>
+        </div>
+
+        <div className="platform-metrics">
+          <div className="metrics-grid">
+            <div className="metric-item">Followers</div>
+            <div className="metric-item">Avg. Likes</div>
+            <div className="metric-item">Avg. Comments</div>
+            <div className="metric-item">Avg. Reel Views</div>
+            <div className="metric-item">Estimated Reach</div>
+            <div className="metric-item">Engagement Rate</div>
+
+            <div className="metric-value">
+              {profileData?.followers || "1.2m"}
+            </div>
+            <div className="metric-value">
+              {formatNumber(profileData?.avgLikes || 15600)}
+            </div>
+            <div className="metric-value">
+              {formatNumber(profileData?.avgComments || 96)}
+            </div>
+            <div className="metric-value">
+              {formatNumber(profileData?.avgVideoViews || 397200)}
+            </div>
+            <div className="metric-value">
+              {formatNumber(profileData?.estimatedReach || 174700)}
+            </div>
+            <div className="metric-value">
+              {profileData?.engagementRate || "1.33%"}
+            </div>
+          </div>
+        </div>
+
+        <div className="content-section">
+          <div className="section-header">
+            <h3>CONTENT</h3>
+          </div>
+
+          <div className="content-categories">
+            <h4>CONTENT CATEGORIES</h4>
+            <div className="category-bar">
+              <div
+                className="category-bar-fill"
+                style={{
+                  width: "95.92%",
+                  backgroundColor: "#4338ca",
+                }}
+              ></div>
+            </div>
+
+            <div className="categories-list">
+              {(() => {
+                // Get categories from the API or use fallback data
+                const categories = profileData?.categories || [];
+
+                // Icons mapping based on category type
+                const getCategoryIcon = (category) => {
+                  const lowerCat = category.toLowerCase();
+                  if (
+                    lowerCat.includes("art") ||
+                    lowerCat.includes("entertainment")
+                  )
+                    return "🎭";
+                  if (lowerCat.includes("movie") || lowerCat.includes("film"))
+                    return "🎬";
+                  if (
+                    lowerCat.includes("health") ||
+                    lowerCat.includes("fitness")
+                  )
+                    return "🏋️";
+                  if (lowerCat.includes("sport")) return "⚽";
+                  if (lowerCat.includes("food")) return "🍔";
+                  if (lowerCat.includes("travel")) return "✈️";
+                  if (lowerCat.includes("fashion")) return "👗";
+                  if (lowerCat.includes("beauty")) return "💄";
+                  return "📱";
+                };
+
+                // Calculate percentages based on total count
+                const totalCategories = Math.max(categories.length, 1);
+
+                // If we have API data, use it
+                if (categories.length > 0) {
+                  return categories.map((category, index) => {
+                    // Format category name
+                    const formattedName = category
+                      .split("-")
+                      .map(
+                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                      )
+                      .join(" ");
+
+                    // Calculate percentage (decreasing for each subsequent category)
+                    const percentage = 95 - index * 5;
+
+                    return (
+                      <div className="category-item" key={index}>
+                        <div className="category-icon">
+                          {getCategoryIcon(category)}
+                        </div>
+                        <div className="category-details">
+                          <div className="category-name">{formattedName}</div>
+                          <div className="category-bar">
+                            <div
+                              className="category-bar-fill"
+                              style={{
+                                width: `${percentage}%`,
+                                backgroundColor:
+                                  index < 2
+                                    ? "#4338ca"
+                                    : index === 2
+                                    ? "#38bdf8"
+                                    : "#fb7185",
+                              }}
+                            ></div>
+                          </div>
+                          <div className="category-percentage">
+                            {percentage.toFixed(2)}%
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                } else {
+                  // Fallback static data
+                  const fallbackCategories = [
+                    {
+                      name: "Arts & Entertainment",
+                      percentage: 95.92,
+                      icon: "🎭",
+                      color: "#4338ca",
+                    },
+                    {
+                      name: "Movies - Arts & Entertainment",
+                      percentage: 93.88,
+                      icon: "🎬",
+                      color: "#4338ca",
+                    },
+                    {
+                      name: "Health & Fitness",
+                      percentage: 2.04,
+                      icon: "🏋️",
+                      color: "#38bdf8",
+                    },
+                    {
+                      name: "Sports",
+                      percentage: 2.04,
+                      icon: "⚽",
+                      color: "#fb7185",
+                    },
+                  ];
+
+                  return fallbackCategories.map((category, index) => (
+                    <div className="category-item" key={index}>
+                      <div className="category-icon">{category.icon}</div>
+                      <div className="category-details">
+                        <div className="category-name">{category.name}</div>
+                        <div className="category-bar">
+                          <div
+                            className="category-bar-fill"
+                            style={{
+                              width: `${category.percentage}%`,
+                              backgroundColor: category.color,
+                            }}
+                          ></div>
+                        </div>
+                        <div className="category-percentage">
+                          {category.percentage}%
+                        </div>
+                      </div>
+                    </div>
+                  ));
+                }
+              })()}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1321,7 +1560,9 @@ const ProfileOverview = ({ profileData }) => {
 
           <div className="demographic-stat-card">
             <div className="stat-header">
-              AUDIENCE CREDIBILITY <span className="beta-tag">Beta</span>
+              <div className="title">
+                AUDIENCE CREDIBILITY <span className="beta-tag">Beta</span>
+              </div>
             </div>
             <div className="stat-value">
               {getAudienceData("credibility", "68.75 %")}
@@ -1470,20 +1711,28 @@ const ProfileOverview = ({ profileData }) => {
 
                 // If we have API data, process it
                 if (languageData.length > 0) {
-                  return languageData.slice(0, 10).map((language, index) => (
-                    <div className="language-item" key={index}>
-                      <span
-                        className="lang-color"
-                        style={{
-                          backgroundColor: colors[index % colors.length],
-                        }}
-                      ></span>
-                      <span className="lang-name">{language.name}</span>
-                      <span className="lang-percentage">
-                        {(language.percent * 100).toFixed(2)}%
-                      </span>
-                    </div>
-                  ));
+                  return languageData.slice(0, 10).map((language, index) => {
+                    // Ensure percent is a valid number
+                    const percent = parseFloat(language.percent);
+                    const displayPercent = isNaN(percent)
+                      ? 0
+                      : (percent * 100).toFixed(2);
+
+                    return (
+                      <div className="language-item" key={index}>
+                        <span
+                          className="lang-color"
+                          style={{
+                            backgroundColor: colors[index % colors.length],
+                          }}
+                        ></span>
+                        <span className="lang-name">{language.name}</span>
+                        <span className="lang-percentage">
+                          {displayPercent}%
+                        </span>
+                      </div>
+                    );
+                  });
                 } else {
                   // Fallback static data
                   const fallbackData = [
@@ -1981,34 +2230,44 @@ const ProfileOverview = ({ profileData }) => {
             <button className="brand-filter">Sports</button>
           </div>
 
-          <div className="brand-cards-container">
-            {profileData?.brandMentions?.map((brand, index) => (
-              <div className="brand-card" key={index}>
-                <div className="brand-logo">
-                  <img
-                    src={
-                      brand.image || "https://via.placeholder.com/80x80?text=B"
-                    }
-                    alt={brand.name}
-                  />
+          <div className="brands-container">
+            <div className="brands-scroll-container">
+              {profileData?.brandMentions?.map((brand, index) => (
+                <div className="brand-card" key={index}>
+                  <div className="brand-logo">
+                    <img
+                      src={
+                        brand.image ||
+                        "https://via.placeholder.com/80x80?text=B"
+                      }
+                      alt={brand.name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src =
+                          "https://via.placeholder.com/60?text=Brand";
+                      }}
+                    />
+                  </div>
+                  <div className="brand-name">{brand.name}</div>
+                  <div className="brand-handle">
+                    @
+                    {brand.url?.split("instagram.com/")[1] ||
+                      brand.name.toLowerCase().replace(/\s+/g, "")}
+                  </div>
+                  <div className="brand-post-count">
+                    {Math.floor(Math.random() * 10) + 1} posts
+                  </div>
                 </div>
-                <div className="brand-name">{brand.name}</div>
-                <div className="brand-handle">
-                  @
-                  {brand.url?.split("instagram.com/")[1] ||
-                    brand.name.toLowerCase().replace(/\s+/g, "")}
-                </div>
-                <div className="brand-post-count">
-                  {Math.floor(Math.random() * 10) + 1} posts
-                </div>
-              </div>
-            ))}
+              ))}
 
-            {/* If no brand mentions are available, show a placeholder */}
-            {(!profileData?.brandMentions ||
-              profileData.brandMentions.length === 0) && (
-              <div className="no-brands-message">No brand mentions found.</div>
-            )}
+              {/* If no brand mentions are available, show a placeholder */}
+              {(!profileData?.brandMentions ||
+                profileData.brandMentions.length === 0) && (
+                <div className="no-brands-message">
+                  No brand mentions found.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

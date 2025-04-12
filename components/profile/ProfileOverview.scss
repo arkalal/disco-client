@@ -1,5 +1,10 @@
 .profile-overview {
   padding: 10px 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding: 0 20px;
+  box-sizing: border-box;
 
   .announcement-banner {
     display: flex;
@@ -49,15 +54,19 @@
     border-radius: 8px;
     padding: 16px;
     margin-bottom: 24px;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 
     .metric-row {
       display: flex;
-      gap: 16px;
       flex-wrap: wrap;
+      gap: 15px;
+      justify-content: space-between;
 
       .metric-card {
         flex: 1;
-        min-width: 150px;
+        min-width: 200px;
 
         .metric-label {
           font-size: 12px;
@@ -98,6 +107,10 @@
             border-radius: 4px;
             font-weight: 500;
           }
+        }
+
+        @media (max-width: 768px) {
+          min-width: 100%;
         }
       }
     }
@@ -182,6 +195,9 @@
 
   .insights-container {
     margin-bottom: 32px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
 
     h3 {
       font-size: 14px;
@@ -361,11 +377,15 @@
     .engagement-metrics {
       display: flex;
       flex-wrap: wrap;
-      gap: 24px;
+      gap: 20px;
+      width: 100%;
+      max-width: 100%;
+      justify-content: space-between;
 
       .metric-section {
         flex: 1;
-        min-width: 280px;
+        min-width: 250px;
+        max-width: calc(50% - 10px);
         padding: 20px;
         background-color: #f8f9fa;
         border-radius: 8px;
@@ -428,6 +448,10 @@
           font-size: 13px;
           color: #6b7280;
           line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+          max-width: 100%;
         }
       }
     }
@@ -568,17 +592,49 @@
       }
 
       .content-posts-container {
+        width: 100%;
         position: relative;
+        overflow: hidden;
         margin-top: 24px;
+        padding: 0 20px;
 
         .posts-wrapper {
           display: flex;
+          flex-wrap: nowrap;
           gap: 16px;
-          overflow-x: hidden;
+          width: 100%;
+          overflow-x: auto;
+          padding: 4px 2px 16px 2px;
+          scroll-behavior: smooth;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+
+          &::-webkit-scrollbar {
+            display: none;
+          }
+
+          @media (min-width: 1400px) {
+            &::after {
+              content: "";
+              flex: 0 0 1px;
+            }
+          }
+
+          @media (max-width: 768px) {
+            gap: 12px;
+          }
 
           .post-card {
             flex: 0 0 auto;
-            width: calc(25% - 12px);
+            width: 220px;
+            @media (max-width: 768px) {
+              width: 180px;
+            }
+
+            @media (min-width: 1800px) {
+              width: 240px;
+            }
+
             border-radius: 8px;
             overflow: hidden;
             background-color: #fff;
@@ -593,7 +649,7 @@
             .post-image {
               position: relative;
               width: 100%;
-              padding-top: 155%; // Adjust aspect ratio to match Instagram posts
+              padding-top: 135%;
               overflow: hidden;
 
               img {
@@ -663,8 +719,8 @@
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
-          width: 40px;
-          height: 40px;
+          width: 36px;
+          height: 36px;
           background-color: white;
           border-radius: 50%;
           border: 1px solid #e2e8f0;
@@ -673,8 +729,15 @@
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          z-index: 2;
-          transition: background-color 0.2s, transform 0.2s;
+          z-index: 5;
+          transition: all 0.2s ease;
+          opacity: 0;
+          pointer-events: none;
+
+          &.visible {
+            opacity: 1;
+            pointer-events: auto;
+          }
 
           &:hover {
             background-color: #f8fafc;
@@ -682,11 +745,11 @@
           }
 
           &.right {
-            right: -20px;
+            right: -4px;
           }
 
           &.left {
-            left: -20px;
+            left: -4px;
           }
 
           .arrow-icon {
@@ -866,9 +929,14 @@
     }
 
     .audience-geography {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
       margin-bottom: 32px;
 
       .geography-list {
+        width: 100%;
+        max-width: 100%;
         .geography-item {
           display: flex;
           align-items: center;
@@ -906,9 +974,14 @@
     }
 
     .audience-interest {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
       margin-bottom: 32px;
 
       .interest-list {
+        width: 100%;
+        max-width: 100%;
         .interest-item {
           display: flex;
           align-items: center;
@@ -946,6 +1019,9 @@
     }
 
     .audience-language {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
       margin-bottom: 32px;
 
       .language-visualization {
@@ -1305,6 +1381,16 @@
   }
 
   /* Media Queries */
+  @media (max-width: 1200px) {
+    .content-posts-container {
+      .posts-wrapper {
+        .post-card {
+          width: calc(33.33% - 12px);
+        }
+      }
+    }
+  }
+
   @media (max-width: 1024px) {
     .audience-section {
       .audience-top-locations {
@@ -1509,6 +1595,9 @@
     }
 
     .growth-chart-container {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
       position: relative;
       height: 380px;
       margin-top: 20px;
@@ -1686,82 +1775,95 @@
       }
     }
 
-    .brand-cards-container {
-      display: flex;
-      gap: 24px;
+    .brands-container {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      position: relative;
+      margin: 20px 0;
+    }
+
+    .brands-scroll-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      width: 100%;
+
+      @media (max-width: 1200px) {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      }
 
       .brand-card {
-        flex: 1;
-        padding: 24px;
-        border: 1px solid #e2e8f0;
+        background-color: #ffffff;
         border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        padding: 15px;
+        text-align: center;
+        width: 100%;
+        flex: 0 0 auto;
+        min-width: 180px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        text-align: center;
-        transition: transform 0.2s, box-shadow 0.2s;
-
-        &:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-        }
+        gap: 8px;
 
         .brand-logo {
-          width: 64px;
-          height: 64px;
-          margin-bottom: 16px;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          overflow: hidden;
+          margin-bottom: 8px;
 
           img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 8px;
           }
         }
 
         .brand-name {
-          font-size: 15px;
           font-weight: 600;
-          color: #334155;
-          margin-bottom: 6px;
+          font-size: 14px;
+          color: #0f172a;
+          max-width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .brand-handle {
-          font-size: 13px;
+          font-size: 12px;
           color: #64748b;
-          margin-bottom: 14px;
+          max-width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .brand-post-count {
           font-size: 12px;
-          color: #64748b;
-          padding: 4px 12px;
-          background-color: #f8fafc;
-          border-radius: 16px;
+          color: #6b7280;
+          background-color: #f3f4f6;
+          padding: 2px 8px;
+          border-radius: 12px;
+          margin-top: 4px;
         }
       }
     }
-  }
-}
 
-@media (max-width: 1200px) {
-  .content-posts-container {
-    .posts-wrapper {
-      .post-card {
-        width: calc(33.33% - 12px);
-      }
+    .no-brands-message {
+      padding: 40px;
+      text-align: center;
+      color: #64748b;
+      font-size: 14px;
+      width: 100%;
     }
   }
 }
 
 @media (max-width: 1024px) {
-  .brand-cards-container {
-    flex-wrap: wrap;
-
-    .brand-card {
-      flex: 0 0 calc(50% - 12px);
-    }
-  }
+  // Remove the old brand-cards-container styles
+  // Keep other responsive styling
 }
 
 @media (max-width: 768px) {
@@ -1788,12 +1890,7 @@
     }
   }
 
-  .brand-cards-container {
-    .brand-card {
-      flex: 0 0 100%;
-      margin-bottom: 16px;
-    }
-  }
+  // Remove the old brand-card styles
 }
 
 @media (max-width: 480px) {
@@ -1811,6 +1908,9 @@
 .content-section-wrapper {
   margin-top: 40px;
   padding: 0 0 30px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 
   .section-title {
     display: flex;
@@ -1877,17 +1977,49 @@
   }
 
   .content-posts-container {
+    width: 100%;
     position: relative;
+    overflow: hidden;
     margin-top: 24px;
+    padding: 0 20px;
 
     .posts-wrapper {
       display: flex;
+      flex-wrap: nowrap;
       gap: 16px;
-      overflow-x: hidden;
+      width: 100%;
+      overflow-x: auto;
+      padding: 4px 2px 16px 2px;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      @media (min-width: 1400px) {
+        &::after {
+          content: "";
+          flex: 0 0 1px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        gap: 12px;
+      }
 
       .post-card {
         flex: 0 0 auto;
-        width: calc(25% - 12px);
+        width: 220px;
+        @media (max-width: 768px) {
+          width: 180px;
+        }
+
+        @media (min-width: 1800px) {
+          width: 240px;
+        }
+
         border-radius: 8px;
         overflow: hidden;
         background-color: #fff;
@@ -1902,7 +2034,7 @@
         .post-image {
           position: relative;
           width: 100%;
-          padding-top: 155%; // Adjust aspect ratio to match Instagram posts
+          padding-top: 135%;
           overflow: hidden;
 
           img {
@@ -1972,8 +2104,8 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       background-color: white;
       border-radius: 50%;
       border: 1px solid #e2e8f0;
@@ -1982,8 +2114,15 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      z-index: 2;
-      transition: background-color 0.2s, transform 0.2s;
+      z-index: 5;
+      transition: all 0.2s ease;
+      opacity: 0;
+      pointer-events: none;
+
+      &.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
 
       &:hover {
         background-color: #f8fafc;
@@ -1991,17 +2130,73 @@
       }
 
       &.right {
-        right: -20px;
+        right: -4px;
       }
 
       &.left {
-        left: -20px;
+        left: -4px;
       }
 
       .arrow-icon {
         color: #334155;
         font-size: 20px;
       }
+    }
+  }
+}
+
+/* Add responsive container adjustments */
+.audience-section,
+.engagement-content,
+.growth-section,
+.brands-section,
+.content-section-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Improve horizontal scrolling containers */
+.tab-navigation,
+.content-tabs,
+.brand-filter-tabs,
+.time-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Fix for mobile screens */
+@media (max-width: 768px) {
+  .profile-overview {
+    padding: 0 10px;
+  }
+
+  .content-posts-container .posts-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .brands-container .brands-scroll-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .metric-row {
+    flex-direction: column;
+  }
+
+  .engagement-metrics {
+    flex-direction: column;
+
+    .metric-section {
+      max-width: 100%;
     }
   }
 }

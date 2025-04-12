@@ -47,15 +47,22 @@ const ProfileHeader = ({ profileData }) => {
         <div className="left-content">
           <div className="profile-avatar">
             {profileData.profilePicture ? (
-              <Image
-                src={profileData.profilePicture}
-                alt={profileData?.name || "Profile Image"}
-                width={125}
-                height={125}
-                className="avatar-image"
-                priority
-                unoptimized={true}
-              />
+              <div className="avatar-wrapper">
+                <Image
+                  src={profileData.profilePicture}
+                  alt={profileData?.name || "Profile Image"}
+                  width={125}
+                  height={125}
+                  className="avatar-image"
+                  priority
+                  unoptimized={true}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src =
+                      "https://via.placeholder.com/125?text=Profile";
+                  }}
+                />
+              </div>
             ) : (
               <div className="fallback-avatar">
                 <FaInstagram size={50} />

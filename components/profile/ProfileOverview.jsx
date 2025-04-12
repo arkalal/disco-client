@@ -619,7 +619,10 @@ const ProfileOverview = ({ profileData }) => {
     const postsContainer = document.querySelector(".posts-wrapper");
     if (!postsContainer) return;
 
-    const scrollAmount = direction === "right" ? 440 : -440; // 2 cards width approximately
+    // Get width of a single card plus gap (220px + 16px)
+    const cardWidth = 236;
+    const scrollAmount = direction === "right" ? cardWidth : -cardWidth;
+
     postsContainer.scrollBy({ left: scrollAmount, behavior: "smooth" });
 
     // Check scroll position after animation completes
@@ -637,11 +640,13 @@ const ProfileOverview = ({ profileData }) => {
 
     if (leftArrow && rightArrow) {
       // Show left arrow only if scrolled right
-      leftArrow.classList.toggle("visible", container.scrollLeft > 0);
+      leftArrow.classList.toggle("visible", container.scrollLeft > 10);
 
-      // Show right arrow only if can scroll more to the right
+      // Show right arrow if there are more cards to show
       const canScrollMore =
-        container.scrollWidth > container.clientWidth + container.scrollLeft;
+        Math.ceil(
+          container.scrollWidth - container.clientWidth - container.scrollLeft
+        ) > 10;
       rightArrow.classList.toggle("visible", canScrollMore);
     }
   };
@@ -650,23 +655,32 @@ const ProfileOverview = ({ profileData }) => {
   useEffect(() => {
     const postsContainer = document.querySelector(".posts-wrapper");
     if (postsContainer) {
+      // Force scroll to start
+      postsContainer.scrollLeft = 0;
+
       // Set initial arrow visibility
-      updateArrowVisibility(postsContainer);
+      // Always show right arrow initially if we have more than 4 cards
+      const hasMoreCards =
+        postsContainer.scrollWidth > postsContainer.clientWidth;
+      const rightArrow = document.querySelector(".swipe-button.right");
+      if (rightArrow && hasMoreCards) {
+        rightArrow.classList.add("visible");
+      }
+
+      // Create bound function references to use in both add and remove event listeners
+      const handleScroll = () => updateArrowVisibility(postsContainer);
+      const handleResize = () => updateArrowVisibility(postsContainer);
 
       // Update arrows on scroll
-      postsContainer.addEventListener("scroll", () => {
-        updateArrowVisibility(postsContainer);
-      });
+      postsContainer.addEventListener("scroll", handleScroll);
 
       // Also update on window resize
-      window.addEventListener("resize", () => {
-        updateArrowVisibility(postsContainer);
-      });
+      window.addEventListener("resize", handleResize);
 
       // Clean up event listeners
       return () => {
-        postsContainer.removeEventListener("scroll", updateArrowVisibility);
-        window.removeEventListener("resize", updateArrowVisibility);
+        postsContainer.removeEventListener("scroll", handleScroll);
+        window.removeEventListener("resize", handleResize);
       };
     }
   }, []);
@@ -1026,8 +1040,8 @@ const ProfileOverview = ({ profileData }) => {
               // Get posts from profile data or use placeholders
               const posts = profileData?.recentPosts || [];
 
-              // Limit to 4 posts to fit the container properly
-              const displayCount = 4;
+              // Show all posts for testing the swiping functionality
+              const displayCount = 8;
 
               // If we have real posts, use them
               if (posts && posts.length > 0) {
@@ -1121,7 +1135,6 @@ const ProfileOverview = ({ profileData }) => {
                       "https://via.placeholder.com/350x536?text=TV+Appearance",
                     views: "13.4m",
                     likes: "1.7m",
-                    comments: "113",
                     date: "2023-01-30",
                     type: "video",
                   },
@@ -1132,6 +1145,39 @@ const ProfileOverview = ({ profileData }) => {
                     likes: "2.3k",
                     date: "2024-06-04",
                     type: "image",
+                  },
+                  {
+                    image:
+                      "https://via.placeholder.com/350x536?text=Award+Ceremony",
+                    views: "3.2m",
+                    likes: "4.5k",
+                    date: "2024-05-20",
+                    type: "image",
+                  },
+                  {
+                    image:
+                      "https://via.placeholder.com/350x536?text=Movie+Promo",
+                    views: "5.9m",
+                    likes: "7.8k",
+                    comments: "342",
+                    date: "2024-03-15",
+                    type: "video",
+                  },
+                  {
+                    image:
+                      "https://via.placeholder.com/350x536?text=Charity+Event",
+                    views: "1.4m",
+                    likes: "3.6k",
+                    date: "2024-04-10",
+                    type: "image",
+                  },
+                  {
+                    image: "https://via.placeholder.com/350x536?text=Interview",
+                    views: "2.8m",
+                    likes: "5.1k",
+                    comments: "217",
+                    date: "2024-02-22",
+                    type: "video",
                   },
                 ];
 
@@ -1171,7 +1217,7 @@ const ProfileOverview = ({ profileData }) => {
                             </span>
                             <span className="count">{post.likes}</span>
                           </div>
-                          {post.comments && (
+                          {post.comments && index !== 2 && (
                             <div className="metric">
                               <span className="icon">
                                 <AiOutlineComment />

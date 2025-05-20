@@ -641,11 +641,7 @@ function transformProfileData(data) {
     username: data.screenName,
     name: data.name,
     bio: data.description,
-    profilePicture: data.image
-      ? `https://via.placeholder.com/150?text=${encodeURIComponent(
-          data.screenName || "Profile"
-        )}`
-      : null,
+    profilePicture: data.image || null,
     verified: data.verified || false,
     influenceScore: (data.qualityScore * 10).toFixed(2) || 7.5,
 

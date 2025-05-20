@@ -25,6 +25,7 @@ import "./search.scss";
 
 const SearchPage = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const searchContainerRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -300,6 +301,8 @@ const SearchPage = () => {
               placeholder="Search Brands, Influencers, Categories and so on"
               className="search-input"
               onClick={toggleDropdown}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchQuery}
               ref={inputRef}
             />
 
@@ -308,6 +311,7 @@ const SearchPage = () => {
                 isOpen={isDropdownOpen}
                 onClose={closeDropdown}
                 searchContainerRef={searchContainerRef}
+                searchQuery={searchQuery}
               />
             )}
           </div>

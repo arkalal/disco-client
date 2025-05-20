@@ -1,7 +1,5 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+trigger: always_on
 ---
 
 # Rules

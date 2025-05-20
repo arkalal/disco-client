@@ -7,10 +7,16 @@ import { IoIosMusicalNotes, IoIosPeople } from "react-icons/io";
 import { MdOutlineSportsBasketball, MdOutlineSchool } from "react-icons/md";
 import { PiTelevisionSimpleBold } from "react-icons/pi";
 import { FiSearch } from "react-icons/fi";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-const SearchDropdown = ({ isOpen, onClose, searchContainerRef }) => {
+const SearchDropdown = ({ isOpen, onClose, searchContainerRef, searchQuery = "" }) => {
   const dropdownRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [profiles, setProfiles] = useState([]);
+  const router = useRouter();
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   // Mount/unmount handling with a delay for exit animation
   useEffect(() => {
@@ -23,6 +29,75 @@ const SearchDropdown = ({ isOpen, onClose, searchContainerRef }) => {
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+  
+  // Search for profiles when query changes
+  useEffect(() => {
+    // Clear any existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    if (searchQuery && searchQuery.trim().length > 0) {
+      // Set a new timeout for debouncing
+      const timeout = setTimeout(async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/instagram/search?q=${encodeURIComponent(searchQuery)}`);
+          if (response.ok) {
+            const data = await response.json();
+            setProfiles(data.data || []);
+          } else {
+            console.error('Error fetching search results:', response.statusText);
+            setProfiles([]);
+          }
+        } catch (error) {
+          console.error('Failed to fetch search results:', error);
+          setProfiles([]);
+        } finally {
+          setLoading(false);
+        }
+      }, 300); // 300ms debounce
+      
+      setSearchTimeout(timeout);
+      
+      return () => {
+        if (timeout) clearTimeout(timeout);
+      };
+    } else {
+      // If query is empty, load default profiles
+      loadDefaultProfiles();
+    }
+  }, [searchQuery]);
+  
+  // Load default profiles when component mounts
+  useEffect(() => {
+    loadDefaultProfiles();
+  }, []);
+  
+  // Function to load default popular profiles
+  const loadDefaultProfiles = async () => {
+    setLoading(true);
+    try {
+      // Fetch default profiles (using empty query will return defaults)
+      const response = await fetch('/api/instagram/search?q=popular');
+      if (response.ok) {
+        const data = await response.json();
+        setProfiles(data.data || []);
+      } else {
+        console.error('Error fetching default profiles:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Failed to fetch default profiles:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Handle profile click to navigate to profile page
+  const handleProfileClick = (username) => {
+    router.push(`/profile/${username}`);
+    onClose();
+  };
 
   // Calculate and apply position styles before DOM paint
   useLayoutEffect(() => {
@@ -101,80 +176,37 @@ const SearchDropdown = ({ isOpen, onClose, searchContainerRef }) => {
 
       <div className="search-dropdown-section">
         <div className="section-header">INFLUENCER PROFILES</div>
-        <div className="influencer-profiles">
-          <div className="influencer-profile">
-            <div className="influencer-avatar">
-              <img src="https://via.placeholder.com/40" alt="Disha Patani" />
-            </div>
-            <div className="influencer-info">
-              <div className="influencer-name">
-                Disha Patani
-                <BsCheckCircleFill className="verified-badge-icon" />
+        {loading ? (
+          <div className="loading-indicator">Loading profiles...</div>
+        ) : profiles.length > 0 ? (
+          <div className="influencer-profiles">
+            {profiles.map((profile) => (
+              <div 
+                key={profile.id} 
+                className="influencer-profile"
+                onClick={() => handleProfileClick(profile.username)}
+              >
+                <div className="influencer-avatar">
+                  <img src={profile.image} alt={profile.name} />
+                </div>
+                <div className="influencer-info">
+                  <div className="influencer-name">
+                    {profile.name}
+                    {profile.verified && (
+                      <BsCheckCircleFill className="verified-badge-icon" />
+                    )}
+                  </div>
+                  <div className="influencer-username">@{profile.username}</div>
+                </div>
+                <div className="profile-arrow">
+                  <BsArrowRight />
+                </div>
               </div>
-              <div className="influencer-username">@dishapatani</div>
-            </div>
-            <div className="profile-arrow">
-              <BsArrowRight />
-            </div>
+            ))}
           </div>
-          <div className="influencer-profile">
-            <div className="influencer-avatar">
-              <img src="https://via.placeholder.com/40" alt="Anushka Sen" />
-            </div>
-            <div className="influencer-info">
-              <div className="influencer-name">
-                Anushka Sen
-                <BsCheckCircleFill className="verified-badge-icon" />
-              </div>
-              <div className="influencer-username">@anushkasen0408</div>
-            </div>
-            <div className="profile-arrow">
-              <BsArrowRight />
-            </div>
-          </div>
-          <div className="influencer-profile">
-            <div className="influencer-avatar">
-              <img
-                src="https://via.placeholder.com/40"
-                alt="Manushi Chhillar"
-              />
-            </div>
-            <div className="influencer-info">
-              <div className="influencer-name">
-                Manushi Chhillar
-                <BsCheckCircleFill className="verified-badge-icon" />
-              </div>
-              <div className="influencer-username">@manushi_chhillar</div>
-            </div>
-            <div className="profile-arrow">
-              <BsArrowRight />
-            </div>
-          </div>
-          <div className="influencer-profile">
-            <div className="influencer-avatar">
-              <img src="https://via.placeholder.com/40" alt="Valmakry" />
-            </div>
-            <div className="influencer-info">
-              <div className="influencer-name">Valmakry</div>
-              <div className="influencer-username">@valmakry</div>
-            </div>
-            <div className="profile-arrow">
-              <BsArrowRight />
-            </div>
-          </div>
-          <div className="influencer-profile">
-            <div className="influencer-avatar">
-              <img src="https://via.placeholder.com/40" alt="KyatGirl" />
-            </div>
-            <div className="influencer-info">
-              <div className="influencer-name">KyatGirl</div>
-              <div className="influencer-username">@kyatgirl</div>
-            </div>
-            <div className="profile-arrow">
-              <BsArrowRight />
-            </div>
-          </div>
-        </div>
+        ) : (
+          <div className="no-results">No profiles found</div>
+        )}
       </div>
     </div>
   );

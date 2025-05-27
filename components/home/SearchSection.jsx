@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AiOutlineInstagram } from "react-icons/ai";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { BsArrowRight } from "react-icons/bs";
@@ -9,6 +10,7 @@ import { FiSearch } from "react-icons/fi";
 import SearchDropdown from "./SearchDropdown";
 
 const SearchSection = () => {
+  const router = useRouter();
   const [platform, setPlatform] = useState("Instagram");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,10 +25,36 @@ const SearchSection = () => {
   };
   
   const handleSearch = () => {
-    // Handle search functionality
-    console.log("Searching for:", searchQuery);
-    console.log("Selected categories:", selectedCategories);
-    // Navigate to search results page or perform search
+    // If there are selected categories, navigate to filter page with categories as URL parameters
+    if (selectedCategories.length > 0) {
+      // Extract category names for the URL - normalize all to lowercase for consistent filtering
+      const categoryValues = selectedCategories.map(cat => {
+        // If it's an object with a name property, use that
+        if (typeof cat === 'object' && cat.name) {
+          return cat.name.toLowerCase();
+        }
+        // Otherwise return the category as is but lowercase
+        return typeof cat === 'string' ? cat.toLowerCase() : cat;
+      });
+      
+      // Create URL with categories as comma-separated query parameter
+      const queryParams = new URLSearchParams();
+      queryParams.append('categories', categoryValues.join(','));
+      
+      // Add search query if available
+      if (searchQuery) {
+        queryParams.append('q', searchQuery);
+      }
+      
+      // Log what we're navigating with for debugging
+      console.log('Navigating to filter page with categories:', categoryValues);
+      
+      // Navigate to filter page with query parameters
+      router.push(`/filterCreators?${queryParams.toString()}`);
+    } else if (searchQuery) {
+      // If only search query but no categories, still navigate but just with the query
+      router.push(`/filterCreators?q=${encodeURIComponent(searchQuery)}`);
+    }
   };
   
   const handleCategorySelect = (category) => {

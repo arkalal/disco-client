@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { IoSearchOutline } from 'react-icons/io5';
 import { IoCloseCircle } from 'react-icons/io5';
 import { IoChevronDownOutline } from 'react-icons/io5';
@@ -20,6 +21,19 @@ import { FiInfo } from 'react-icons/fi';
 import './FilterCreatorsUI.scss';
 
 export default function FilterCreatorsUI() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get search categories from URL parameters
+  const categoriesParam = searchParams.get('categories');
+  const categories = categoriesParam ? categoriesParam.split(',') : [];
+  
+  // State for influencers data and loading state
+  const [influencers, setInfluencers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalResults, setTotalResults] = useState(0);
+
+  // Filter states
   const [activeDropdown, setActiveDropdown] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
@@ -71,6 +85,81 @@ export default function FilterCreatorsUI() {
   const dropdownRef = useRef(null);
   const allFiltersRef = useRef(null);
   const allFiltersBtnRef = useRef(null);
+
+  // Fetch creators based on filters
+  const fetchCreators = async (filters = {}) => {
+    setIsLoading(true);
+    
+    try {
+      // Build the query parameters
+      const queryParams = new URLSearchParams();
+      
+      // Add categories from URL or state - always include this filter
+      if (categories && categories.length > 0) {
+        // Convert all categories to lowercase for consistent filtering
+        const normalizedCategories = categories.map(cat => cat.toLowerCase());
+        console.log('Adding categories to query:', normalizedCategories);
+        queryParams.append('categories', normalizedCategories.join(','));
+      }
+      
+      // Only add location filters if explicitly selected
+      if (selectedCountry && selectedCountry !== '' && filters.applyLocationFilter) {
+        const locations = [selectedCountry];
+        if (selectedCities && selectedCities.length > 0) {
+          locations.push(...selectedCities);
+        }
+        queryParams.append('locations', locations.join(','));
+      }
+      
+      // Only add gender filter if explicitly selected
+      if (genderFilter && genderFilter !== '' && filters.applyGenderFilter) {
+        queryParams.append('genders', genderFilter);
+      }
+      
+      // Only add followers range if explicitly selected
+      if (followersFilter.min && filters.applyFollowersFilter) {
+        queryParams.append('minFollowers', followersFilter.min);
+      }
+      
+      if (followersFilter.max && filters.applyFollowersFilter) {
+        queryParams.append('maxFollowers', followersFilter.max);
+      }
+      
+      // Add any additional filters from the parameter
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && ['categories', 'applyLocationFilter', 'applyGenderFilter', 'applyFollowersFilter'].indexOf(key) === -1) {
+          queryParams.append(key, value);
+        }
+      });
+      
+      const response = await fetch(`/api/instagram/filter?${queryParams.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching filtered creators: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setInfluencers(data.data || []);
+      setTotalResults(data.pagination?.total || data.data?.length || 0);
+    } catch (error) {
+      console.error('Error fetching filtered creators:', error);
+      setInfluencers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Initial fetch on component mount
+  useEffect(() => {
+    console.log('Categories from URL:', categories);
+    if (categories.length > 0) {
+      console.log('Fetching creators with categories:', categories);
+      fetchCreators();
+    } else {
+      console.log('No categories found, fetching all creators');
+      fetchCreators();
+    }
+  }, [categoriesParam]);
   
   // Handle clicking outside to close dropdowns
   useEffect(() => {
@@ -113,21 +202,53 @@ export default function FilterCreatorsUI() {
   }, [showAllFilters]);
   
   const toggleDropdown = (dropdown) => {
-    if (activeDropdown === dropdown) {
-      setActiveDropdown('');
-    } else {
-      setActiveDropdown(dropdown);
-    }
+    setActiveDropdown(activeDropdown === dropdown ? '' : dropdown);
   };
   
   // Handle country selection
   const handleCountryChange = (country) => {
     setSelectedCountry(country);
+    // Update filters when country changes
+    fetchCreators();
   };
   
   // Handle influencer size selection
   const handleInfluencerSizeChange = (size) => {
     setSelectedInfluencerSize(size);
+    
+    // Map size selection to follower range
+    let min = 0;
+    let max = 0;
+    
+    switch (size) {
+      case 'nano':
+        min = 1000;
+        max = 10000;
+        break;
+      case 'micro':
+        min = 10000;
+        max = 50000;
+        break;
+      case 'mid-tier':
+        min = 50000;
+        max = 500000;
+        break;
+      case 'macro':
+        min = 500000;
+        max = 1000000;
+        break;
+      case 'mega':
+        min = 1000000;
+        max = 0; // No upper limit
+        break;
+      default:
+        min = 0;
+        max = 0;
+    }
+    
+    setFollowersFilter({ min, max });
+    // Update filters when influencer size changes
+    fetchCreators({ minFollowers: min, maxFollowers: max || '' });
   };
   
   // Toggle all filters sidebar
@@ -145,105 +266,59 @@ export default function FilterCreatorsUI() {
   
   // Handle city selection
   const toggleCitySelection = (city) => {
+    let newSelectedCities;
     if (selectedCities.includes(city)) {
-      setSelectedCities(selectedCities.filter(c => c !== city));
+      newSelectedCities = selectedCities.filter(c => c !== city);
     } else {
-      setSelectedCities([...selectedCities, city]);
+      newSelectedCities = [...selectedCities, city];
     }
+    setSelectedCities(newSelectedCities);
+    
+    // Update filters when city selection changes
+    setTimeout(() => fetchCreators(), 0);
   };
   
   // Remove city from selection
   const removeCity = (city) => {
-    setSelectedCities(selectedCities.filter(c => c !== city));
+    const newSelectedCities = selectedCities.filter(c => c !== city);
+    setSelectedCities(newSelectedCities);
+    
+    // Update filters when city is removed
+    setTimeout(() => fetchCreators(), 0);
+  };
+  
+  // Handle gender filter change
+  const handleGenderChange = (gender) => {
+    setGenderFilter(gender);
+    // Close the dropdown after selection
+    setActiveDropdown('');
+  };
+  
+  // Apply all filters - called when user clicks Apply button in the filter panel
+  const applyAllFilters = () => {
+    // Pass filter application flags to indicate these filters should be applied
+    fetchCreators({
+      applyLocationFilter: true,
+      applyGenderFilter: true,
+      applyFollowersFilter: true
+    });
+    setShowAllFilters(false);
+  };
+  
+  // Reset all filters
+  const resetFilters = () => {
+    setGenderFilter('');
+    setLocationFilter('');
+    setFollowersFilter({min: 0, max: 0});
+    setSelectedInfluencerSize('');
+    setSelectedCountry('India');
+    setSelectedCities([]);
+    
+    // Fetch with only categories - reset all other filters
+    fetchCreators();
   };
 
-  // Static data for demonstration
-  const influencers = [
-    {
-      name: 'SHILPA SHETTY KUNDRA',
-      handle: '@theshilpashetty',
-      influenceScore: 8.71,
-      followers: '32.8m',
-      avgLikes: '78.9k',
-      avgReelViews: '1.7m',
-      er: '0.24%',
-      location: 'Mumbai',
-      categories: ['Health & Fitness', 'Lifestyle'],
-      moreCategories: 1
-    },
-    {
-      name: 'Suresh Raina',
-      handle: '@sureshraina3',
-      influenceScore: 8.74,
-      followers: '27.7m',
-      avgLikes: '176.3k',
-      avgReelViews: '1.4m',
-      er: '0.64%',
-      location: 'Ghaziabad',
-      categories: ['Health & Fitness', 'Sports'],
-      moreCategories: 2
-    },
-    {
-      name: 'Yuvraj Singh',
-      handle: '@yuvisofficial',
-      influenceScore: 8.87,
-      followers: '20.7m',
-      avgLikes: '356k',
-      avgReelViews: '3.3m',
-      er: '1.73%',
-      location: 'Mumbai',
-      categories: ['Health & Fitness', 'Sports'],
-      moreCategories: 2
-    },
-    {
-      name: 'Malaika Arora',
-      handle: '@malaikaaroraofficial',
-      influenceScore: 8.50,
-      followers: '19m',
-      avgLikes: '55.3k',
-      avgReelViews: '743.1k',
-      er: '0.29%',
-      location: 'Thane',
-      categories: ['Health & Fitness', 'Health & Beauty'],
-      moreCategories: 0
-    },
-    {
-      name: 'Rishab Pant',
-      handle: '@rishabpant',
-      influenceScore: 8.93,
-      followers: '14.9m',
-      avgLikes: '713.9k',
-      avgReelViews: '4.9m',
-      er: '4.81%',
-      location: 'Delhi',
-      categories: ['Health & Fitness', 'Sports'],
-      moreCategories: 2
-    },
-    {
-      name: 'Bipasha Basu',
-      handle: '@bipashabasu',
-      influenceScore: 8.57,
-      followers: '14.1m',
-      avgLikes: '65.6k',
-      avgReelViews: '1.8m',
-      er: '0.47%',
-      location: 'Delhi',
-      categories: ['Health & Fitness', 'Arts & Entertainment'],
-      moreCategories: 2
-    },
-    {
-      name: 'Upasana Kamineni Konidela',
-      handle: '@upasanakaminenikonidela',
-      influenceScore: 8.76,
-      followers: '13.1m',
-      avgLikes: '281.1k',
-      avgReelViews: '2.8m',
-      er: '2.16%',
-      location: 'Hyderabad',
-      categories: ['Health & Fitness', 'Health & Beauty'],
-      moreCategories: 0
-    }
-  ];
+  // Static data removed - we now use dynamic data from the API
 
   return (
     <div className="filter-creators-container">
@@ -304,14 +379,16 @@ export default function FilterCreatorsUI() {
               top: genderButtonRef.current ? `${genderButtonRef.current.offsetTop + genderButtonRef.current.offsetHeight + 8}px` : '100%',
               left: genderButtonRef.current ? `${genderButtonRef.current.offsetLeft}px` : '0'
             }}>
-              <div className="dropdown-item" onClick={() => setGenderFilter('all')}>
-                <span>All</span>
-              </div>
-              <div className="dropdown-item" onClick={() => setGenderFilter('male')}>
-                <span>Male</span>
-              </div>
-              <div className="dropdown-item" onClick={() => setGenderFilter('female')}>
-                <span>Female</span>
+              <div className="gender-selection dropdown-content" onClick={e => e.stopPropagation()}>
+                <div className={`dropdown-item ${genderFilter === '' ? 'selected' : ''}`} onClick={() => handleGenderChange('')}>
+                  All
+                </div>
+                <div className={`dropdown-item ${genderFilter === 'm' ? 'selected' : ''}`} onClick={() => handleGenderChange('m')}>
+                  Male
+                </div>
+                <div className={`dropdown-item ${genderFilter === 'f' ? 'selected' : ''}`} onClick={() => handleGenderChange('f')}>
+                  Female
+                </div>
               </div>
             </div>
           )}
@@ -778,8 +855,8 @@ export default function FilterCreatorsUI() {
               </div>
               
               <div className="sidebar-actions">
-                <button className="reset-btn">Reset</button>
-                <button className="apply-btn">SHOW PROFILES (648)</button>
+                <button className="reset-btn" onClick={resetFilters}>Reset</button>
+                <button className="apply-btn" onClick={applyAllFilters}>SHOW PROFILES ({totalResults})</button>
               </div>
             </div>
           </div>
@@ -808,36 +885,69 @@ export default function FilterCreatorsUI() {
         </div>
 
         <div className="table-body">
-          {influencers.map((influencer, index) => (
-            <div className="table-row" key={index}>
-              <div className="checkbox-col">
-                <input type="checkbox" />
-              </div>
-              <div className="profile-col">
-                <div className="profile-img-container">
-                  <div className="profile-img"></div>
+          {isLoading ? (
+            // Skeleton loader while loading
+            Array.from({ length: 5 }).map((_, index) => (
+              <div className="table-row skeleton" key={index}>
+                <div className="checkbox-col skeleton-box"></div>
+                <div className="profile-col">
+                  <div className="profile-img-container">
+                    <div className="profile-img skeleton-circle"></div>
+                  </div>
+                  <div className="profile-info">
+                    <div className="profile-name skeleton-box"></div>
+                    <div className="profile-handle skeleton-box"></div>
+                  </div>
                 </div>
-                <div className="profile-info">
-                  <div className="profile-name">{influencer.name}</div>
-                  <div className="profile-handle">{influencer.handle}</div>
+                <div className="col score skeleton-box"></div>
+                <div className="col followers skeleton-box"></div>
+                <div className="col avg-likes skeleton-box"></div>
+                <div className="col avg-reel-views skeleton-box"></div>
+                <div className="col er skeleton-box"></div>
+                <div className="col location skeleton-box"></div>
+                <div className="col categories">
+                  <span className="category-badge skeleton-box"></span>
+                  <span className="category-badge skeleton-box"></span>
                 </div>
               </div>
-              <div className="col score">{influencer.influenceScore}</div>
-              <div className="col followers">{influencer.followers}</div>
-              <div className="col avg-likes">{influencer.avgLikes}</div>
-              <div className="col avg-reel-views">{influencer.avgReelViews}</div>
-              <div className="col er">{influencer.er}</div>
-              <div className="col location">{influencer.location}</div>
-              <div className="col categories">
-                {influencer.categories.map((category, idx) => (
-                  <span key={idx} className="category-badge">{category}</span>
-                ))}
-                {influencer.moreCategories > 0 && (
-                  <span className="more-categories">+{influencer.moreCategories} more</span>
-                )}
+            ))
+          ) : influencers.length > 0 ? (
+            influencers.map((influencer, index) => (
+              <div className="table-row" key={index}>
+                <div className="checkbox-col">
+                  <input type="checkbox" />
+                </div>
+                <div className="profile-col">
+                  <div className="profile-img-container">
+                    <div className="profile-img" style={{backgroundImage: `url(${influencer.profileImg})`}}></div>
+                  </div>
+                  <div className="profile-info">
+                    <div className="profile-name">{influencer.name}</div>
+                    <div className="profile-handle">{influencer.handle}</div>
+                  </div>
+                </div>
+                <div className="col score">{influencer.influenceScore}</div>
+                <div className="col followers">{influencer.followers}</div>
+                <div className="col avg-likes">{influencer.avgLikes}</div>
+                <div className="col avg-reel-views">{influencer.avgReelViews}</div>
+                <div className="col er">{influencer.er}</div>
+                <div className="col location">{influencer.location}</div>
+                <div className="col categories">
+                  {influencer.categories.map((category, idx) => (
+                    <span key={idx} className="category-badge">{category}</span>
+                  ))}
+                  {influencer.moreCategories > 0 && (
+                    <span className="more-categories">+{influencer.moreCategories} more</span>
+                  )}
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="no-results">
+              <p>No influencers found matching your criteria.</p>
+              <button onClick={resetFilters} className="reset-btn">Reset Filters</button>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

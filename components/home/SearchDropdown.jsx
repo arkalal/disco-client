@@ -10,13 +10,25 @@ import { FiSearch } from "react-icons/fi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-const SearchDropdown = ({ isOpen, onClose, searchContainerRef, searchQuery = "" }) => {
+const SearchDropdown = ({ isOpen, onClose, onCategorySelect, searchContainerRef, searchQuery = "" }) => {
   const dropdownRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState([]);
   const router = useRouter();
   const [searchTimeout, setSearchTimeout] = useState(null);
+  
+  // Define categories with icons
+  const categories = [
+    { name: "Beauty", icon: "💄" },
+    { name: "Hair Care", icon: "💇" },
+    { name: "Fashion", icon: "👗" },
+    { name: "Travel", icon: "🌎" },
+    { name: "Fitness", icon: "🏋️" },
+    { name: "Health", icon: "⚕️" },
+    { name: "Food", icon: "🍽️" },
+    { name: "Lifestyle", icon: "✨" },
+  ];
 
   // Mount/unmount handling with a delay for exit animation
   useEffect(() => {
@@ -98,6 +110,13 @@ const SearchDropdown = ({ isOpen, onClose, searchContainerRef, searchQuery = "" 
     router.push(`/profile/${username}`);
     onClose();
   };
+  
+  // Handle category selection
+  const handleCategoryClick = (category) => {
+    if (onCategorySelect) {
+      onCategorySelect(category);
+    }
+  };
 
   // Calculate and apply position styles before DOM paint
   useLayoutEffect(() => {
@@ -144,34 +163,16 @@ const SearchDropdown = ({ isOpen, onClose, searchContainerRef, searchQuery = "" 
         <span>SEARCH SUGGESTIONS</span>
       </div>
       <div className="search-categories">
-        <div className="category-item">
-          <span className="category-icon arts">🎭</span>
-          <span className="category-name">Arts & Entertainment</span>
-        </div>
-        <div className="category-item">
-          <span className="category-icon fashion">👗</span>
-          <span className="category-name">Fashion</span>
-        </div>
-        <div className="category-item">
-          <span className="category-icon family">📱</span>
-          <span className="category-name">Family & Parenting</span>
-        </div>
-        <div className="category-item">
-          <span className="category-icon travel">🌎</span>
-          <span className="category-name">Travel</span>
-        </div>
-        <div className="category-item">
-          <span className="category-icon fitness">🏋️</span>
-          <span className="category-name">Fitness</span>
-        </div>
-        <div className="category-item">
-          <span className="category-icon education">🎓</span>
-          <span className="category-name">Education</span>
-        </div>
-        <div className="category-item">
-          <span className="category-icon creator">⭐</span>
-          <span className="category-name">Content Creator</span>
-        </div>
+        {categories.map((category, index) => (
+          <div 
+            key={index} 
+            className="category-item"
+            onClick={() => handleCategoryClick(category)}
+          >
+            <span className="category-icon">{category.icon}</span>
+            <span className="category-name">{category.name}</span>
+          </div>
+        ))}
       </div>
 
       <div className="search-dropdown-section">

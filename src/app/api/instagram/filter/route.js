@@ -21,10 +21,12 @@ export async function GET(request) {
   
   // Extract filter parameters and normalize to lowercase for case-insensitive matching
   const categories = searchParams.get("categories") ? searchParams.get("categories").split(",").map(cat => cat.trim().toLowerCase()) : [];
-  const locations = searchParams.get("locations") ? searchParams.get("locations").split(",").map(loc => loc.trim()) : [];
-  const genders = searchParams.get("genders") ? searchParams.get("genders").split(",").map(g => g.trim()) : [];
+  const locations = searchParams.get("locations") ? searchParams.get("locations").split(",").map(loc => loc.trim().toLowerCase()) : [];
+  const genders = searchParams.get("genders") ? searchParams.get("genders").split(",").map(g => g.trim().toLowerCase()) : [];
   
   console.log("Filtering with categories:", categories);
+  console.log("Filtering with locations:", locations);
+  console.log("Filtering with genders:", genders);
   const minFollowers = searchParams.get("minFollowers") || "";
   const maxFollowers = searchParams.get("maxFollowers") || "";
   const page = parseInt(searchParams.get("page") || "1", 10);

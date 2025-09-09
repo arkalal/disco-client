@@ -18,12 +18,27 @@ try {
 export async function GET(request) {
   // Get the filter parameters from URL parameters
   const { searchParams } = new URL(request.url);
-  
+
   // Extract filter parameters and normalize to lowercase for case-insensitive matching
-  const categories = searchParams.get("categories") ? searchParams.get("categories").split(",").map(cat => cat.trim().toLowerCase()) : [];
-  const locations = searchParams.get("locations") ? searchParams.get("locations").split(",").map(loc => loc.trim().toLowerCase()) : [];
-  const genders = searchParams.get("genders") ? searchParams.get("genders").split(",").map(g => g.trim().toLowerCase()) : [];
-  
+  const categories = searchParams.get("categories")
+    ? searchParams
+        .get("categories")
+        .split(",")
+        .map((cat) => cat.trim().toLowerCase())
+    : [];
+  const locations = searchParams.get("locations")
+    ? searchParams
+        .get("locations")
+        .split(",")
+        .map((loc) => loc.trim().toLowerCase())
+    : [];
+  const genders = searchParams.get("genders")
+    ? searchParams
+        .get("genders")
+        .split(",")
+        .map((g) => g.trim().toLowerCase())
+    : [];
+
   console.log("Filtering with categories:", categories);
   console.log("Filtering with locations:", locations);
   console.log("Filtering with genders:", genders);
@@ -32,10 +47,17 @@ export async function GET(request) {
   const page = parseInt(searchParams.get("page") || "1", 10);
   const perPage = parseInt(searchParams.get("perPage") || "10", 10);
   const sort = searchParams.get("sort") || "-usersCount"; // Default sort by followers desc
-  
+
   // Generate a unique cache key based on the filter parameters
   const filterKey = JSON.stringify({
-    categories, locations, genders, minFollowers, maxFollowers, page, perPage, sort
+    categories,
+    locations,
+    genders,
+    minFollowers,
+    maxFollowers,
+    page,
+    perPage,
+    sort,
   });
 
   try {
@@ -60,31 +82,31 @@ export async function GET(request) {
     console.log("Fetching filtered results from API...");
     // Build API URL with filters
     let apiUrl = `https://instagram-statistics-api.p.rapidapi.com/search?page=${page}&perPage=${perPage}&socialTypes=INST`;
-    
+
     // Add tag filtering
     if (categories.length > 0) {
       apiUrl += `&tags=${encodeURIComponent(categories.join(","))}`;
     }
-    
+
     // Add location filtering
     if (locations.length > 0) {
       apiUrl += `&locations=${encodeURIComponent(locations.join(","))}`;
     }
-    
+
     // Add gender filtering
     if (genders.length > 0) {
       apiUrl += `&genders=${encodeURIComponent(genders.join(","))}`;
     }
-    
+
     // Add followers range filtering
     if (minFollowers) {
       apiUrl += `&minUsersCount=${encodeURIComponent(minFollowers)}`;
     }
-    
+
     if (maxFollowers) {
       apiUrl += `&maxUsersCount=${encodeURIComponent(maxFollowers)}`;
     }
-    
+
     // Add sorting
     if (sort) {
       apiUrl += `&sort=${encodeURIComponent(sort)}`;
@@ -97,8 +119,8 @@ export async function GET(request) {
       console.log("API Key present:", !!process.env.RAPIDAPI_KEY);
 
       // Use the provided API key or fall back to env variable
-      const API_KEY = "3044984e1bmshf01d9d6f6aeb45dp1b9ea2jsne913f73d0369";
-      
+      const API_KEY = "3918f1498amsh6ed2cfac7b910cbp190c59jsne527aad0ea6e";
+
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -121,7 +143,13 @@ export async function GET(request) {
         }
 
         // Use fallback data for development
-        const fallbackData = generateFallbackData(categories, locations, genders, minFollowers, maxFollowers);
+        const fallbackData = generateFallbackData(
+          categories,
+          locations,
+          genders,
+          minFollowers,
+          maxFollowers
+        );
         return NextResponse.json(fallbackData);
       }
 
@@ -141,7 +169,15 @@ export async function GET(request) {
     } catch (apiError) {
       console.error("API request failed:", apiError);
       // For development, fall back to demo data
-      return NextResponse.json(generateFallbackData(categories, locations, genders, minFollowers, maxFollowers));
+      return NextResponse.json(
+        generateFallbackData(
+          categories,
+          locations,
+          genders,
+          minFollowers,
+          maxFollowers
+        )
+      );
     }
   } catch (error) {
     console.error("Error in Instagram filter route:", error);
@@ -155,18 +191,24 @@ function processFilterResults(rawData) {
     return { data: [], pagination: { total: 0 } };
   }
 
-  const processedResults = rawData.data.map(profile => ({
+  const processedResults = rawData.data.map((profile) => ({
     id: profile.cid || `INST:${profile.screenName}`,
     name: profile.name || "",
     username: profile.screenName || "",
     handle: `@${profile.screenName || ""}`,
-    profileImg: profile.image || `https://via.placeholder.com/50?text=${encodeURIComponent(profile.screenName?.charAt(0) || "?")}`,
+    profileImg:
+      profile.image ||
+      `https://via.placeholder.com/50?text=${encodeURIComponent(
+        profile.screenName?.charAt(0) || "?"
+      )}`,
     verified: profile.verified || false,
     followers: formatFollowers(profile.usersCount || 0),
     followersCount: profile.usersCount || 0,
     influenceScore: (profile.qualityScore * 10).toFixed(1) || "5.0",
     avgLikes: formatNumber(profile.avgInteractions || 0),
-    avgReelViews: formatNumber((profile.avgViews || profile.avgInteractions * 3) || 0),
+    avgReelViews: formatNumber(
+      profile.avgViews || profile.avgInteractions * 3 || 0
+    ),
     er: ((profile.avgER || 0) * 100).toFixed(2) + "%",
     location: getLocation(profile),
     categories: (profile.tags || []).slice(0, 3),
@@ -174,13 +216,13 @@ function processFilterResults(rawData) {
     genders: profile.genders || [],
     countries: profile.countries || [],
     cities: profile.cities || [],
-    rawData: profile
+    rawData: profile,
   }));
 
   return {
     data: processedResults,
     meta: rawData.meta || { code: 200 },
-    pagination: rawData.pagination || { total: processedResults.length }
+    pagination: rawData.pagination || { total: processedResults.length },
   };
 }
 
@@ -190,30 +232,30 @@ function getLocation(profile) {
   if (profile.cities && profile.cities.length > 0) {
     return formatLocationName(profile.cities[0].name);
   }
-  
+
   if (profile.countries && profile.countries.length > 0) {
     return formatLocationName(profile.countries[0].name);
   }
-  
+
   if (profile.membersCities && profile.membersCities.length > 0) {
     return formatLocationName(profile.membersCities[0].category);
   }
-  
+
   if (profile.membersCountries && profile.membersCountries.length > 0) {
     return formatLocationName(profile.membersCountries[0].category);
   }
-  
+
   return "Global";
 }
 
 // Format location name to be more readable
 function formatLocationName(name) {
   if (!name) return "Global";
-  
+
   // Convert kebab-case to Title Case
   return name
     .split("-")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
 
@@ -238,7 +280,13 @@ function formatNumber(num) {
 }
 
 // Generate fallback data for development/testing
-function generateFallbackData(categories, locations, genders, minFollowers, maxFollowers) {
+function generateFallbackData(
+  categories,
+  locations,
+  genders,
+  minFollowers,
+  maxFollowers
+) {
   // Base profiles data
   const baseProfiles = [
     {
@@ -257,9 +305,18 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "Portugal",
       categories: ["Sports", "Football", "Lifestyle"],
       moreCategories: 2,
-      genders: [{name: "m", percent: 0.65}, {name: "f", percent: 0.35}],
-      countries: [{name: "united-states", percent: 0.25}, {name: "india", percent: 0.15}],
-      cities: [{name: "madrid", percent: 0.1}, {name: "manchester", percent: 0.08}]
+      genders: [
+        { name: "m", percent: 0.65 },
+        { name: "f", percent: 0.35 },
+      ],
+      countries: [
+        { name: "united-states", percent: 0.25 },
+        { name: "india", percent: 0.15 },
+      ],
+      cities: [
+        { name: "madrid", percent: 0.1 },
+        { name: "manchester", percent: 0.08 },
+      ],
     },
     {
       id: "INST:leomessi",
@@ -277,9 +334,18 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "Argentina",
       categories: ["Sports", "Football", "Family"],
       moreCategories: 1,
-      genders: [{name: "m", percent: 0.7}, {name: "f", percent: 0.3}],
-      countries: [{name: "argentina", percent: 0.3}, {name: "spain", percent: 0.2}],
-      cities: [{name: "barcelona", percent: 0.15}, {name: "buenos-aires", percent: 0.1}]
+      genders: [
+        { name: "m", percent: 0.7 },
+        { name: "f", percent: 0.3 },
+      ],
+      countries: [
+        { name: "argentina", percent: 0.3 },
+        { name: "spain", percent: 0.2 },
+      ],
+      cities: [
+        { name: "barcelona", percent: 0.15 },
+        { name: "buenos-aires", percent: 0.1 },
+      ],
     },
     {
       id: "INST:kyliejenner",
@@ -297,9 +363,18 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "United States",
       categories: ["Fashion", "Beauty", "Lifestyle"],
       moreCategories: 3,
-      genders: [{name: "f", percent: 0.85}, {name: "m", percent: 0.15}],
-      countries: [{name: "united-states", percent: 0.45}, {name: "canada", percent: 0.1}],
-      cities: [{name: "los-angeles", percent: 0.2}, {name: "new-york-city", percent: 0.1}]
+      genders: [
+        { name: "f", percent: 0.85 },
+        { name: "m", percent: 0.15 },
+      ],
+      countries: [
+        { name: "united-states", percent: 0.45 },
+        { name: "canada", percent: 0.1 },
+      ],
+      cities: [
+        { name: "los-angeles", percent: 0.2 },
+        { name: "new-york-city", percent: 0.1 },
+      ],
     },
     {
       id: "INST:selenagomez",
@@ -317,9 +392,18 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "United States",
       categories: ["Music", "Beauty", "Entertainment"],
       moreCategories: 2,
-      genders: [{name: "f", percent: 0.7}, {name: "m", percent: 0.3}],
-      countries: [{name: "united-states", percent: 0.4}, {name: "brazil", percent: 0.12}],
-      cities: [{name: "new-york-city", percent: 0.15}, {name: "los-angeles", percent: 0.1}]
+      genders: [
+        { name: "f", percent: 0.7 },
+        { name: "m", percent: 0.3 },
+      ],
+      countries: [
+        { name: "united-states", percent: 0.4 },
+        { name: "brazil", percent: 0.12 },
+      ],
+      cities: [
+        { name: "new-york-city", percent: 0.15 },
+        { name: "los-angeles", percent: 0.1 },
+      ],
     },
     {
       id: "INST:therock",
@@ -337,9 +421,18 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "United States",
       categories: ["Entertainment", "Fitness", "Lifestyle"],
       moreCategories: 1,
-      genders: [{name: "m", percent: 0.6}, {name: "f", percent: 0.4}],
-      countries: [{name: "united-states", percent: 0.38}, {name: "united-kingdom", percent: 0.09}],
-      cities: [{name: "miami", percent: 0.12}, {name: "los-angeles", percent: 0.1}]
+      genders: [
+        { name: "m", percent: 0.6 },
+        { name: "f", percent: 0.4 },
+      ],
+      countries: [
+        { name: "united-states", percent: 0.38 },
+        { name: "united-kingdom", percent: 0.09 },
+      ],
+      cities: [
+        { name: "miami", percent: 0.12 },
+        { name: "los-angeles", percent: 0.1 },
+      ],
     },
     {
       id: "INST:beyonce",
@@ -357,9 +450,18 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "United States",
       categories: ["Music", "Fashion", "Entertainment"],
       moreCategories: 2,
-      genders: [{name: "f", percent: 0.75}, {name: "m", percent: 0.25}],
-      countries: [{name: "united-states", percent: 0.42}, {name: "united-kingdom", percent: 0.08}],
-      cities: [{name: "new-york-city", percent: 0.13}, {name: "houston", percent: 0.08}]
+      genders: [
+        { name: "f", percent: 0.75 },
+        { name: "m", percent: 0.25 },
+      ],
+      countries: [
+        { name: "united-states", percent: 0.42 },
+        { name: "united-kingdom", percent: 0.08 },
+      ],
+      cities: [
+        { name: "new-york-city", percent: 0.13 },
+        { name: "houston", percent: 0.08 },
+      ],
     },
     {
       id: "INST:natgeo",
@@ -377,9 +479,18 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "Global",
       categories: ["Nature", "Photography", "Travel"],
       moreCategories: 2,
-      genders: [{name: "m", percent: 0.55}, {name: "f", percent: 0.45}],
-      countries: [{name: "united-states", percent: 0.35}, {name: "india", percent: 0.12}],
-      cities: [{name: "washington-dc", percent: 0.1}, {name: "new-york-city", percent: 0.08}]
+      genders: [
+        { name: "m", percent: 0.55 },
+        { name: "f", percent: 0.45 },
+      ],
+      countries: [
+        { name: "united-states", percent: 0.35 },
+        { name: "india", percent: 0.12 },
+      ],
+      cities: [
+        { name: "washington-dc", percent: 0.1 },
+        { name: "new-york-city", percent: 0.08 },
+      ],
     },
     {
       id: "INST:kimkardashian",
@@ -397,9 +508,18 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "United States",
       categories: ["Fashion", "Beauty", "Lifestyle"],
       moreCategories: 3,
-      genders: [{name: "f", percent: 0.8}, {name: "m", percent: 0.2}],
-      countries: [{name: "united-states", percent: 0.4}, {name: "canada", percent: 0.09}],
-      cities: [{name: "los-angeles", percent: 0.18}, {name: "new-york-city", percent: 0.11}]
+      genders: [
+        { name: "f", percent: 0.8 },
+        { name: "m", percent: 0.2 },
+      ],
+      countries: [
+        { name: "united-states", percent: 0.4 },
+        { name: "canada", percent: 0.09 },
+      ],
+      cities: [
+        { name: "los-angeles", percent: 0.18 },
+        { name: "new-york-city", percent: 0.11 },
+      ],
     },
     {
       id: "INST:justinbieber",
@@ -417,9 +537,18 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "Canada",
       categories: ["Music", "Lifestyle", "Fashion"],
       moreCategories: 1,
-      genders: [{name: "f", percent: 0.7}, {name: "m", percent: 0.3}],
-      countries: [{name: "united-states", percent: 0.35}, {name: "canada", percent: 0.15}],
-      cities: [{name: "toronto", percent: 0.12}, {name: "los-angeles", percent: 0.1}]
+      genders: [
+        { name: "f", percent: 0.7 },
+        { name: "m", percent: 0.3 },
+      ],
+      countries: [
+        { name: "united-states", percent: 0.35 },
+        { name: "canada", percent: 0.15 },
+      ],
+      cities: [
+        { name: "toronto", percent: 0.12 },
+        { name: "los-angeles", percent: 0.1 },
+      ],
     },
     {
       id: "INST:nike",
@@ -437,127 +566,169 @@ function generateFallbackData(categories, locations, genders, minFollowers, maxF
       location: "United States",
       categories: ["Sports", "Fashion", "Fitness"],
       moreCategories: 2,
-      genders: [{name: "m", percent: 0.6}, {name: "f", percent: 0.4}],
-      countries: [{name: "united-states", percent: 0.3}, {name: "china", percent: 0.15}],
-      cities: [{name: "portland", percent: 0.1}, {name: "los-angeles", percent: 0.08}]
-    }
+      genders: [
+        { name: "m", percent: 0.6 },
+        { name: "f", percent: 0.4 },
+      ],
+      countries: [
+        { name: "united-states", percent: 0.3 },
+        { name: "china", percent: 0.15 },
+      ],
+      cities: [
+        { name: "portland", percent: 0.1 },
+        { name: "los-angeles", percent: 0.08 },
+      ],
+    },
   ];
-  
+
   // Filter profiles based on the provided parameters
   let filteredProfiles = [...baseProfiles];
-  
+
   // Filter by categories
   if (categories && categories.length > 0) {
     console.log("Filtering profiles by categories:", categories);
-    
+
     // Pre-process categories for better matching
-    const normalizedCategories = categories.map(cat => {
+    const normalizedCategories = categories.map((cat) => {
       // Convert category name to a standard format
       return cat.toLowerCase().trim();
     });
-    
+
     // Map common category variations
     const categoryMap = {
-      'fashion': ['fashion', 'style', 'clothing', 'apparel', 'model'],
-      'beauty': ['beauty', 'makeup', 'cosmetics', 'skincare'],
-      'lifestyle': ['lifestyle', 'living', 'life'],
-      'travel': ['travel', 'tourism', 'vacation', 'adventure'],
-      'food': ['food', 'cooking', 'culinary', 'recipe', 'chef'],
-      'fitness': ['fitness', 'gym', 'workout', 'exercise', 'health & fitness'],
-      'health': ['health', 'wellness', 'healthcare', 'health & beauty', 'health & fitness'],
-      'sports': ['sports', 'athlete', 'football', 'basketball', 'soccer'],
-      'entertainment': ['entertainment', 'celebrity', 'actor', 'actress', 'film', 'movie', 'tv', 'television'],
-      'music': ['music', 'musician', 'singer', 'artist', 'band', 'concert'],
-      'art': ['art', 'artist', 'creative', 'design', 'drawing', 'painting'],
-      'photography': ['photography', 'photographer', 'photo', 'camera'],
-      'technology': ['technology', 'tech', 'gadget', 'computer', 'software'],
-      'business': ['business', 'entrepreneur', 'startup', 'corporate', 'company'],
-      'education': ['education', 'learning', 'teaching', 'school', 'university'],
-      'parenting': ['parenting', 'family', 'kids', 'children', 'baby'],
-      'pets': ['pets', 'animals', 'dog', 'cat', 'pet care'],
-      'gaming': ['gaming', 'gamer', 'videogames', 'games', 'esports'],
-      'automotive': ['automotive', 'cars', 'vehicles', 'racing'],
-      'luxury': ['luxury', 'premium', 'high-end', 'designer'],
+      fashion: ["fashion", "style", "clothing", "apparel", "model"],
+      beauty: ["beauty", "makeup", "cosmetics", "skincare"],
+      lifestyle: ["lifestyle", "living", "life"],
+      travel: ["travel", "tourism", "vacation", "adventure"],
+      food: ["food", "cooking", "culinary", "recipe", "chef"],
+      fitness: ["fitness", "gym", "workout", "exercise", "health & fitness"],
+      health: [
+        "health",
+        "wellness",
+        "healthcare",
+        "health & beauty",
+        "health & fitness",
+      ],
+      sports: ["sports", "athlete", "football", "basketball", "soccer"],
+      entertainment: [
+        "entertainment",
+        "celebrity",
+        "actor",
+        "actress",
+        "film",
+        "movie",
+        "tv",
+        "television",
+      ],
+      music: ["music", "musician", "singer", "artist", "band", "concert"],
+      art: ["art", "artist", "creative", "design", "drawing", "painting"],
+      photography: ["photography", "photographer", "photo", "camera"],
+      technology: ["technology", "tech", "gadget", "computer", "software"],
+      business: ["business", "entrepreneur", "startup", "corporate", "company"],
+      education: ["education", "learning", "teaching", "school", "university"],
+      parenting: ["parenting", "family", "kids", "children", "baby"],
+      pets: ["pets", "animals", "dog", "cat", "pet care"],
+      gaming: ["gaming", "gamer", "videogames", "games", "esports"],
+      automotive: ["automotive", "cars", "vehicles", "racing"],
+      luxury: ["luxury", "premium", "high-end", "designer"],
     };
-    
+
     // Expand categories to include related terms
     const expandedCategories = new Set();
-    normalizedCategories.forEach(cat => {
+    normalizedCategories.forEach((cat) => {
       expandedCategories.add(cat);
-      
+
       // Add related categories from the map
       Object.entries(categoryMap).forEach(([key, values]) => {
         if (cat === key || values.includes(cat)) {
           expandedCategories.add(key);
-          values.forEach(v => expandedCategories.add(v));
+          values.forEach((v) => expandedCategories.add(v));
         }
       });
     });
-    
+
     console.log("Expanded categories for matching:", [...expandedCategories]);
-    
-    filteredProfiles = filteredProfiles.filter(profile => {
+
+    filteredProfiles = filteredProfiles.filter((profile) => {
       // Get all categories from the profile including hidden ones
-      const profileCategories = [...profile.categories, ...(new Array(profile.moreCategories).fill("other"))];
-      
+      const profileCategories = [
+        ...profile.categories,
+        ...new Array(profile.moreCategories).fill("other"),
+      ];
+
       // Normalize profile categories
-      const normalizedProfileCategories = profileCategories.map(cat => {
-        return (typeof cat === 'string') ? cat.toLowerCase().trim() : '';
+      const normalizedProfileCategories = profileCategories.map((cat) => {
+        return typeof cat === "string" ? cat.toLowerCase().trim() : "";
       });
-      
+
       // Check if any of the requested categories match any profile categories
-      return [...expandedCategories].some(category => {
-        return normalizedProfileCategories.some(profCat => {
+      return [...expandedCategories].some((category) => {
+        return normalizedProfileCategories.some((profCat) => {
           // Check for exact match or if the category is a substring of the profile category
-          return profCat === category || 
-                 profCat.includes(category) || 
-                 category.includes(profCat);
+          return (
+            profCat === category ||
+            profCat.includes(category) ||
+            category.includes(profCat)
+          );
         });
       });
     });
-    
-    console.log(`Found ${filteredProfiles.length} profiles matching categories`);
+
+    console.log(
+      `Found ${filteredProfiles.length} profiles matching categories`
+    );
   }
-  
+
   // Filter by locations
   if (locations && locations.length > 0) {
-    filteredProfiles = filteredProfiles.filter(profile => {
-      return locations.some(location => 
-        profile.location.toLowerCase().includes(location.toLowerCase()) ||
-        profile.countries.some(country => country.name.toLowerCase() === location.toLowerCase()) ||
-        profile.cities.some(city => city.name.toLowerCase() === location.toLowerCase())
+    filteredProfiles = filteredProfiles.filter((profile) => {
+      return locations.some(
+        (location) =>
+          profile.location.toLowerCase().includes(location.toLowerCase()) ||
+          profile.countries.some(
+            (country) => country.name.toLowerCase() === location.toLowerCase()
+          ) ||
+          profile.cities.some(
+            (city) => city.name.toLowerCase() === location.toLowerCase()
+          )
       );
     });
   }
-  
+
   // Filter by genders
   if (genders && genders.length > 0) {
-    filteredProfiles = filteredProfiles.filter(profile => {
-      return genders.some(gender => 
-        profile.genders.some(g => g.name.toLowerCase() === gender.toLowerCase())
+    filteredProfiles = filteredProfiles.filter((profile) => {
+      return genders.some((gender) =>
+        profile.genders.some(
+          (g) => g.name.toLowerCase() === gender.toLowerCase()
+        )
       );
     });
   }
-  
+
   // Filter by follower count
   if (minFollowers) {
     const min = parseInt(minFollowers, 10);
-    filteredProfiles = filteredProfiles.filter(profile => profile.followersCount >= min);
+    filteredProfiles = filteredProfiles.filter(
+      (profile) => profile.followersCount >= min
+    );
   }
-  
+
   if (maxFollowers) {
     const max = parseInt(maxFollowers, 10);
-    filteredProfiles = filteredProfiles.filter(profile => profile.followersCount <= max);
+    filteredProfiles = filteredProfiles.filter(
+      (profile) => profile.followersCount <= max
+    );
   }
-  
+
   return {
     data: filteredProfiles,
     meta: { code: 200 },
-    pagination: { 
+    pagination: {
       total: filteredProfiles.length,
       page: 1,
       perPage: filteredProfiles.length,
-      totalPages: 1
-    }
+      totalPages: 1,
+    },
   };
 }

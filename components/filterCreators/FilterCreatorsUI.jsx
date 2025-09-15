@@ -984,10 +984,11 @@ export default function FilterCreatorsUI() {
             </span>
             <IoChevronDownOutline className="dropdown-icon" />
           </div>
-          <div className="filter-category">
+          {/* Influencer score filter - commented out as requested */}
+          {/* <div className="filter-category">
             <span>Influence Score</span>
             <IoChevronDownOutline className="dropdown-icon" />
-          </div>
+          </div> */}
           <div
             className="filter-category all-filters"
             onClick={toggleAllFilters}
@@ -1642,8 +1643,12 @@ export default function FilterCreatorsUI() {
         </div>
 
         <div className="results-count">
-          <span className="count">22,822</span>
-          <span className="profiles-text">profiles</span>
+          {totalResults > 0 && (
+            <>
+              <span className="count">{totalResults.toLocaleString()}</span>
+              <span className="profiles-text">profiles</span>
+            </>
+          )}
           <div className="sort-followers">
             <span>Followers</span>
             <IoChevronDownOutline className="dropdown-icon" />

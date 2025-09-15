@@ -119,7 +119,7 @@ export async function GET(request) {
       console.log("API Key present:", !!process.env.RAPIDAPI_KEY);
 
       // Use the provided API key or fall back to env variable
-      const API_KEY = "3918f1498amsh6ed2cfac7b910cbp190c59jsne527aad0ea6e";
+      const API_KEY = "3e85e496b2msh6481d82063885f3p14459ajsn794d265e427a";
 
       const response = await fetch(apiUrl, {
         method: "GET",

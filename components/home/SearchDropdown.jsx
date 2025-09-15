@@ -10,7 +10,7 @@ import { FiSearch } from "react-icons/fi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-const SearchDropdown = ({ isOpen, onClose, onCategorySelect, searchContainerRef, searchQuery = "" }) => {
+const SearchDropdown = ({ isOpen, onClose, onCategorySelect, searchContainerRef, searchQuery = "", selectedCategories = [] }) => {
   const dropdownRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -114,7 +114,9 @@ const SearchDropdown = ({ isOpen, onClose, onCategorySelect, searchContainerRef,
   // Handle category selection
   const handleCategoryClick = (category) => {
     if (onCategorySelect) {
+      // Pass the category to the parent component for handling
       onCategorySelect(category);
+      // Don't close dropdown - allow multiple selections
     }
   };
 
@@ -163,16 +165,25 @@ const SearchDropdown = ({ isOpen, onClose, onCategorySelect, searchContainerRef,
         <span>SEARCH SUGGESTIONS</span>
       </div>
       <div className="search-categories">
-        {categories.map((category, index) => (
-          <div 
-            key={index} 
-            className="category-item"
-            onClick={() => handleCategoryClick(category)}
-          >
-            <span className="category-icon">{category.icon}</span>
-            <span className="category-name">{category.name}</span>
-          </div>
-        ))}
+        {categories.map((category, index) => {
+          // Check if this category is already selected
+          const isSelected = selectedCategories.some(selectedCat => 
+            (selectedCat === category) || 
+            (selectedCat.name && category.name && selectedCat.name === category.name)
+          );
+          
+          return (
+            <div 
+              key={index} 
+              className={`category-item ${isSelected ? 'category-selected' : ''}`}
+              onClick={() => handleCategoryClick(category)}
+            >
+              <span className="category-icon">{category.icon}</span>
+              <span className="category-name">{category.name}</span>
+              {isSelected && <BsCheckCircleFill className="selected-indicator" />}
+            </div>
+          );
+        })}
       </div>
 
       <div className="search-dropdown-section">

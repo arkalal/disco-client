@@ -24,17 +24,24 @@ const SearchSection = () => {
     }
   };
   
+  // Format category name for API (lowercase with hyphens)
+  const formatCategoryForApi = (categoryName) => {
+    if (!categoryName) return "";
+    // Convert to lowercase and replace spaces with hyphens
+    return categoryName.toLowerCase().replace(/\s+/g, "-");
+  };
+  
   const handleSearch = () => {
     // If there are selected categories, navigate to filter page with categories as URL parameters
     if (selectedCategories.length > 0) {
-      // Extract category names for the URL - normalize all to lowercase for consistent filtering
+      // Extract category names for the URL - normalize all to lowercase with hyphens for consistent filtering
       const categoryValues = selectedCategories.map(cat => {
         // If it's an object with a name property, use that
         if (typeof cat === 'object' && cat.name) {
-          return cat.name.toLowerCase();
+          return formatCategoryForApi(cat.name);
         }
-        // Otherwise return the category as is but lowercase
-        return typeof cat === 'string' ? cat.toLowerCase() : cat;
+        // Otherwise return the category as is but properly formatted
+        return typeof cat === 'string' ? formatCategoryForApi(cat) : cat;
       });
       
       // Create URL with categories as comma-separated query parameter
@@ -58,15 +65,33 @@ const SearchSection = () => {
   };
   
   const handleCategorySelect = (category) => {
-    if (!selectedCategories.includes(category)) {
+    // Check if this category is already selected
+    const isAlreadySelected = selectedCategories.some(cat => 
+      (cat === category) || 
+      (cat.name && category.name && cat.name === category.name)
+    );
+    
+    // If not already selected, add it to the array
+    if (!isAlreadySelected) {
       setSelectedCategories([...selectedCategories, category]);
     }
-    setIsDropdownOpen(false);
+    
+    // Keep dropdown open to allow selecting multiple categories
+    // Only close if user clicks outside or presses search
   };
   
   const removeCategory = (category, e) => {
     e.stopPropagation(); // Prevent dropdown from opening
-    setSelectedCategories(selectedCategories.filter(cat => cat !== category));
+    
+    // Handle removal of categories whether they're objects or strings
+    setSelectedCategories(selectedCategories.filter(cat => {
+      // If both are objects with name property
+      if (cat.name && category.name) {
+        return cat.name !== category.name;
+      }
+      // Direct comparison for string categories or identical objects
+      return cat !== category;
+    }));
   };
 
   const closeDropdown = () => {
@@ -124,11 +149,17 @@ const SearchSection = () => {
                   <button 
                     className="remove-category" 
                     onClick={(e) => removeCategory(category, e)}
+                    aria-label={`Remove ${category.name} category`}
                   >
                     <IoMdClose />
                   </button>
                 </div>
               ))}
+              {selectedCategories.length > 1 && (
+                <div className="category-count" title="Number of selected categories">
+                  {selectedCategories.length} categories
+                </div>
+              )}
             </div>
           )}
           
@@ -156,6 +187,7 @@ const SearchSection = () => {
             onCategorySelect={handleCategorySelect}
             searchContainerRef={searchContainerRef}
             searchQuery={searchQuery}
+            selectedCategories={selectedCategories}
           />
         )}
       </div>

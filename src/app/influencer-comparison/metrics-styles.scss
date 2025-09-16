@@ -1,0 +1,86 @@
+// Additional styles for metrics display in comparison page
+
+.accordion-section {
+  .section-content {
+    .metric-value {
+      font-size: 14px;
+      color: #111827;
+      animation: pop-in 0.4s ease-out forwards;
+      
+      .skeleton-metric {
+        width: 80%;
+        height: 16px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #f1f1f1 0%, #e2e8f0 50%, #f1f1f1 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+      }
+      
+      &.with-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 500;
+        
+        &.good {
+          background-color: #10b981;
+          color: white;
+        }
+        
+        &.average {
+          background-color: #f59e0b;
+          color: white;
+        }
+        
+        &.low {
+          background-color: #ef4444;
+          color: white;
+        }
+      }
+      
+      .brand-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        
+        .brand-item {
+          font-size: 13px;
+          color: #4b5563;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

@@ -1,0 +1,261 @@
+@import '../../src/app/globals.scss';
+
+.add-influencer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.45); // 45% opacity for the dark faded background
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.add-influencer-popup {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 550px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid #edf2f7;
+  gap: 12px;
+
+  .platform-selector {
+    display: flex;
+    align-items: center;
+    background-color: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 6px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    gap: 6px;
+
+    .platform-icon {
+      font-size: 14px;
+      color: #4a5568;
+    }
+
+    span {
+      font-size: 13px;
+      font-weight: 500;
+      color: #1a202c;
+    }
+
+    .dropdown-icon {
+      font-size: 16px;
+      color: #718096;
+    }
+
+    &:hover {
+      background-color: #edf2f7;
+    }
+  }
+
+  .search-input {
+    flex: 1;
+    
+    input {
+      width: 100%;
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      
+      &:focus {
+        border-color: #a0aec0;
+      }
+      
+      &::placeholder {
+        color: #a0aec0;
+      }
+    }
+  }
+}
+
+.popup-content {
+  padding: 12px 0;
+
+  .recent-profiles-header {
+    padding: 0 20px;
+    margin: 8px 0 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #718096;
+    letter-spacing: 0.5px;
+  }
+
+  .influencer-list {
+    display: flex;
+    flex-direction: column;
+
+    .influencer-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: #f7fafc;
+      }
+      
+      .influencer-avatar {
+        width: 40px;
+        height: 40px;
+        margin-right: 14px;
+        
+        img {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+      }
+      
+      .influencer-info {
+        flex: 1;
+        
+        .influencer-name {
+          font-size: 14px;
+          font-weight: 500;
+          color: #2d3748;
+          margin-bottom: 2px;
+        }
+        
+        .influencer-username {
+          font-size: 12px;
+          color: #718096;
+        }
+      }
+      
+      .add-to-compare-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: transparent;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #4a5568;
+        cursor: pointer;
+        transition: all 0.2s;
+        
+        .add-icon {
+          font-size: 14px;
+        }
+        
+        &:hover {
+          background-color: #f7fafc;
+          border-color: #a0aec0;
+        }
+      }
+    }
+  }
+
+  .no-results {
+    padding: 30px 20px;
+    text-align: center;
+    color: #718096;
+    font-size: 14px;
+  }
+}
+
+// Skeleton loader for loading state
+.skeleton-loader {
+  padding: 0 20px;
+  
+  .skeleton-profile {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    
+    .skeleton-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(90deg, #f1f1f1 0%, #e2e8f0 50%, #f1f1f1 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      margin-right: 14px;
+    }
+    
+    .skeleton-content {
+      flex: 1;
+      
+      .skeleton-line-lg {
+        width: 70%;
+        height: 14px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #f1f1f1 0%, #e2e8f0 50%, #f1f1f1 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        margin-bottom: 6px;
+      }
+      
+      .skeleton-line-sm {
+        width: 40%;
+        height: 10px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #f1f1f1 0%, #e2e8f0 50%, #f1f1f1 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+      }
+    }
+    
+    .skeleton-action {
+      width: 100px;
+      height: 26px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #f1f1f1 0%, #e2e8f0 50%, #f1f1f1 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

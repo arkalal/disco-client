@@ -312,6 +312,35 @@
             color: #9ca3af;
           }
         }
+        
+        .influencer-avatar {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          margin-bottom: 12px;
+          overflow: hidden;
+          
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
+        
+        .influencer-name {
+          font-size: 15px;
+          font-weight: 500;
+          color: #2d3748;
+          margin-bottom: 3px;
+          text-align: center;
+        }
+        
+        .influencer-username {
+          font-size: 13px;
+          color: #718096;
+          margin-bottom: 12px;
+          text-align: center;
+        }
 
         .add-influencer-button {
           background-color: transparent;
@@ -460,21 +489,12 @@
 
           .info-icon {
             color: #9ca3af;
-            font-size: 12px;
-            cursor: help;
-          }
-
-          .metric-value-placeholder {
-            height: 16px;
-            background-color: #f3f4f6;
-            border-radius: 8px;
-          }
         }
 
-        .metrics-group {
-          margin-bottom: 16px;
-          
-          &:last-child {
+        .accordion-sections {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
             margin-bottom: 0;
           }
         }

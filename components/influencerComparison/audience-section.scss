@@ -1,0 +1,179 @@
+// Audience section specific styles for the metrics section
+
+.metrics-section {
+  .metrics-content {
+    // Subsection styling
+    .metrics-subsection {
+      margin-bottom: 24px;
+      border-radius: 8px;
+      overflow: hidden;
+      
+      // Apply alternating background for subsections
+      &:nth-child(odd) {
+        background-color: #fcfcfc;
+      }
+      
+      &:nth-child(even) {
+        background-color: #f9f8fc;
+      }
+      
+      .subsection-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #4b5563;
+        margin: 0;
+        padding: 12px 16px;
+        background-color: rgba(0, 0, 0, 0.02);
+        border-bottom: 1px solid #edf2f7;
+        
+        .info-icon {
+          font-size: 14px;
+          color: #9ca3af;
+          cursor: help;
+          margin-left: 6px;
+        }
+      }
+      
+      // New audience table for better alignment
+      .audience-table {
+        width: 100%;
+        
+        .audience-row {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          border-bottom: 1px solid #edf2f7;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          &.header {
+            background-color: rgba(0, 0, 0, 0.02);
+            font-weight: 500;
+            display: none; // Hide header row as per screenshot
+          }
+          
+          .audience-cell {
+            padding: 12px 16px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            
+            // For location items
+            .location-name {
+              font-weight: 500;
+              color: #374151;
+            }
+            
+            .location-percentage {
+              color: #6b7280;
+              margin-left: 5px;
+            }
+            
+            // For credibility value
+            &.credibility-value {
+              font-weight: 600;
+              color: #111827;
+              justify-content: center;
+            }
+          }
+        }
+      }
+      
+      // Special styling for credibility section
+      &.credibility-section {
+        background-color: #f9fafb;
+        
+        .audience-table {
+          padding: 6px 0;
+          
+          .audience-row {
+            border-bottom: none;
+            
+            .audience-cell {
+              font-size: 15px;
+            }
+          }
+        }
+      }
+      
+      // Gender grid
+      .audience-gender-grid {
+        background-color: transparent;
+        
+        .gender-row {
+          display: grid;
+          grid-template-columns: 180px repeat(4, 1fr);
+          border-bottom: 1px solid #edf2f7;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          &.header {
+            background-color: rgba(0, 0, 0, 0.02);
+          }
+          
+          .gender-cell {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #111827;
+            
+            &.label {
+              color: #4b5563;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+      
+      // Age group grid
+      .age-group-grid {
+        background-color: transparent;
+        
+        .age-row {
+          display: grid;
+          grid-template-columns: 180px repeat(4, 1fr);
+          border-bottom: 1px solid #edf2f7;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          &:nth-child(odd) {
+            background-color: rgba(0, 0, 0, 0.02);
+          }
+          
+          .age-cell {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #111827;
+            
+            &.label {
+              color: #4b5563;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animation for rows
+.metrics-section .metrics-content .audience-cell,
+.metrics-section .metrics-content .gender-cell,
+.metrics-section .metrics-content .age-cell {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

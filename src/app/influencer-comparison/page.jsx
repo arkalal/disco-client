@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiShare2 } from "react-icons/fi";
 import { IoHomeOutline } from "react-icons/io5";
 import { BsLightbulb, BsSearch, BsBarChart, BsInstagram } from "react-icons/bs";
@@ -19,15 +19,32 @@ import { VscGraph } from "react-icons/vsc";
 import { BiNotification, BiChevronDown } from "react-icons/bi";
 import Link from "next/link";
 
+// Custom components
+import AddInfluencerPopup from "../../../components/influencerComparison/AddInfluencerPopup";
+import InfluencerCard from "../../../components/influencerComparison/InfluencerCard";
+import InfluencerCardSkeletonLoader from "../../../components/influencerComparison/InfluencerCardSkeletonLoader";
+import MetricsSection from "../../../components/influencerComparison/MetricsSection";
+
+// Helper functions
+import { 
+  fetchInfluencerData, 
+  calculateEngagementMetrics,
+  generateInsights,
+  processContentCategories,
+  getPaidPartnershipMetrics 
+} from "../../../utils/influencerComparisonHelpers";
+
 import "../../../components/layout/MainLayout.scss";
 import "../../../components/layout/Sidebar.scss";
 import "./influencer-comparison.scss";
+import "./metrics-styles.scss";
+import "../../../components/influencerComparison/audience-section.scss";
 
 const InfluencerComparisonPage = () => {
   // State for accordion sections
   const [openSections, setOpenSections] = useState({
     overview: true,
-    engagements: false,
+    engagements: true,
     paidPartnerships: true,
     content: true,
     audience: true,
@@ -35,12 +52,118 @@ const InfluencerComparisonPage = () => {
     brands: true,
   });
 
+  // State for add influencer popup
+  const [showAddInfluencerPopup, setShowAddInfluencerPopup] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [influencers, setInfluencers] = useState([null, null, null, null]);
+  
+  // State for profile data
+  const [influencerData, setInfluencerData] = useState([null, null, null, null]);
+  const [loadingStates, setLoadingStates] = useState([false, false, false, false]);
+  const [metricsLoaded, setMetricsLoaded] = useState(false);
+  
+  // Effect to fetch data when influencers change
+  useEffect(() => {
+    // Process each influencer to load its data
+    influencers.forEach((influencer, index) => {
+      if (influencer && !influencerData[index]) {
+        fetchInfluencerProfile(influencer.username, index);
+      }
+    });
+  }, [influencers]);
+  
+  // Function to fetch influencer profile data
+  const fetchInfluencerProfile = async (username, slotIndex) => {
+    // Update loading state for this slot
+    setLoadingStates(prev => {
+      const newState = [...prev];
+      newState[slotIndex] = true;
+      return newState;
+    });
+    
+    try {
+      // Fetch profile data
+      const profileData = await fetchInfluencerData(username);
+      
+      // Calculate additional metrics
+      const engagement = calculateEngagementMetrics(profileData);
+      const insights = generateInsights(profileData);
+      const contentCategories = processContentCategories(profileData);
+      const paidPartnerships = getPaidPartnershipMetrics(profileData);
+      
+      // Create enhanced data object
+      const enhancedData = {
+        ...profileData,
+        engagement,
+        insights,
+        contentCategories,
+        paidPartnerships,
+        audience: profileData.audience || {}
+      };
+      
+      // Update data for this slot
+      setInfluencerData(prev => {
+        const newData = [...prev];
+        newData[slotIndex] = enhancedData;
+        return newData;
+      });
+      
+      // Set metrics as loaded after a short delay for animation
+      setTimeout(() => {
+        setMetricsLoaded(true);
+      }, 500);
+    } catch (error) {
+      console.error(`Error loading profile for slot ${slotIndex}:`, error);
+    } finally {
+      // Update loading state
+      setLoadingStates(prev => {
+        const newState = [...prev];
+        newState[slotIndex] = false;
+        return newState;
+      });
+    }
+  };
+
   // Toggle accordion sections
   const toggleSection = (section) => {
     setOpenSections((prev) => ({
       ...prev,
       [section]: !prev[section],
     }));
+  };
+
+  // Open add influencer popup for a specific slot
+  const handleOpenAddInfluencerPopup = (slotIndex) => {
+    setSelectedSlot(slotIndex);
+    setShowAddInfluencerPopup(true);
+  };
+
+  // Close add influencer popup
+  const handleCloseAddInfluencerPopup = () => {
+    setShowAddInfluencerPopup(false);
+  };
+
+  // Add influencer to a slot
+  const handleAddInfluencer = (profile) => {
+    if (selectedSlot !== null) {
+      const newInfluencers = [...influencers];
+      newInfluencers[selectedSlot] = profile;
+      setInfluencers(newInfluencers);
+      setShowAddInfluencerPopup(false);
+    }
+  };
+  
+  // Remove influencer from a slot
+  const handleRemoveInfluencer = (slotIndex) => {
+    // Clear the influencer data
+    const newInfluencers = [...influencers];
+    const newInfluencerData = [...influencerData];
+    
+    newInfluencers[slotIndex] = null;
+    newInfluencerData[slotIndex] = null;
+    
+    setInfluencers(newInfluencers);
+    setInfluencerData(newInfluencerData);
   };
 
   return (
@@ -133,411 +256,84 @@ const InfluencerComparisonPage = () => {
         </div>
 
         <div className="comparison-slots">
-          {[1, 2, 3, 4].map((slot) => (
-            <div key={slot} className="comparison-slot">
-              <div className="avatar-placeholder">
-                <AiOutlineUser className="user-icon" />
-              </div>
-              <button className="add-influencer-button">
-                <span>+ Add Influencer</span>
-              </button>
+          {[0, 1, 2, 3].map((slotIndex) => (
+            <div key={slotIndex} className="comparison-slot">
+              {influencers[slotIndex] ? (
+                loadingStates[slotIndex] ? (
+                  <InfluencerCardSkeletonLoader />
+                ) : (
+                  <InfluencerCard 
+                    profile={influencers[slotIndex]} 
+                    onRemove={() => handleRemoveInfluencer(slotIndex)}
+                  />
+                )
+              ) : (
+                <>
+                  <div className="avatar-placeholder">
+                    <AiOutlineUser className="user-icon" />
+                  </div>
+                  <button 
+                    className="add-influencer-button"
+                    onClick={() => handleOpenAddInfluencerPopup(slotIndex)}
+                  >
+                    <span>+ Add Influencer</span>
+                  </button>
+                </>
+              )}
             </div>
           ))}
         </div>
 
         <div className="accordion-sections">
           {/* Overview Section */}
-          <div
-            className={`accordion-section ${
-              openSections.overview ? "open" : ""
-            }`}
-          >
-            <div
-              className="section-header"
-              onClick={() => toggleSection("overview")}
-            >
-              <div className="header-left">
-                <AiOutlineClockCircle className="section-icon" />
-                <h2>Overview</h2>
-              </div>
-              <BiChevronDown className="chevron-icon" />
-            </div>
-            <div className="section-content">
-              <div className="metrics-row">
-                <div className="metric-label">Followers</div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-              <div className="metrics-row">
-                <div className="metric-label">Engagement Rate</div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-              <div className="metrics-row">
-                <div className="metric-label">Estimated Reach</div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-              <div className="metrics-row">
-                <div className="metric-label">Influence Score</div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-              <div className="metrics-row">
-                <div className="metric-label">Insights</div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <MetricsSection
+            sectionType="overview"
+            title="Overview"
+            icon={<AiOutlineClockCircle />}
+            influencersData={influencerData}
+            isOpen={openSections.overview}
+            loading={!metricsLoaded}
+          />
 
           {/* Engagements & Views Section */}
-          <div
-            className={`accordion-section ${
-              openSections.engagements ? "open" : ""
-            }`}
-          >
-            <div
-              className="section-header"
-              onClick={() => toggleSection("engagements")}
-            >
-              <div className="header-left">
-                <AiOutlineHeart className="section-icon" />
-                <h2>Engagements & Views</h2>
-              </div>
-              <BiChevronDown className="chevron-icon" />
-            </div>
-            <div className="section-content">
-              <div className="subsection">
-                <div className="subsection-header">
-                  <AiOutlinePicture className="subsection-icon" />
-                  <h3>Images</h3>
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Likes</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Comments</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Engagement Rate</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="subsection">
-                <div className="subsection-header">
-                  <RiVideoLine className="subsection-icon" />
-                  <h3>Reels</h3>
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Views</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Likes</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Comments</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Engagement Rate</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">View Rate</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="subsection">
-                <div className="metrics-row">
-                  <div className="metric-label">Likes - Comments Ratio</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">
-                    Reel Views To Followers Ratio
-                  </div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Post Frequency</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <MetricsSection
+            sectionType="engagements"
+            title="Engagements & Views"
+            icon={<AiOutlineHeart />}
+            influencersData={influencerData}
+            isOpen={openSections.engagements}
+            loading={!metricsLoaded}
+          />
 
           {/* Paid Partnerships - Engagements & Views Section */}
-          <div
-            className={`accordion-section ${
-              openSections.paidPartnerships ? "open" : ""
-            }`}
-          >
-            <div
-              className="section-header"
-              onClick={() => toggleSection("paidPartnerships")}
-            >
-              <div className="header-left">
-                <AiOutlineHeart className="section-icon" />
-                <h2>Paid Partnerships - Engagements & Views</h2>
-              </div>
-              <BiChevronDown className="chevron-icon" />
-            </div>
-            <div className="section-content">
-              <div className="subsection">
-                <div className="subsection-header">
-                  <AiOutlinePicture className="subsection-icon" />
-                  <h3>Images</h3>
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Likes</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Comments</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Engagement Rate</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Images Count</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="subsection">
-                <div className="subsection-header">
-                  <RiVideoLine className="subsection-icon" />
-                  <h3>Reels</h3>
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Views</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Likes</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Avg. Comments</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Total Reels</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">Engagement Rate</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                <div className="metrics-row">
-                  <div className="metric-label">View Rate</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <MetricsSection
+            sectionType="paidPartnerships"
+            title="Paid Partnerships - Engagements & Views"
+            icon={<AiOutlineHeart />}
+            influencersData={influencerData}
+            isOpen={openSections.paidPartnerships}
+            loading={!metricsLoaded}
+          />
 
           {/* Content Section */}
-          <div className={`accordion-section ${openSections.content ? 'open' : ''}`}>
-            <div 
-              className="section-header" 
-              onClick={() => toggleSection('content')}
-            >
-              <div className="header-left">
-                <AiOutlinePicture className="section-icon" />
-                <h2>Content</h2>
-              </div>
-              <BiChevronDown className="chevron-icon" />
-            </div>
-            <div className="section-content">
-              <div className="metrics-row">
-                <div className="metric-label">
-                  Content Categories
-                  <span className="info-icon">ⓘ</span>
-                </div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <MetricsSection
+            sectionType="content"
+            title="Content"
+            icon={<AiOutlinePicture />}
+            influencersData={influencerData}
+            isOpen={openSections.content}
+            loading={!metricsLoaded}
+          />
 
           {/* Audience Section */}
-          <div className={`accordion-section ${openSections.audience ? 'open' : ''}`}>
-            <div 
-              className="section-header" 
-              onClick={() => toggleSection('audience')}
-            >
-              <div className="header-left">
-                <AiOutlineUser className="section-icon" />
-                <h2>Audience</h2>
-                <span className="section-info">ⓘ</span>
-              </div>
-              <BiChevronDown className="chevron-icon" />
-            </div>
-            <div className="section-content">
-              <div className="metrics-row">
-                <div className="metric-label">Top Cities</div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-              
-              <div className="metrics-row">
-                <div className="metric-label">Top States</div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-              
-              <div className="metrics-row">
-                <div className="metric-label">
-                  Audience Credibility
-                  <span className="info-icon">ⓘ</span>
-                </div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-              
-              <div className="metrics-row">
-                <div className="metric-label">Top Countries</div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
-                ))}
-              </div>
-              
-              <div className="metrics-group">
-                <div className="metrics-row group-header">
-                  <div className="metric-label">Audience Gender</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                
-                <div className="metrics-row submetric">
-                  <div className="metric-label">Male</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                
-                <div className="metrics-row submetric">
-                  <div className="metric-label">Female</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="metrics-group">
-                <div className="metrics-row group-header">
-                  <div className="metric-label">Audience Age Group</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                
-                <div className="metrics-row submetric">
-                  <div className="metric-label">13-17 years</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                
-                <div className="metrics-row submetric">
-                  <div className="metric-label">18-24 years</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                
-                <div className="metrics-row submetric">
-                  <div className="metric-label">25-34 years</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                
-                <div className="metrics-row submetric">
-                  <div className="metric-label">35-44 years</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                
-                <div className="metrics-row submetric">
-                  <div className="metric-label">45-64 years</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-                
-                <div className="metrics-row submetric">
-                  <div className="metric-label">65+ years</div>
-                  {[1, 2, 3, 4].map((slot) => (
-                    <div key={slot} className="metric-value-placeholder"></div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <MetricsSection
+            sectionType="audience"
+            title="Audience"
+            icon={<AiOutlineUser />}
+            influencersData={influencerData}
+            isOpen={openSections.audience}
+            loading={!metricsLoaded}
+          />
 
           {/* Growth Section */}
           <div className={`accordion-section ${openSections.growth ? 'open' : ''}`}>
@@ -557,8 +353,16 @@ const InfluencerComparisonPage = () => {
                   30d Followers Growth Rate
                   <span className="info-icon">ⓘ</span>
                 </div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
+                {influencerData.map((influencer, index) => (
+                  <div key={index} className="metric-value">
+                    {!metricsLoaded ? (
+                      <div className="skeleton-metric"></div>
+                    ) : influencer ? (
+                      '2.4%'
+                    ) : (
+                      '-'
+                    )}
+                  </div>
                 ))}
               </div>
               
@@ -567,8 +371,16 @@ const InfluencerComparisonPage = () => {
                   30d Followers Gain
                   <span className="info-icon">ⓘ</span>
                 </div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
+                {influencerData.map((influencer, index) => (
+                  <div key={index} className="metric-value">
+                    {!metricsLoaded ? (
+                      <div className="skeleton-metric"></div>
+                    ) : influencer ? (
+                      '+12.5k'
+                    ) : (
+                      '-'
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -592,14 +404,32 @@ const InfluencerComparisonPage = () => {
                   Brand Mentions
                   <span className="info-icon">ⓘ</span>
                 </div>
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="metric-value-placeholder"></div>
+                {influencerData.map((influencer, index) => (
+                  <div key={index} className="metric-value">
+                    {!metricsLoaded ? (
+                      <div className="skeleton-metric"></div>
+                    ) : influencer && influencer.brandMentions ? (
+                      <div className="brand-list">
+                        {influencer.brandMentions.slice(0, 3).map((brand, i) => (
+                          <div key={i} className="brand-item">{brand.name}</div>
+                        ))}
+                      </div>
+                    ) : (
+                      '-'
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
       </main>
+      {/* Add Influencer Popup */}
+      <AddInfluencerPopup 
+        isOpen={showAddInfluencerPopup} 
+        onClose={handleCloseAddInfluencerPopup} 
+        onAddInfluencer={handleAddInfluencer}
+      />
     </div>
   );
 };

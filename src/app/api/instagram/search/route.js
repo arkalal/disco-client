@@ -141,7 +141,67 @@ function formatFollowers(count) {
 
 // Generate fallback data for development/testing
 function generateFallbackData(query) {
-  const profiles = [
+  // Define featured influencers as requested by the client
+  const featuredInfluencers = [
+    {
+      id: "INST:dishapatani",
+      name: "Disha Patani",
+      username: "dishapatani",
+      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/358829864_1329124541019799_8223809761582188870_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=gwJa1dDdevYAX8oaHfj",
+      verified: true,
+      followers: "54.1M",
+      followersCount: 54100000,
+      engagementRate: "1.82%",
+      category: "entertainment"
+    },
+    {
+      id: "INST:shreyaghoshal",
+      name: "Shreya Ghoshal",
+      username: "shreyaghoshal",
+      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/271653271_1188803521530192_5339978536922490664_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=VGBMf2TxgXMAX9bccPp",
+      verified: true,
+      followers: "27.9M",
+      followersCount: 27900000,
+      engagementRate: "1.25%",
+      category: "music"
+    },
+    {
+      id: "INST:anushkasen0408",
+      name: "Anushka Sen",
+      username: "anushkasen0408",
+      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/352389908_1337963533518195_1747282549727419475_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=CTntxiuyw0gAX80hLiB",
+      verified: true,
+      followers: "15.2M",
+      followersCount: 15200000,
+      engagementRate: "2.34%",
+      category: "entertainment"
+    },
+    {
+      id: "INST:manushi_chhillar",
+      name: "Manushi Chhillar",
+      username: "manushi_chhillar",
+      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/347305477_950551499515575_9174906832820045234_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=F06HfuHlLbQAX_fcpam",
+      verified: true,
+      followers: "6.1M",
+      followersCount: 6100000,
+      engagementRate: "1.76%",
+      category: "entertainment"
+    },
+    {
+      id: "INST:manishmalhotra05",
+      name: "Manish Malhotra",
+      username: "manishmalhotra05",
+      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/358080606_300350469257935_3103627363432794776_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=L__1nA36PXwAX9wvUmi",
+      verified: true,
+      followers: "5.3M",
+      followersCount: 5300000,
+      engagementRate: "0.98%",
+      category: "fashion"
+    }
+  ];
+  
+  // Default profiles for other queries
+  const defaultProfiles = [
     {
       id: "INST:cristiano",
       name: "Cristiano Ronaldo",
@@ -198,8 +258,18 @@ function generateFallbackData(query) {
       category: "entertainment"
     }
   ];
-
-  // Filter by query if provided
+  
+  // Check for featured query
+  if (query === 'featured' || query === 'popular') {
+    return {
+      data: featuredInfluencers,
+      meta: { code: 200 },
+      pagination: { total: featuredInfluencers.length }
+    };
+  }
+  
+  // For other queries, use the default profiles and filter by query if provided
+  const profiles = defaultProfiles;
   const filteredProfiles = query 
     ? profiles.filter(p => 
         p.name.toLowerCase().includes(query.toLowerCase()) || 

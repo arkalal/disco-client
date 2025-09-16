@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { IoLocationOutline } from "react-icons/io5";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
 import { FaGlobe, FaInstagram } from "react-icons/fa";
+import { HiOutlineDotsHorizontal } from "react-icons/hi";
+import { BiCopy, BiMessage, BiPhoneCall } from "react-icons/bi";
 import "./ProfileHeader.scss";
 
 const ProfileHeader = ({ profileData }) => {
@@ -34,13 +36,67 @@ const ProfileHeader = ({ profileData }) => {
     return ["Arts & Entertainment", "Influencer"];
   };
 
+  // State for the dropdown menu
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Toggle dropdown
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
   return (
     <div className="profile-header-container">
       <div className="header-top">
-        <button className="update-profile-btn">
-          <span>Update Profile</span>
-          <FiRefreshCw className="refresh-icon" />
-        </button>
+        <div className="action-buttons">
+          <div className="action-dropdown-container" ref={dropdownRef}>
+            <button
+              className="action-icon-button tooltip-container"
+              onClick={toggleDropdown}
+            >
+              <HiOutlineDotsHorizontal />
+              <span className="tooltip">More options</span>
+            </button>
+            {dropdownOpen && (
+              <div className="action-dropdown">
+                <button className="dropdown-item">
+                  <FiRefreshCw className="dropdown-icon" />
+                  <span>Update Profile</span>
+                </button>
+              </div>
+            )}
+          </div>
+          <button className="action-icon-button tooltip-container">
+            <BiCopy />
+            <span className="tooltip">Compare</span>
+          </button>
+          <button className="action-icon-button tooltip-container">
+            <BiMessage />
+            <span className="tooltip">Message</span>
+          </button>
+          <button className="action-icon-button tooltip-container">
+            <BiPhoneCall />
+            <span className="tooltip">Call</span>
+          </button>
+          <button className="add-to-list-button">
+            <FiPlus />
+            <span>Add to list</span>
+          </button>
+        </div>
       </div>
 
       <div className="header-main">
@@ -113,14 +169,7 @@ const ProfileHeader = ({ profileData }) => {
           </div>
         </div>
 
-        <div className="profile-actions">
-          <button className="add-to-list-btn">
-            <FiPlus />
-            <span>Add to list</span>
-          </button>
-          <button className="message-btn">Message</button>
-          <button className="compare-btn">Compare</button>
-        </div>
+        {/* Removed the profile actions that were here */}
       </div>
     </div>
   );

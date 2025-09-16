@@ -90,24 +90,27 @@ const SearchDropdown = ({ isOpen, onClose, onCategorySelect, searchContainerRef,
   const loadDefaultProfiles = async () => {
     setLoading(true);
     try {
-      // Fetch default profiles (using empty query will return defaults)
-      const response = await fetch('/api/instagram/search?q=popular');
+      // Updated the query parameter to request our specific influencers
+      // Using 'featured' as a special query to request the specific list of default influencers
+      const response = await fetch('/api/instagram/search?q=featured&users=dishapatani,shreyaghoshal,anushkasen0408,manushi_chhillar,manishmalhotra05');
       if (response.ok) {
         const data = await response.json();
         setProfiles(data.data || []);
       } else {
         console.error('Error fetching default profiles:', response.statusText);
+        setProfiles([]);
       }
     } catch (error) {
       console.error('Failed to fetch default profiles:', error);
+      setProfiles([]);
     } finally {
       setLoading(false);
     }
   };
   
-  // Handle profile click to navigate to profile page
+  // Handle profile click to open profile in new tab
   const handleProfileClick = (username) => {
-    router.push(`/profile/${username}`);
+    window.open(`/profile/${username}`, '_blank');
     onClose();
   };
   
@@ -189,7 +192,18 @@ const SearchDropdown = ({ isOpen, onClose, onCategorySelect, searchContainerRef,
       <div className="search-dropdown-section">
         <div className="section-header">INFLUENCER PROFILES</div>
         {loading ? (
-          <div className="loading-indicator">Loading profiles...</div>
+          <div className="skeleton-loader">
+            {[1, 2, 3, 4, 5].map((index) => (
+              <div key={index} className="skeleton-profile">
+                <div className="skeleton-avatar"></div>
+                <div className="skeleton-content">
+                  <div className="skeleton-line-lg"></div>
+                  <div className="skeleton-line-sm"></div>
+                </div>
+                <div className="skeleton-action"></div>
+              </div>
+            ))}
+          </div>
         ) : profiles.length > 0 ? (
           <div className="influencer-profiles">
             {profiles.map((profile) => (
@@ -210,7 +224,7 @@ const SearchDropdown = ({ isOpen, onClose, onCategorySelect, searchContainerRef,
                   </div>
                   <div className="influencer-username">@{profile.username}</div>
                 </div>
-                <div className="profile-arrow">
+                <div className="profile-action">
                   <BsArrowRight />
                 </div>
               </div>

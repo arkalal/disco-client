@@ -35,6 +35,7 @@ import { FaInstagram } from "react-icons/fa";
 import ProfileHeader from "../../../../components/profile/ProfileHeader";
 import ProfileNavigation from "../../../../components/profile/ProfileNavigation";
 import ProfileOverview from "../../../../components/profile/ProfileOverview";
+import ProfileSkeletonLoader from "../../../../components/profile/ProfileSkeletonLoader";
 
 // Styles
 import "../profile-styles.scss";
@@ -112,11 +113,7 @@ export default function Profile({ params }) {
 
   // Loading state
   if (loading) {
-    return (
-      <div className="loading-container">
-        <p>Loading profile data...</p>
-      </div>
-    );
+    return <ProfileSkeletonLoader />;
   }
 
   // Error state

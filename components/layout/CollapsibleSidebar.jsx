@@ -16,10 +16,9 @@ import { RiUserSearchLine } from "react-icons/ri";
 import { FaRegChartBar } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 
-const Sidebar = () => {
+const CollapsibleSidebar = ({ activePage }) => {
   const router = useRouter();
   const { data: session } = useSession();
-  const [activeItem, setActiveItem] = useState("home");
 
   const handleLogout = async () => {
     try {
@@ -68,7 +67,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="sidebar">
+    <div className="collapsible-sidebar">
       <div className="logo">
         <Link href="/home">
           <span className="logo-text">disco</span>
@@ -83,8 +82,7 @@ const Sidebar = () => {
             <Link
               key={item.id}
               href={`/${item.id}`}
-              className={`nav-item ${activeItem === item.id ? "active" : ""}`}
-              onClick={() => setActiveItem(item.id)}
+              className={`nav-item ${activePage === item.id ? "active" : ""}`}
             >
               <Icon className="nav-icon" />
               <span className="nav-label">{item.label}</span>
@@ -104,8 +102,7 @@ const Sidebar = () => {
             <Link
               key={item.id}
               href={`/${item.id}`}
-              className={`nav-item ${activeItem === item.id ? "active" : ""}`}
-              onClick={() => setActiveItem(item.id)}
+              className={`nav-item ${activePage === item.id ? "active" : ""}`}
             >
               <Icon className="nav-icon" />
               <span className="nav-label">{item.label}</span>
@@ -148,4 +145,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default CollapsibleSidebar;

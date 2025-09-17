@@ -9,6 +9,7 @@
   left: 0;
   top: 0;
   transition: width 0.3s ease;
+  overflow-y: auto;
 
   .logo {
     padding: 0 20px;
@@ -25,11 +26,17 @@
     }
   }
 
-  .nav-menu {
-    flex: 1;
+  .nav-menu,
+  .reports-menu {
     display: flex;
     flex-direction: column;
     gap: 4px;
+  }
+  
+  .section-divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 15px 20px;
   }
 
   .nav-item {
@@ -84,12 +91,16 @@
       font-size: 12px;
       font-weight: 500;
     }
+    
+    .count {
+      margin-left: 5px;
+      color: #8a8f98;
+      font-size: 12px;
+    }
   }
 
   .notifications {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 20px;
-    margin-top: 20px;
+    padding-bottom: 10px;
   }
 
   .try-disco {
@@ -125,21 +136,42 @@
     }
   }
 
-  .logout {
-    margin-top: 10px;
+  .user-profile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 20px;
-
+    margin-top: 15px;
+    
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      
+      .username {
+        color: #fff;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      .premium-badge {
+        color: #ffc107;
+        font-size: 12px;
+        font-weight: 400;
+      }
+    }
+    
     .logout-button {
       background: none;
       border: none;
       cursor: pointer;
-      font-family: inherit;
-      text-align: left;
-      width: 100%;
-      padding: 12px 20px;
       color: #8a8f98;
-
+      padding: 5px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
       &:hover {
         color: #fff;
         background-color: rgba(255, 255, 255, 0.05);

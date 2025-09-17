@@ -2,22 +2,19 @@
 
 import React, { useState, useEffect } from "react";
 import { FiShare2 } from "react-icons/fi";
-import { IoHomeOutline } from "react-icons/io5";
-import { BsLightbulb, BsSearch, BsBarChart, BsInstagram } from "react-icons/bs";
-import { MdKeyboardArrowDown, MdOutlineAnalytics } from "react-icons/md";
-import {
-  AiOutlineMessage,
+import { BsInstagram } from "react-icons/bs";
+import { 
   AiOutlineYoutube,
   AiOutlineUser,
   AiOutlineHeart,
   AiOutlineClockCircle,
-  AiOutlinePicture,
+  AiOutlinePicture, 
 } from "react-icons/ai";
-import { IconArrowsExchange } from "@tabler/icons-react";
-import { RiListCheck2, RiVideoLine } from "react-icons/ri";
+import { RiVideoLine } from "react-icons/ri";
 import { VscGraph } from "react-icons/vsc";
-import { BiNotification, BiChevronDown } from "react-icons/bi";
-import Link from "next/link";
+import { BiChevronDown } from "react-icons/bi";
+import { BsBarChart } from "react-icons/bs";
+import CollapsibleSidebar from "../../../components/layout/CollapsibleSidebar";
 
 // Custom components
 import AddInfluencerPopup from "../../../components/influencerComparison/AddInfluencerPopup";
@@ -36,6 +33,7 @@ import {
 
 import "../../../components/layout/MainLayout.scss";
 import "../../../components/layout/Sidebar.scss";
+import "../../../components/layout/CollapsibleSidebar.scss";
 import "./influencer-comparison.scss";
 import "./metrics-styles.scss";
 import "../../../components/influencerComparison/audience-section.scss";
@@ -168,72 +166,7 @@ const InfluencerComparisonPage = () => {
 
   return (
     <div className="influencer-comparison-container">
-      <div className="collapsible-sidebar">
-        <div className="logo">
-          <Link href="/home">
-            <span className="logo-text">disco</span>
-          </Link>
-        </div>
-
-        <nav className="nav-menu">
-          <Link href="/home" className="nav-item">
-            <IoHomeOutline className="nav-icon" />
-            <span className="nav-label">Home</span>
-          </Link>
-          <Link href="/campaign-ideas" className="nav-item">
-            <BsLightbulb className="nav-icon" />
-            <span className="nav-label">Campaign Ideas</span>
-          </Link>
-          <Link href="/search" className="nav-item">
-            <BsSearch className="nav-icon" />
-            <span className="nav-label">Influencer Search</span>
-          </Link>
-          <Link href="/influencer-comparison" className="nav-item active">
-            <IconArrowsExchange className="nav-icon" />
-            <span className="nav-label">Influencer Comparison</span>
-          </Link>
-          <Link href="/plans-lists" className="nav-item">
-            <RiListCheck2 className="nav-icon" />
-            <span className="nav-label">Plans & Lists</span>
-          </Link>
-          <Link href="/messages" className="nav-item">
-            <AiOutlineMessage className="nav-icon" />
-            <span className="nav-label">Messages</span>
-            <span className="badge">3</span>
-          </Link>
-          <Link href="/campaign-reports" className="nav-item">
-            <BsBarChart className="nav-icon" />
-            <span className="nav-label">Campaign Reports</span>
-          </Link>
-          <Link href="/consolidated-reports" className="nav-item">
-            <MdOutlineAnalytics className="nav-icon" />
-            <span className="nav-label">Consolidated Reports</span>
-          </Link>
-          <Link href="/content-research" className="nav-item">
-            <VscGraph className="nav-icon" />
-            <span className="nav-label">Content Research</span>
-            <span className="badge">New</span>
-          </Link>
-          <Link href="/competitor-analysis" className="nav-item">
-            <BsBarChart className="nav-icon" />
-            <span className="nav-label">Competitor Analysis</span>
-          </Link>
-        </nav>
-
-        <div className="notifications">
-          <Link href="/notifications" className="nav-item">
-            <BiNotification className="nav-icon" />
-            <span className="nav-label">Notifications</span>
-          </Link>
-        </div>
-
-        <div className="try-disco">
-          <button className="try-button">
-            TRY DISCO
-            <span className="credits">3 credits remaining</span>
-          </button>
-        </div>
-      </div>
+      <CollapsibleSidebar activePage="influencer-comparison" />
 
       <main className="comparison-content">
         <div className="comparison-header">
@@ -293,6 +226,7 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.overview}
             loading={!metricsLoaded}
+            onToggle={() => toggleSection('overview')}
           />
 
           {/* Engagements & Views Section */}
@@ -303,6 +237,7 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.engagements}
             loading={!metricsLoaded}
+            onToggle={() => toggleSection('engagements')}
           />
 
           {/* Paid Partnerships - Engagements & Views Section */}
@@ -313,6 +248,7 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.paidPartnerships}
             loading={!metricsLoaded}
+            onToggle={() => toggleSection('paidPartnerships')}
           />
 
           {/* Content Section */}
@@ -323,6 +259,7 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.content}
             loading={!metricsLoaded}
+            onToggle={() => toggleSection('content')}
           />
 
           {/* Audience Section */}
@@ -333,6 +270,7 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.audience}
             loading={!metricsLoaded}
+            onToggle={() => toggleSection('audience')}
           />
 
           {/* Growth Section */}

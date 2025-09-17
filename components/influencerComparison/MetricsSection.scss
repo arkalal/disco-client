@@ -7,7 +7,16 @@
   overflow: hidden;
   border: 1px solid rgba(179, 175, 221, 0.3);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
+  
+  &:not(.open) {
+    max-height: 60px;
+  }
+  
+  &.open {
+    max-height: 3000px; // Large enough to accommodate any content
+    transition: max-height 0.5s ease-in-out;
+  }
   
   .section-header {
     display: flex;
@@ -34,11 +43,31 @@
         margin: 0;
       }
     }
+    
+    .chevron-icon {
+      font-size: 20px;
+      color: #6b7280;
+      transition: transform 0.3s ease;
+      
+      &.open {
+        transform: rotate(180deg);
+      }
+    }
+    
+    &:hover {
+      background-color: #f5f3fa;
+      
+      .chevron-icon {
+        color: #4b5563;
+      }
+    }
   }
   
   .metrics-content {
     padding: 16px 20px;
     border-top: 1px solid #e5e7eb;
+    opacity: 1;
+    transition: opacity 0.3s ease;
     
     .metrics-subsection {
       margin-bottom: 20px;

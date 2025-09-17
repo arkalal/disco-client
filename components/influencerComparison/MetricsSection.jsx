@@ -2,6 +2,7 @@
 
 import React from "react";
 import { getBadgeStatus, formatNumber } from "../../utils/influencerComparisonHelpers";
+import { BiChevronDown } from "react-icons/bi";
 import "./MetricsSection.scss";
 
 // Badge component for metric ratings
@@ -66,7 +67,8 @@ const MetricsSection = ({
   icon, 
   influencersData, 
   isOpen,
-  loading
+  loading,
+  onToggle
 }) => {
   // Format a value for display based on its type
   const formatValue = (value, type) => {
@@ -842,11 +844,12 @@ const MetricsSection = ({
 
   return (
     <div className={`metrics-section ${sectionType} ${isOpen ? 'open' : ''}`}>
-      <div className="section-header">
+      <div className="section-header" onClick={onToggle}>
         <div className="section-title">
           {icon && <span className="section-icon">{icon}</span>}
           <h3>{title}</h3>
         </div>
+        <BiChevronDown className={`chevron-icon ${isOpen ? 'open' : ''}`} />
       </div>
       {isOpen && renderSectionContent()}
     </div>

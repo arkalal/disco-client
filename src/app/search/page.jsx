@@ -1,23 +1,14 @@
 "use client";
 
-import { AiOutlineInstagram, AiOutlineMessage } from "react-icons/ai";
-import { MdKeyboardArrowDown, MdOutlineAnalytics } from "react-icons/md";
+import { AiOutlineInstagram } from "react-icons/ai";
+import { MdKeyboardArrowDown } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";
-import {
-  BsLightbulb,
-  BsSearch,
-  BsBarChart,
-} from "react-icons/bs";
-import { IconArrowsExchange } from "@tabler/icons-react";
-import { RiListCheck2 } from "react-icons/ri";
-import { VscGraph } from "react-icons/vsc";
-import { BiNotification } from "react-icons/bi";
-import { IoHomeOutline } from "react-icons/io5";
-import Link from "next/link";
+import CollapsibleSidebar from "../../../components/layout/CollapsibleSidebar";
 import SearchSection from "../../../components/home/SearchSection";
 
 import "../../../components/layout/MainLayout.scss";
 import "../../../components/layout/Sidebar.scss";
+import "../../../components/layout/CollapsibleSidebar.scss";
 import "../../../components/home/SearchSection.scss";
 import "../../../components/home/SearchDropdown.scss";
 import "./search.scss";
@@ -173,72 +164,7 @@ const SearchPage = () => {
 
   return (
     <div className="search-page-container">
-      <div className="collapsible-sidebar">
-        <div className="logo">
-          <Link href="/home">
-            <span className="logo-text">disco</span>
-          </Link>
-        </div>
-
-        <nav className="nav-menu">
-          <Link href="/home" className="nav-item">
-            <IoHomeOutline className="nav-icon" />
-            <span className="nav-label">Home</span>
-          </Link>
-          <Link href="/campaign-ideas" className="nav-item">
-            <BsLightbulb className="nav-icon" />
-            <span className="nav-label">Campaign Ideas</span>
-          </Link>
-          <Link href="/search" className="nav-item active">
-            <BsSearch className="nav-icon" />
-            <span className="nav-label">Influencer Search</span>
-          </Link>
-          <Link href="/influencer-comparison" className="nav-item">
-            <IconArrowsExchange className="nav-icon" />
-            <span className="nav-label">Influencer Comparison</span>
-          </Link>
-          <Link href="/plans-lists" className="nav-item">
-            <RiListCheck2 className="nav-icon" />
-            <span className="nav-label">Plans & Lists</span>
-          </Link>
-          <Link href="/messages" className="nav-item">
-            <AiOutlineMessage className="nav-icon" />
-            <span className="nav-label">Messages</span>
-            <span className="badge">3</span>
-          </Link>
-          <Link href="/campaign-reports" className="nav-item">
-            <BsBarChart className="nav-icon" />
-            <span className="nav-label">Campaign Reports</span>
-          </Link>
-          <Link href="/consolidated-reports" className="nav-item">
-            <MdOutlineAnalytics className="nav-icon" />
-            <span className="nav-label">Consolidated Reports</span>
-          </Link>
-          <Link href="/content-research" className="nav-item">
-            <VscGraph className="nav-icon" />
-            <span className="nav-label">Content Research</span>
-            <span className="badge">New</span>
-          </Link>
-          <Link href="/competitor-analysis" className="nav-item">
-            <BsBarChart className="nav-icon" />
-            <span className="nav-label">Competitor Analysis</span>
-          </Link>
-        </nav>
-
-        <div className="notifications">
-          <Link href="/notifications" className="nav-item">
-            <BiNotification className="nav-icon" />
-            <span className="nav-label">Notifications</span>
-          </Link>
-        </div>
-
-        <div className="try-disco">
-          <button className="try-button">
-            TRY DISCO
-            <span className="credits">3 credits remaining</span>
-          </button>
-        </div>
-      </div>
+      <CollapsibleSidebar activePage="search" />
 
       <main className="search-content">
         <div className="search-header">

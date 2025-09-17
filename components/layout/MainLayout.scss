@@ -6,10 +6,21 @@
 
   .main-content {
     flex: 1;
-    margin-left: 250px;
     padding: 32px;
     position: relative;
-    width: calc(100% - 250px);
     overflow-x: hidden;
+    box-sizing: border-box;
+  }
+  
+  // When the page has the regular sidebar
+  .sidebar + .main-content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+  }
+  
+  // When the page has the collapsible sidebar
+  .collapsible-sidebar + .main-content {
+    margin-left: 60px;
+    width: calc(100% - 60px);
   }
 }

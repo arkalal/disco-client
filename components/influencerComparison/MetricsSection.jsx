@@ -15,15 +15,25 @@ const Badge = ({ status, label, className }) => {
   );
 };
 
-// Component for displaying insights with color-coded icons
-const InsightChip = ({ insight }) => {
-  const iconType = insight.type === 'positive' ? '✓' : 
-                 insight.type === 'negative' ? '✗' : '•';
+// Component for displaying insights with color-coded icons in a row format
+const InsightRow = ({ insight }) => {
+  // Use the appropriate icon based on insight type
+  // positive = green plus/check, negative = red x, average/neutral = yellow dot
+  const getIcon = (type) => {
+    switch(type) {
+      case 'positive':
+        return <span className="insight-icon positive">✓</span>;
+      case 'negative':
+        return <span className="insight-icon negative">✗</span>;
+      default:
+        return <span className="insight-icon average">•</span>;
+    }
+  };
   
   return (
-    <div className={`insight-chip ${insight.type}`}>
-      <span className="insight-icon">{iconType}</span>
-      <span className="insight-text">{insight.text}</span>
+    <div className="insight-row">
+      {getIcon(insight.type)}
+      <span className="insight-text" title={insight.text}>{insight.text}</span>
     </div>
   );
 };
@@ -176,16 +186,22 @@ const MetricsSection = ({
             {/* Insights Row */}
             <div className="metric-row insights-row">
               <div className="metric-label">Insights</div>
-              {influencersData.map((influencer, index) => (
-                <div key={index} className="metric-value insights-list">
+              {influencersData.map((influencer, colIndex) => (
+                <div key={colIndex} className="metric-value insights-column">
                   {loading ? (
                     <div className="skeleton-metric"></div>
-                  ) : influencer && influencer.insights ? (
-                    influencer.insights.map((insight, i) => (
-                      <InsightChip key={i} insight={insight} />
-                    ))
                   ) : (
-                    '-'
+                    <div className="insights-list">
+                      {/* Show all available insights for this influencer */}
+                      {influencer?.insights ? (
+                        influencer.insights.map((insight, i) => (
+                          <InsightRow key={i} insight={insight} />
+                        ))
+                      ) : (
+                        // If no insights, show a placeholder
+                        <div className="insight-placeholder">-</div>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}

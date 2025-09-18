@@ -3,6 +3,7 @@
   min-height: 100vh;
   background-color: #f9fafb;
   overflow-x: hidden;
+  position: relative;
 
   .main-content {
     flex: 1;
@@ -10,6 +11,8 @@
     position: relative;
     overflow-x: hidden;
     box-sizing: border-box;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    will-change: margin-left, width;
   }
   
   // When the page has the regular sidebar
@@ -22,5 +25,11 @@
   .collapsible-sidebar + .main-content {
     margin-left: 60px;
     width: calc(100% - 60px);
+    transition: margin-left 0.3s ease, width 0.3s ease;
+  }
+  
+  .collapsible-sidebar:hover + .main-content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
   }
 }

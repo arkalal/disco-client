@@ -10,6 +10,13 @@
   top: 0;
   transition: width 0.3s ease;
   overflow-y: auto;
+  justify-content: space-between;
+  -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+  scrollbar-width: none;  /* Hide scrollbar for Firefox */
+  
+  &::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+  }
 
   .logo {
     padding: 0 20px;
@@ -102,10 +109,15 @@
   .notifications {
     padding-bottom: 10px;
   }
+  
+  .sidebar-bottom {
+    margin-top: auto;
+  }
 
   .try-disco {
     padding: 0 20px;
     margin-top: 20px;
+    margin-bottom: 10px;
 
     .try-button {
       width: 100%;
@@ -171,6 +183,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      min-width: 28px;
       
       &:hover {
         color: #fff;

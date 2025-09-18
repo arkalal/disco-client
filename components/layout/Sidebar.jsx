@@ -124,25 +124,28 @@ const Sidebar = () => {
         </Link>
       </div>
 
-      {/* User profile section */}
-      {session && (
-        <div className="user-profile">
-          <div className="profile-info">
-            <span className="username">Arkalal</span>
-            <span className="premium-badge">Premium</span>
+      {/* Bottom section - profile and credits */}
+      <div className="sidebar-bottom">
+        {/* User profile section */}
+        {session && (
+          <div className="user-profile">
+            <div className="profile-info">
+              <span className="username">Arkalal</span>
+              <span className="premium-badge">Premium</span>
+            </div>
+            <button className="nav-item logout-button" onClick={handleLogout}>
+              <IoLogOutOutline className="nav-icon" />
+            </button>
           </div>
-          <button className="nav-item logout-button" onClick={handleLogout}>
-            <IoLogOutOutline className="nav-icon" />
+        )}
+
+        {/* Credits remaining section */}
+        <div className="try-disco">
+          <button className="try-button">
+            TRY DISCO
+            <span className="credits">3 credits remaining</span>
           </button>
         </div>
-      )}
-
-      {/* Credits remaining section */}
-      <div className="try-disco">
-        <button className="try-button">
-          TRY DISCO
-          <span className="credits">3 credits remaining</span>
-        </button>
       </div>
     </div>
   );

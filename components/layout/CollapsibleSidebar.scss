@@ -9,12 +9,20 @@
   position: fixed;
   left: 0;
   top: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: width 0.3s ease;
   z-index: 100;
+  justify-content: space-between;
+  -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+  scrollbar-width: none;  /* Hide scrollbar for Firefox */
+  
+  &::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+  }
 
   &:hover {
-    width: 290px;
+    width: 250px;
   }
 
   .logo {
@@ -27,7 +35,7 @@
     position: relative;
 
     .logo-text {
-      font-size: 18px;
+      font-size: 24px;
       color: #fff;
       font-weight: 600;
       position: absolute;
@@ -48,7 +56,7 @@
       left: auto;
       transform: none;
       font-size: 24px;
-      margin-left: 12px;
+      margin-left: 0;
     }
   }
 
@@ -81,6 +89,7 @@
     position: relative;
     white-space: nowrap;
     overflow: hidden;
+    justify-content: center;
 
     &:hover {
       background-color: rgba(255, 255, 255, 0.05);
@@ -105,7 +114,7 @@
     .nav-icon {
       font-size: 20px;
       min-width: 20px;
-      margin-right: 12px;
+      margin-right: 0;
       flex-shrink: 0;
     }
 
@@ -118,6 +127,7 @@
       max-width: 0;
       transition: opacity 0.3s ease, max-width 0.3s ease;
       margin-right: 8px;
+      visibility: hidden;
     }
 
     .badge {
@@ -147,16 +157,30 @@
   }
 
   &:hover {
+    .nav-item {
+      justify-content: flex-start;
+    }
+    
+    .nav-icon {
+      margin-right: 12px;
+    }
+    
     .nav-label,
     .badge,
     .count {
       opacity: 1;
+      visibility: visible;
       max-width: 180px;
     }
   }
 
   .notifications {
-    padding-bottom: 15px;
+    padding-bottom: 10px;
+  }
+  
+  // Wrapper for bottom elements
+  .sidebar-bottom {
+    margin-top: auto;
   }
 
   .user-profile {
@@ -165,9 +189,8 @@
     justify-content: space-between;
     padding: 15px 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin-top: 25px; // Increased from 15px to add more space above
-    padding-top: 20px; // Increased padding-top to add more space
-    max-height: 70px; // Set a default max-height for collapsed state
+    margin-top: 15px;
+    max-height: 70px;
     overflow: hidden;
     transition: all 0.3s ease;
     
@@ -193,11 +216,12 @@
       border: none;
       cursor: pointer;
       color: #8a8f98;
-      padding: 8px;
+      padding: 5px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      min-width: 28px;
       transition: all 0.2s ease;
       
       &:hover {
@@ -216,7 +240,8 @@
     .username, .premium-badge {
       opacity: 0;
       max-width: 0;
-      transition: opacity 0.3s ease, max-width 0.3s ease;
+      visibility: hidden;
+      transition: opacity 0.3s ease, max-width 0.3s ease, visibility 0.3s ease;
     }
   }
   
@@ -224,19 +249,21 @@
     .username, .premium-badge {
       opacity: 1;
       max-width: 180px;
+      visibility: visible;
     }
   }
 
   .try-disco {
-    padding: 0 20px;
-    margin-top: 30px;
+    padding: 0 10px;
+    margin-top: 20px;
+    margin-bottom: 10px; // Add bottom margin for spacing
 
     .try-button {
       width: 100%;
       background-color: #1a1d23;
       border: none;
       border-radius: 8px;
-      padding: 12px;
+      padding: 12px 0;
       color: #fff;
       font-weight: 600;
       cursor: pointer;
@@ -259,7 +286,8 @@
         opacity: 0;
         max-width: 0;
         overflow: hidden;
-        transition: opacity 0.3s ease, max-width 0.3s ease;
+        visibility: hidden;
+        transition: opacity 0.3s ease, max-width 0.3s ease, visibility 0.3s ease;
       }
     }
   }
@@ -267,5 +295,6 @@
   &:hover .try-button .credits {
     opacity: 1;
     max-width: 200px;
+    visibility: visible;
   }
 }

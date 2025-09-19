@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Purple background circle -->
+  <circle cx="70" cy="70" r="60" fill="#F2EAFB" />
+  
+  <!-- Person illustration -->
+  <g transform="translate(40, 40)">
+    <!-- Character head -->
+    <circle cx="30" cy="25" r="15" fill="#8B5CF6" />
+    
+    <!-- Character body -->
+    <path d="M15 40 Q30 30 45 40 L45 60 Q30 70 15 60 Z" fill="#8B5CF6" />
+    
+    <!-- Smaller circles (decorative elements) -->
+    <circle cx="10" cy="15" r="8" fill="#A78BFA" opacity="0.7" />
+    <circle cx="50" cy="20" r="10" fill="#A78BFA" opacity="0.7" />
+    <circle cx="45" cy="55" r="8" fill="#C4B5FD" opacity="0.6" />
+    <circle cx="15" cy="50" r="5" fill="#C4B5FD" opacity="0.6" />
+    
+    <!-- Document/file illustration -->
+    <rect x="25" y="40" width="20" height="25" rx="2" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5" />
+    <line x1="30" y1="47" x2="40" y2="47" stroke="#8B5CF6" stroke-width="1.5" />
+    <line x1="30" y1="52" x2="40" y2="52" stroke="#8B5CF6" stroke-width="1.5" />
+    <line x1="30" y1="57" x2="35" y2="57" stroke="#8B5CF6" stroke-width="1.5" />
+  </g>
+</svg>

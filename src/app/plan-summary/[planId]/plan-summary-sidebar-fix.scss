@@ -1,0 +1,12 @@
+/* Fix for sidebar z-index to appear on top when expanded */
+.sidebar-container {
+  &.expanded {
+    z-index: 1000 !important; /* Higher than any other element */
+  }
+}
+
+/* Ensure plan summary content doesn't overlap */
+.plan-summary-container {
+  position: relative;
+  z-index: 1;
+}

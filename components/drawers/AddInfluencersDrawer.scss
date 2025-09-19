@@ -1,0 +1,277 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+.add-influencers-drawer-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  .drawer-scrim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(21, 23, 28, 0.55);
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+  }
+  
+  .drawer-content {
+    width: 560px;
+    height: 100%;
+    max-width: 100%;
+    background-color: #FFFFFF;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 300ms ease-out;
+    
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 28px;
+      border-bottom: 1px solid #F3F4F6;
+      
+      h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #0E1117;
+        line-height: 1.2;
+      }
+      
+      .close-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #6B7280;
+        transition: all 0.15s ease;
+        
+        &:hover {
+          background-color: #F4F5F7;
+          color: #374151;
+        }
+        
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px #D9E1FF;
+        }
+      }
+    }
+    
+    .drawer-body {
+      flex: 1;
+      padding: 20px 28px;
+      overflow-y: auto;
+      
+      .form-field {
+        margin-bottom: 20px;
+        
+        label {
+          display: block;
+          font-size: 12px;
+          font-weight: 500;
+          color: #6B7280;
+          margin-bottom: 6px;
+        }
+        
+        .custom-select {
+          position: relative;
+          width: 100%;
+          
+          .select-button {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            background-color: #FFFFFF;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: left;
+            
+            &:hover {
+              border-color: #DADDE3;
+            }
+            
+            &:focus {
+              outline: none;
+              border-color: #C7D2FE;
+              box-shadow: 0 0 0 2px rgba(199, 210, 254, 0.5);
+            }
+          }
+          
+          .select-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            width: 100%;
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            z-index: 10;
+            
+            .select-option {
+              padding: 10px 16px;
+              font-size: 14px;
+              color: #111827;
+              cursor: pointer;
+              transition: background-color 0.15s ease;
+              
+              &:hover {
+                background-color: #F9FAFB;
+              }
+              
+              &.create-option {
+                color: #4F46E5;
+                font-weight: 500;
+              }
+            }
+          }
+        }
+        
+        .platform-selector {
+          display: flex;
+          gap: 8px;
+          
+          .platform-button {
+            flex: 1;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            
+            &:not(.active) {
+              background-color: #F3F4F6;
+              color: #111827;
+              
+              &:hover {
+                background-color: #EAECEF;
+              }
+            }
+            
+            &.active {
+              background-color: #111827;
+              color: #FFFFFF;
+            }
+          }
+        }
+        
+        .influencers-textarea {
+          width: 100%;
+          min-height: 180px;
+          border: 1px solid #E5E7EB;
+          border-radius: 12px;
+          padding: 12px 14px;
+          font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+          font-size: 14px;
+          line-height: 1.5;
+          resize: vertical;
+          
+          &::placeholder {
+            color: #9CA3AF;
+          }
+          
+          &:focus {
+            outline: none;
+            border-color: #C7D2FE;
+            box-shadow: 0 0 0 2px rgba(199, 210, 254, 0.3);
+          }
+        }
+      }
+    }
+    
+    .drawer-footer {
+      padding: 16px 28px 20px;
+      border-top: 1px solid #EEF1F5;
+      
+      .footer-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        
+        button {
+          height: 44px;
+          padding: 0 20px;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          
+          &.cancel-button {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            color: #111827;
+            
+            &:hover {
+              background-color: #F9FAFB;
+            }
+          }
+          
+          &.submit-button {
+            background-color: #1114FF;
+            border: none;
+            color: #FFFFFF;
+            
+            &:hover {
+              background-color: #0000E6;
+            }
+            
+            &.disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+              
+              &:hover {
+                background-color: #1114FF;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

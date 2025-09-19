@@ -12,7 +12,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   transition: width 0.3s ease;
-  z-index: 100;
+  z-index: 9999; /* Increased z-index to ensure sidebar is always on top */
   justify-content: space-between;
   -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
   scrollbar-width: none;  /* Hide scrollbar for Firefox */
@@ -23,6 +23,7 @@
 
   &:hover {
     width: 250px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15); /* Add shadow when expanded */
   }
 
   .logo {

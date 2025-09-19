@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import './CreateListDrawer.scss';
+
+.edit-list-drawer-container {
+  // Extend most styles from create-list-drawer-container
+  @extend .create-list-drawer-container;
+  
+  // Footer buttons specific to Edit drawer
+  .drawer-footer {
+    .footer-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      
+      .delete-button {
+        height: 44px;
+        padding: 0 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        background-color: transparent;
+        border: none;
+        color: #EF4444;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-right: auto;
+        
+        &:hover {
+          background-color: rgba(239, 68, 68, 0.08);
+        }
+      }
+      
+      .update-button {
+        height: 44px;
+        padding: 0 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        background-color: #111827;
+        border: none;
+        color: #FFFFFF;
+        
+        &:hover {
+          background-color: #1F2937;
+        }
+        
+        &.disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+      }
+    }
+  }
+  
+  .confirm-delete {
+    padding: 16px;
+    text-align: center;
+    
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 8px;
+    }
+    
+    p {
+      color: #4B5563;
+      font-size: 14px;
+      margin: 0 0 24px;
+    }
+    
+    .confirm-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      
+      button {
+        min-width: 120px;
+        height: 40px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        
+        &.cancel-button {
+          background: #FFFFFF;
+          border: 1px solid #D1D5DB;
+          color: #111827;
+          
+          &:hover {
+            background: #F9FAFB;
+          }
+        }
+        
+        &.confirm-delete-button {
+          background: #EF4444;
+          border: none;
+          color: #FFFFFF;
+          
+          &:hover {
+            background: #DC2626;
+          }
+        }
+      }
+    }
+  }
+}

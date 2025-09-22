@@ -36,7 +36,141 @@ import { HiOutlineLocationMarker } from "react-icons/hi";
 import { TbCategory } from "react-icons/tb";
 import { BsPerson } from "react-icons/bs";
 import { FiInfo } from "react-icons/fi";
+import { AiOutlineEye } from "react-icons/ai";
+import { BiMessageRoundedDetail } from "react-icons/bi";
+import { HiPlus } from "react-icons/hi";
+import { FiFilter, FiCheck, FiX, FiUser, FiDownload, FiEdit2, FiInstagram } from "react-icons/fi";
+import { HiOutlineCurrencyRupee } from "react-icons/hi";
+import { BsFileEarmarkPlus } from "react-icons/bs";
+import { IoListOutline } from "react-icons/io5";
+import { MdClose } from "react-icons/md";
 import "./FilterCreatorsUI.scss";
+import { SidebarLoader, UnsavedPlanView } from "./SidebarComponents";
+import "./SidebarComponents.scss";
+
+// Add to List Dropdown Component
+const AddToListDropdown = ({ isOpen, onClose, items, onItemClick }) => {
+  const dropdownRef = useRef(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+    
+    const handleEscKey = (event) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscKey);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscKey);
+    };
+  }, [isOpen, onClose]);
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div 
+      className={`add-list-dropdown ${isOpen ? 'open' : ''}`}
+      ref={dropdownRef}
+    >
+      {items.map(item => (
+        <div 
+          className="dropdown-item" 
+          key={item.id}
+          onClick={() => onItemClick(item.id)}
+        >
+          <span className="item-icon">{item.icon}</span>
+          {item.label}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Add Profile to Plan Modal Component
+const AddProfileModal = ({ isOpen, onClose, onAddToList }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const modalRef = useRef(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+    
+    const handleEscKey = (event) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscKey);
+      document.body.style.overflow = "hidden";
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscKey);
+      document.body.style.overflow = "auto";
+    };
+  }, [isOpen, onClose]);
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div className="modal-overlay">
+      <div className="modal-container" ref={modalRef}>
+        <div className="modal-header">
+          <h3>Add Profile to Plan</h3>
+          <button className="close-button" onClick={onClose}>
+            <MdClose />
+          </button>
+        </div>
+        <div className="modal-body">
+          <div className="form-group">
+            <label>Select Plan</label>
+            <div className="search-input-container">
+              <input
+                type="text"
+                placeholder="Search plan name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+              <FiSearch className="search-icon" />
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button 
+            className="add-to-list-btn" 
+            disabled={!searchTerm.trim()}
+            onClick={() => {
+              if (searchTerm.trim()) {
+                onAddToList(searchTerm);
+              }
+            }}
+          >
+            Add To List
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function FilterCreatorsUI() {
   const router = useRouter();
@@ -69,6 +203,27 @@ export default function FilterCreatorsUI() {
   const [genderFilter, setGenderFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [followersFilter, setFollowersFilter] = useState({ min: 0, max: 0 });
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const searchRef = useRef(null);
+  
+  // State for add-to-list dropdown and modal
+  const [activeRowId, setActiveRowId] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  
+  // States for sidebar transitions
+  const [sidebarState, setSidebarState] = useState('default'); // 'default', 'loading', 'unsaved-plan'
+  const [selectedCreators, setSelectedCreators] = useState([]);
+  const [dropdownItems, setDropdownItems] = useState([
+    { id: 'new-plan', label: 'To a new plan', icon: <BsFileEarmarkPlus /> },
+    { id: 'view-plans', label: 'View all plans', icon: <IoListOutline /> }
+  ]);
+  const [createdLists, setCreatedLists] = useState([]);
+
   const [selectedInfluencerSize, setSelectedInfluencerSize] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
   const [searchCity, setSearchCity] = useState("");
@@ -818,7 +973,8 @@ export default function FilterCreatorsUI() {
 
   return (
     <div className="filter-creators-container">
-      <div className="search-filters-section">
+      <div className="main-content">
+        <div className="search-filters-section">
         <div className="filters-row">
           <div className="active-filters">
             {categories.length > 0
@@ -1656,7 +1812,7 @@ export default function FilterCreatorsUI() {
         </div>
       </div>
 
-      {/* All Filters Sidebar */}
+      {/* All Filters Sidebar - Shows as overlay */}
       {showAllFilters && (
         <div className="all-filters-overlay">
           <div className="all-filters-sidebar" ref={allFiltersRef}>
@@ -2222,6 +2378,75 @@ export default function FilterCreatorsUI() {
                     </span>
                   )}
                 </div>
+                <div 
+                  className="row-actions"
+                  onMouseEnter={() => {
+                    setActiveRowId(influencer.id);
+                    setSelectedProfile(influencer);
+                    setDropdownOpen(false);
+                  }}
+                >
+                  <button className="action-button" aria-label="Preview profile">
+                    <AiOutlineEye />
+                  </button>
+                  <button className="action-button" aria-label="Message">
+                    <BiMessageRoundedDetail />
+                  </button>
+                  <div className="dropdown-container"
+                    onMouseEnter={() => {
+                      setActiveRowId(influencer.id);
+                      setSelectedProfile(influencer);
+                      setDropdownOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      setTimeout(() => {
+                        setDropdownOpen(false);
+                      }, 150);
+                    }}
+                  >
+                    <button 
+                      className="action-button add-to-list" 
+                      aria-label="Add to list"
+                    >
+                      <span className="plus-icon">+</span>Add to list
+                    </button>
+                    <AddToListDropdown 
+                      isOpen={dropdownOpen && activeRowId === influencer.id}
+                      items={sidebarState === 'unsaved-plan' ? [
+                        { id: 'list-1', label: 'List 1', icon: <FiInstagram size={14} /> },
+                        { id: 'new-list', label: 'To a new list', icon: <BsFileEarmarkPlus /> }
+                      ] : dropdownItems}
+                      onClose={() => {
+                        setTimeout(() => {
+                          setDropdownOpen(false);
+                        }, 150);
+                      }}
+                      onItemClick={(itemId) => {
+                        setDropdownOpen(false);
+                        
+                        if (itemId === 'new-plan') {
+                          // Start the loading state
+                          setSidebarState('loading');
+                          
+                          // Simulate backend request with a timeout
+                          setTimeout(() => {
+                            // Add the selected profile to the creators list
+                            setSelectedCreators([influencer]);
+                            setSidebarState('unsaved-plan');
+                          }, 1500);
+                        } else if (itemId === 'view-plans') {
+                          setModalOpen(true);
+                        } else if (itemId === 'list-1') {
+                          // Simulate adding to an existing list
+                          console.log(`Adding ${influencer.name} to List 1`);
+                        } else if (itemId === 'new-list') {
+                          // Simulate creating a new list
+                          console.log(`Creating a new list with ${influencer.name}`);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             ))
           ) : (
@@ -2244,7 +2469,97 @@ export default function FilterCreatorsUI() {
             {totalPages > 1 && <Pagination />}
           </div>
         )}
+        </div>
       </div>
+      
+      {/* Right sidebar with dynamic content based on state */}
+      <div className="creators-sidebar">
+        {sidebarState === 'default' && (
+          <>
+            <h2 className="sidebar-title">
+              Improve your efficiency with
+              <span className="bold-text">Epigroww Global!</span>
+            </h2>
+            
+            <div className="sidebar-content">
+              {/* Add influencer button */}
+              <div className="sidebar-action-btn add-influencer">
+                <div className="btn-icon">
+                  <FiUser size={18} />
+                </div>
+                <div className="btn-content">
+                  <div className="btn-title">Add Influencers</div>
+                  <div className="btn-description">Maybe a way to communicate plan & list hierarchy.</div>
+                </div>
+              </div>
+              
+              {/* Get costs button */}
+              <div className="sidebar-action-btn get-costs">
+                <div className="btn-icon">
+                  <HiOutlineCurrencyRupee size={18} />
+                </div>
+                <div className="btn-content">
+                  <div className="btn-title">Get Costs</div>
+                  <div className="btn-description">Reach out to influencers & get their updated costs.</div>
+                </div>
+              </div>
+              
+              {/* Download lists button */}
+              <div className="sidebar-action-btn download-lists">
+                <div className="btn-icon">
+                  <FiDownload size={18} />
+                </div>
+                <div className="btn-content">
+                  <div className="btn-title">Download Lists</div>
+                  <div className="btn-description">Download influencer lists with their metrics on an excel sheet!</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Fixed bottom footer with Create List button */}
+            <div className="sidebar-footer">
+              <button className="create-list-btn">
+                <span className="btn-icon">+</span>
+                <span>Create List</span>
+              </button>
+            </div>
+          </>
+        )}
+        
+        {sidebarState === 'loading' && (
+          <SidebarLoader />
+        )}
+        
+        {sidebarState === 'unsaved-plan' && (
+          <UnsavedPlanView 
+            selectedCreators={selectedCreators}
+            onNewListClick={() => {
+              // This would create a new list in a real implementation
+              console.log('New list clicked');
+            }}
+            onSaveAndViewClick={() => {
+              // In a real implementation, this would save the plan and redirect to the plan view
+              console.log('Save and view plan clicked');
+              // For demo purposes, we'll go back to default state after a delay
+              setTimeout(() => {
+                setSidebarState('default');
+                setSelectedCreators([]);
+              }, 500);
+            }}
+          />
+        )}
+      </div>
+      
+      {/* Modal for adding profile to plan */}
+      <AddProfileModal 
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onAddToList={(planName) => {
+          // Handle adding profile to list logic
+          console.log(`Adding ${selectedProfile?.name} to plan: ${planName}`);
+          setModalOpen(false);
+        }}
+      />
     </div>
   );
 }

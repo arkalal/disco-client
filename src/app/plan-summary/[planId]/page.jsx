@@ -106,12 +106,17 @@ const PlanSummary = ({ params }) => {
     // Here you would typically delete the list from your data store
   };
   
-  // Calculate and show CBF hover card
+  // Calculate and show CBF hover card - enhanced for aggressive detection
   const handleCBFHover = (influencer, event) => {
     if (!event || !influencer) return;
     
-    // Get the element's position
-    const rect = event.currentTarget.getBoundingClientRect();
+    // Immediately set influencer to ensure card appears
+    setHoveredInfluencer(influencer);
+    
+    // Use a more reliable method to get the element's position
+    // Prioritize currentTarget (the element with the listener) but fall back to target if needed
+    const element = event.currentTarget || event.target;
+    const rect = element.getBoundingClientRect();
     
     // We want the card to appear to the right
     const position = {
@@ -127,9 +132,8 @@ const PlanSummary = ({ params }) => {
       position.top = rect.top - 10;
     }
     
-    // Update state
+    // Update position
     setCbfCardPosition(position);
-    setHoveredInfluencer(influencer);
   };
   
   const handleCBFHoverEnd = () => {
@@ -493,8 +497,11 @@ const PlanSummary = ({ params }) => {
                     className="cbf-pill" 
                     onClick={(e) => handleCBFHover(influencer, e)}
                     onMouseEnter={(e) => handleCBFHover(influencer, e)}
+                    onMouseOver={(e) => handleCBFHover(influencer, e)}
+                    onMouseMove={(e) => handleCBFHover(influencer, e)}
                     onMouseLeave={handleCBFHoverEnd}
                     onFocus={(e) => handleCBFHover(influencer, e)}
+                    tabIndex={0}
                   >
                     {influencer.cbfIndex}
                   </div>

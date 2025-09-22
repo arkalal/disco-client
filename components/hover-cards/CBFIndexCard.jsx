@@ -34,103 +34,137 @@ const CBFIndexCard = ({ influencer, onChangeIndex, position = { top: 0, left: 0 
     }
   ];
   
-  // More direct approach to handle hover/mouseout
+  // Enhanced approach for reliable hover detection with fast mouse movements
   useEffect(() => {
     const cardElement = cardRef.current;
     if (!cardElement || !isVisible) return;
     
-    // Keep track of if we're hovering over the pill or card
-    let isOverElement = false;
+    // Clear any pending close timer when the card appears
+    clearTimeout(hoverTimerRef.current);
+    setIsClosing(false);
     
+    // Aggressive event capture for all mouse events
+    const addAggressiveListener = (element, eventType, handler) => {
+      // Use capture phase to get the events before they bubble
+      element.addEventListener(eventType, handler, true);
+    };
+    
+    // Central function to check if we're hovering relevant elements
+    const isHoveringTarget = () => {
+      // Check for hover on both pill and card
+      return !!document.querySelector('.cbf-index-card:hover, .cbf-pill:hover');
+    };
+    
+    // Handle mouse entering the card
     const handleMouseEnter = () => {
-      isOverElement = true;
       clearTimeout(hoverTimerRef.current);
       setIsClosing(false);
     };
     
+    // Handle mouse leaving the card
     const handleMouseLeave = () => {
-      isOverElement = false;
-      
-      // Short delay to see if we moved to the pill or card
+      // Short delay to check if we moved to a pill
       hoverTimerRef.current = setTimeout(() => {
-        // Check if we're hovering either element
-        if (!document.querySelector('.cbf-index-card:hover, .cbf-pill:hover')) {
+        if (!isHoveringTarget()) {
           setIsClosing(true);
           setTimeout(() => {
-            // Double check before closing
-            if (!document.querySelector('.cbf-index-card:hover, .cbf-pill:hover')) {
+            // Final check before closing
+            if (!isHoveringTarget()) {
               onClose();
             } else {
               setIsClosing(false);
             }
-          }, 120);
+          }, 100);
         }
-      }, 50);
+      }, 30); // Shorter delay for faster response
     };
     
-    // Handle document-level mouseout to catch when cursor leaves the window
-    const handleDocumentMouseOut = (e) => {
-      // If mouse leaves the document to an external element (like browser chrome)
-      if (!e.relatedTarget && !e.toElement) {
-        setIsClosing(true);
-        setTimeout(() => onClose(), 120);
+    // Handle document-wide mouse movements for edge cases
+    const handleDocumentMouseMove = (e) => {
+      // If we have a pending close timer but mouse is over a relevant element
+      if (hoverTimerRef.current && isHoveringTarget()) {
+        // Cancel the close
+        clearTimeout(hoverTimerRef.current);
+        setIsClosing(false);
       }
     };
     
-    // Add listeners
-    cardElement.addEventListener('mouseenter', handleMouseEnter);
-    cardElement.addEventListener('mouseleave', handleMouseLeave);
-    document.addEventListener('mouseout', handleDocumentMouseOut);
+    // Handle document-level mouseout (when cursor leaves window)
+    const handleDocumentMouseOut = (e) => {
+      if (!e.relatedTarget && !e.toElement) {
+        setIsClosing(true);
+        setTimeout(() => onClose(), 100);
+      }
+    };
     
-    // Also add a global click handler to close if clicked elsewhere
+    // Global click handler to close if clicked elsewhere
     const handleGlobalClick = (e) => {
       const clickedElement = e.target;
       const clickedOnCard = cardElement.contains(clickedElement);
-      const clickedOnPill = clickedElement.classList.contains('cbf-pill');
+      const clickedOnPill = clickedElement.closest('.cbf-pill') !== null;
       
       if (!clickedOnCard && !clickedOnPill) {
         setIsClosing(true);
-        setTimeout(() => onClose(), 120);
+        setTimeout(() => onClose(), 100);
       }
     };
+    
+    // Add all event listeners
+    // For the card itself
+    addAggressiveListener(cardElement, 'mouseenter', handleMouseEnter);
+    addAggressiveListener(cardElement, 'mouseover', handleMouseEnter);
+    addAggressiveListener(cardElement, 'mouseleave', handleMouseLeave);
+    
+    // Document-level listeners
+    document.addEventListener('mousemove', handleDocumentMouseMove);
+    document.addEventListener('mouseout', handleDocumentMouseOut);
     document.addEventListener('click', handleGlobalClick, true);
     
-    // Cleanup
+    // Cleanup all listeners
     return () => {
       clearTimeout(hoverTimerRef.current);
-      cardElement.removeEventListener('mouseenter', handleMouseEnter);
-      cardElement.removeEventListener('mouseleave', handleMouseLeave);
+      cardElement.removeEventListener('mouseenter', handleMouseEnter, true);
+      cardElement.removeEventListener('mouseover', handleMouseEnter, true);
+      cardElement.removeEventListener('mouseleave', handleMouseLeave, true);
+      document.removeEventListener('mousemove', handleDocumentMouseMove);
       document.removeEventListener('mouseout', handleDocumentMouseOut);
       document.removeEventListener('click', handleGlobalClick, true);
     };
   }, [isVisible, onClose]);
   
-  // Add explicit event listener for the pill elements
+  // Global monitoring of pill elements
   useEffect(() => {
     if (!isVisible) return;
     
+    // Find all pill elements
     const pillElements = document.querySelectorAll('.cbf-pill');
-    const handlePillMouseLeave = () => {
-      // Short timeout to allow moving to the card
-      setTimeout(() => {
-        // If we're not over the card, close it
-        if (!document.querySelector('.cbf-index-card:hover')) {
-          setIsClosing(true);
-          setTimeout(() => onClose(), 120);
-        }
-      }, 50);
-    };
     
+    // Add redundant listeners to pills for maximum detection
     pillElements.forEach(pill => {
-      pill.addEventListener('mouseleave', handlePillMouseLeave);
+      const handlePillMouseLeave = () => {
+        setTimeout(() => {
+          if (!document.querySelector('.cbf-index-card:hover')) {
+            setIsClosing(true);
+            setTimeout(() => onClose(), 100);
+          }
+        }, 30);
+      };
+      
+      pill.addEventListener('mouseleave', handlePillMouseLeave, true);
+      
+      return () => {
+        pill.removeEventListener('mouseleave', handlePillMouseLeave, true);
+      };
     });
-    
-    return () => {
-      pillElements.forEach(pill => {
-        pill.removeEventListener('mouseleave', handlePillMouseLeave);
-      });
-    };
   }, [isVisible, onClose]);
+  
+  // React to visibility changes
+  useEffect(() => {
+    if (isVisible) {
+      // When card appears, ensure it's not in closing state
+      setIsClosing(false);
+    }
+  }, [isVisible]);
   
   if (!isVisible || !influencer) return null;
   

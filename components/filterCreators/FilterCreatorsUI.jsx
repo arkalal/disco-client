@@ -39,17 +39,35 @@ import { FiInfo } from "react-icons/fi";
 import { AiOutlineEye } from "react-icons/ai";
 import { BiMessageRoundedDetail } from "react-icons/bi";
 import { HiPlus } from "react-icons/hi";
-import { FiFilter, FiCheck, FiX, FiUser, FiDownload, FiEdit2, FiInstagram } from "react-icons/fi";
+import { FiFilter, FiCheck, FiX, FiUser, FiDownload, FiEdit2, FiInstagram, FiArrowLeft } from "react-icons/fi";
 import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { BsFileEarmarkPlus } from "react-icons/bs";
 import { IoListOutline } from "react-icons/io5";
 import { MdClose } from "react-icons/md";
 import "./FilterCreatorsUI.scss";
-import { SidebarLoader, UnsavedPlanView } from "./SidebarComponents";
+import { SidebarLoader, UnsavedPlanView, AllPlansView } from "./SidebarComponents";
 import "./SidebarComponents.scss";
+import ListDetailView from "./ListDetailView";
+import EditListDrawer from "../drawers/EditListDrawer";
+import CreateListDrawer from "../drawers/CreateListDrawer";
+import SavePlanModal from "./SavePlanModal";
+import CreatePlanModal from "./CreatePlanModal.jsx";
 
 // Add to List Dropdown Component
-const AddToListDropdown = ({ isOpen, onClose, items, onItemClick }) => {
+const AddToListDropdown = ({ 
+  isOpen, 
+  onClose, 
+  items, 
+  onItemClick, 
+  isFirstRow,
+  isPlansMode = false,
+  plans = [],
+  onCreateNewPlan,
+  onCreateNewList,
+  onSelectPlanList,
+  onHoverIn,
+  onHoverOut
+}) => {
   const dropdownRef = useRef(null);
   
   useEffect(() => {
@@ -78,10 +96,57 @@ const AddToListDropdown = ({ isOpen, onClose, items, onItemClick }) => {
   
   if (!isOpen) return null;
   
+  if (isPlansMode) {
+    return (
+      <div 
+        className={`add-list-dropdown ${isOpen ? 'open' : ''} ${isFirstRow ? 'first-row' : ''}`}
+        ref={dropdownRef}
+        onMouseEnter={() => onHoverIn && onHoverIn()}
+        onMouseLeave={() => onHoverOut && onHoverOut()}
+      >
+        <div 
+          className="dropdown-item"
+          onClick={() => { onClose(); onCreateNewPlan && onCreateNewPlan(); }}
+        >
+          <span className="item-icon"><BsFileEarmarkPlus /></span>
+          To a new plan
+        </div>
+        <div className="dropdown-section-header">Recent Plans</div>
+        {plans.map(plan => (
+          <div className="dropdown-item plan-item" key={plan.id}>
+            <span className="item-icon"><FiInstagram size={14} /></span>
+            <span className="plan-name">{plan.name}</span>
+            <span className="submenu-arrow">›</span>
+            <div className="plan-submenu">
+              <div 
+                className="submenu-item"
+                onClick={(e) => { e.stopPropagation(); onClose(); onCreateNewList && onCreateNewList(plan); }}
+              >
+                To a new list
+              </div>
+              {plan.lists && plan.lists.map(list => (
+                <div 
+                  key={list.id}
+                  className="submenu-item"
+                  onClick={(e) => { e.stopPropagation(); onClose(); onSelectPlanList && onSelectPlanList(plan, list); }}
+                >
+                  {list.name}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="dropdown-item" onClick={() => onItemClick('view-plans')}>View all plans</div>
+      </div>
+    );
+  }
+
   return (
     <div 
-      className={`add-list-dropdown ${isOpen ? 'open' : ''}`}
+      className={`add-list-dropdown ${isOpen ? 'open' : ''} ${isFirstRow ? 'first-row' : ''}`}
       ref={dropdownRef}
+      onMouseEnter={() => onHoverIn && onHoverIn()}
+      onMouseLeave={() => onHoverOut && onHoverOut()}
     >
       {items.map(item => (
         <div 
@@ -214,15 +279,42 @@ export default function FilterCreatorsUI() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
+  // Robust hover handling for action dropdowns
+  const hoverCloseTimer = useRef(null);
   
   // States for sidebar transitions
-  const [sidebarState, setSidebarState] = useState('default'); // 'default', 'loading', 'unsaved-plan'
+  const [sidebarState, setSidebarState] = useState('default'); // 'default', 'loading', 'unsaved-plan', 'list-detail', 'all-plans'
   const [selectedCreators, setSelectedCreators] = useState([]);
   const [dropdownItems, setDropdownItems] = useState([
     { id: 'new-plan', label: 'To a new plan', icon: <BsFileEarmarkPlus /> },
     { id: 'view-plans', label: 'View all plans', icon: <IoListOutline /> }
   ]);
   const [createdLists, setCreatedLists] = useState([]);
+  const [loadingButtonId, setLoadingButtonId] = useState(null); // To track which button is loading
+  const [plans, setPlans] = useState([
+    {
+      id: 'plan-1',
+      name: 'Unsaved Plan',
+      dateLabel: 'Sep 23, 2025',
+      lists: [
+        { id: 'list-1', name: 'List 1' }
+      ],
+    }
+  ]);
+  
+  // States for list management UI
+  const [showEditListDrawer, setShowEditListDrawer] = useState(false);
+  const [showCreateListDrawer, setShowCreateListDrawer] = useState(false);
+  const [showSavePlanModal, setShowSavePlanModal] = useState(false);
+  const [showCreatePlanModal, setShowCreatePlanModal] = useState(false);
+  const [currentListView, setCurrentListView] = useState(null); // To track which list is being viewed
+  const [currentListData, setCurrentListData] = useState({
+    id: '1',
+    name: 'List 1',
+    color: '#4F46E5',
+    platform: 'instagram',
+    deliverables: []
+  });
 
   const [selectedInfluencerSize, setSelectedInfluencerSize] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -2340,7 +2432,15 @@ export default function FilterCreatorsUI() {
             ))
           ) : influencers.length > 0 ? (
             influencers.map((influencer, index) => (
-              <div className="table-row" key={index}>
+              <div className={`table-row ${dropdownOpen && activeRowId === influencer.id ? 'dropdown-open' : ''}`} key={index}
+                   onMouseEnter={() => {
+                     // Cancel any pending close when entering the row area
+                     if (hoverCloseTimer.current) {
+                       clearTimeout(hoverCloseTimer.current);
+                       hoverCloseTimer.current = null;
+                     }
+                   }}
+              >
                 <div className="checkbox-col">
                   <input type="checkbox" />
                 </div>
@@ -2383,7 +2483,7 @@ export default function FilterCreatorsUI() {
                   onMouseEnter={() => {
                     setActiveRowId(influencer.id);
                     setSelectedProfile(influencer);
-                    setDropdownOpen(false);
+                    // Do not forcibly close dropdown here to prevent flicker
                   }}
                 >
                   <button className="action-button" aria-label="Preview profile">
@@ -2396,46 +2496,100 @@ export default function FilterCreatorsUI() {
                     onMouseEnter={() => {
                       setActiveRowId(influencer.id);
                       setSelectedProfile(influencer);
+                      // Cancel scheduled close and open immediately for aggressive hover
+                      if (hoverCloseTimer.current) {
+                        clearTimeout(hoverCloseTimer.current);
+                        hoverCloseTimer.current = null;
+                      }
                       setDropdownOpen(true);
                     }}
                     onMouseLeave={() => {
-                      setTimeout(() => {
-                        setDropdownOpen(false);
-                      }, 150);
+                      // Only close dropdown if we're not in loading state for this row
+                      if (loadingButtonId !== influencer.id) {
+                        // Delay the close slightly to allow cursor travel to the dropdown
+                        hoverCloseTimer.current = setTimeout(() => {
+                          setDropdownOpen(false);
+                          hoverCloseTimer.current = null;
+                        }, 220);
+                      }
                     }}
                   >
                     <button 
-                      className="action-button add-to-list" 
+                      className={`action-button add-to-list ${loadingButtonId === influencer.id ? 'loading' : ''}`}
                       aria-label="Add to list"
                     >
-                      <span className="plus-icon">+</span>Add to list
+                      {loadingButtonId === influencer.id ? (
+                        <span className="button-loader"></span>
+                      ) : (
+                        <><span className="plus-icon">+</span>Add to list</>
+                      )}
                     </button>
                     <AddToListDropdown 
                       isOpen={dropdownOpen && activeRowId === influencer.id}
+                      // In All Plans view, also treat the 2nd row like first to avoid clipping under header
+                      isFirstRow={index === 0 || (sidebarState === 'all-plans' && index === 1)}
+                      isPlansMode={sidebarState === 'all-plans'}
+                      plans={plans}
                       items={sidebarState === 'unsaved-plan' ? [
                         { id: 'list-1', label: 'List 1', icon: <FiInstagram size={14} /> },
                         { id: 'new-list', label: 'To a new list', icon: <BsFileEarmarkPlus /> }
                       ] : dropdownItems}
+                      onCreateNewPlan={() => setShowCreatePlanModal(true)}
+                      onCreateNewList={(plan) => {
+                        setShowCreateListDrawer(true);
+                      }}
+                      onSelectPlanList={(plan, list) => {
+                        console.log(`Add ${influencer.name} to ${plan.name} -> ${list.name}`);
+                      }}
                       onClose={() => {
-                        setTimeout(() => {
-                          setDropdownOpen(false);
-                        }, 150);
+                        // Only close the dropdown if not in loading state for this influencer
+                        if (loadingButtonId !== influencer.id) {
+                          if (hoverCloseTimer.current) {
+                            clearTimeout(hoverCloseTimer.current);
+                            hoverCloseTimer.current = null;
+                          }
+                          hoverCloseTimer.current = setTimeout(() => {
+                            setDropdownOpen(false);
+                            hoverCloseTimer.current = null;
+                          }, 180);
+                        }
+                      }}
+                      onHoverIn={() => {
+                        if (hoverCloseTimer.current) {
+                          clearTimeout(hoverCloseTimer.current);
+                          hoverCloseTimer.current = null;
+                        }
+                      }}
+                      onHoverOut={() => {
+                        if (loadingButtonId !== influencer.id) {
+                          hoverCloseTimer.current = setTimeout(() => {
+                            setDropdownOpen(false);
+                            hoverCloseTimer.current = null;
+                          }, 220);
+                        }
                       }}
                       onItemClick={(itemId) => {
-                        setDropdownOpen(false);
-                        
                         if (itemId === 'new-plan') {
-                          // Start the loading state
+                          // Don't close dropdown, just show loading in both places
                           setSidebarState('loading');
+                          setLoadingButtonId(influencer.id);
                           
                           // Simulate backend request with a timeout
                           setTimeout(() => {
                             // Add the selected profile to the creators list
                             setSelectedCreators([influencer]);
                             setSidebarState('unsaved-plan');
+                            // Reset loading button state after a brief delay to show transition
+                            setTimeout(() => {
+                              setLoadingButtonId(null);
+                            }, 500);
                           }, 1500);
                         } else if (itemId === 'view-plans') {
-                          setModalOpen(true);
+                          setDropdownOpen(false);
+                          setSidebarState('all-plans');
+                        } else if (itemId === 'view-all-plans') {
+                          setDropdownOpen(false);
+                          setSidebarState('all-plans');
                         } else if (itemId === 'list-1') {
                           // Simulate adding to an existing list
                           console.log(`Adding ${influencer.name} to List 1`);
@@ -2534,18 +2688,44 @@ export default function FilterCreatorsUI() {
           <UnsavedPlanView 
             selectedCreators={selectedCreators}
             onNewListClick={() => {
-              // This would create a new list in a real implementation
-              console.log('New list clicked');
+              setShowCreateListDrawer(true);
             }}
             onSaveAndViewClick={() => {
-              // In a real implementation, this would save the plan and redirect to the plan view
-              console.log('Save and view plan clicked');
-              // For demo purposes, we'll go back to default state after a delay
-              setTimeout(() => {
-                setSidebarState('default');
-                setSelectedCreators([]);
-              }, 500);
+              setShowSavePlanModal(true);
             }}
+            onEditListClick={() => {
+              setShowEditListDrawer(true);
+            }}
+            onDeleteListClick={() => {
+              // In a real implementation, this would delete the list
+              console.log('Delete list clicked');
+            }}
+            onListClick={() => {
+              // Switch to list detail view
+              setCurrentListView('List 1');
+              setSidebarState('list-detail');
+            }}
+            onBackClick={() => {
+              setSidebarState('all-plans');
+            }}
+          />
+        )}
+        
+        {sidebarState === 'all-plans' && (
+          <AllPlansView 
+            plans={plans}
+            onNewPlanClick={() => setShowCreatePlanModal(true)}
+            onSelectPlan={(plan) => {
+              setSidebarState('unsaved-plan');
+            }}
+          />
+        )}
+        
+        {sidebarState === 'list-detail' && (
+          <ListDetailView 
+            listName={currentListView}
+            influencers={selectedCreators}
+            onBackClick={() => setSidebarState('unsaved-plan')}
           />
         )}
       </div>
@@ -2560,6 +2740,75 @@ export default function FilterCreatorsUI() {
           setModalOpen(false);
         }}
       />
+      
+      {/* Edit List Drawer */}
+      <EditListDrawer 
+        isOpen={showEditListDrawer}
+        onClose={() => setShowEditListDrawer(false)}
+        onUpdateList={(updatedList) => {
+          console.log('List updated:', updatedList);
+          setShowEditListDrawer(false);
+        }}
+        onDeleteList={() => {
+          console.log('List deleted');
+          setShowEditListDrawer(false);
+          // In a real implementation, this would delete the list
+          // For now, go back to default sidebar state
+          setSidebarState('default');
+        }}
+        listData={currentListData}
+      />
+      
+      {/* Create New List Drawer */}
+      <CreateListDrawer 
+        isOpen={showCreateListDrawer}
+        onClose={() => setShowCreateListDrawer(false)}
+        onCreateList={(newList) => {
+          console.log('New list created:', newList);
+          setShowCreateListDrawer(false);
+          // In a real implementation, this would add the list to the UI
+        }}
+      />
+      
+      {/* Save Plan Modal */}
+      {showSavePlanModal && (
+        <SavePlanModal 
+          isOpen={true}
+          onClose={() => setShowSavePlanModal(false)}
+          onSave={(planData) => {
+            console.log('Plan saved:', planData);
+            setShowSavePlanModal(false);
+            // In a real implementation, this would save the plan and redirect
+            // For demo purposes, we'll go back to default state
+            setTimeout(() => {
+              setSidebarState('default');
+              setSelectedCreators([]);
+              setLoadingButtonId(null);
+            }, 500);
+          }}
+        />
+      )}
+
+      {/* Create Plan Modal */}
+      {showCreatePlanModal && (
+        <CreatePlanModal
+          isOpen={true}
+          onClose={() => setShowCreatePlanModal(false)}
+          onCreate={(newPlan) => {
+            setPlans((prev) => [
+              {
+                id: `plan-${prev.length + 1}`,
+                name: newPlan.planName || 'New Plan',
+                dateLabel: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+                lists: []
+              },
+              ...prev,
+            ]);
+            setShowCreatePlanModal(false);
+            setSidebarState('all-plans');
+          }}
+        />
+      )}
     </div>
   );
 }

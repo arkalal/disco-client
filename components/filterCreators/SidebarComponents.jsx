@@ -1,5 +1,5 @@
-import React from 'react';
-import { FiEdit2, FiInstagram, FiFileText } from 'react-icons/fi';
+import React, { useState, useRef, useEffect } from 'react';
+import { FiEdit2, FiInstagram, FiFileText, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import './SidebarComponents.scss';
 
@@ -15,12 +15,65 @@ export const SidebarLoader = () => {
   );
 };
 
+// All Plans View Component for the Sidebar
+export const AllPlansView = ({ plans = [], onNewPlanClick, onSelectPlan }) => {
+  return (
+    <div className="all-plans-view">
+      <div className="all-plans-header">
+        <h2>All Plans</h2>
+        <p className="hint">Kindly select a plan from the list below to start adding influencers!</p>
+        <button className="new-plan-button" onClick={onNewPlanClick}>
+          <span className="plus">+</span> New Plan
+        </button>
+      </div>
+
+      <div className="plans-list">
+        {plans.map((plan) => (
+          <div className="plan-card" key={plan.id} onClick={() => onSelectPlan && onSelectPlan(plan)}>
+            <div className="plan-card-title">{plan.name}</div>
+            <div className="plan-card-meta">
+              <span className="meta-item">{plan.lists?.length || 0} {plan.lists?.length === 1 ? 'list' : 'lists'}</span>
+              {plan.dateLabel && <span className="meta-sep">•</span>}
+              {plan.dateLabel && <span className="meta-item">{plan.dateLabel}</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Unsaved Plan View Component for the Sidebar
-export const UnsavedPlanView = ({ selectedCreators, onNewListClick, onSaveAndViewClick }) => {
+export const UnsavedPlanView = ({ 
+  selectedCreators, 
+  onNewListClick, 
+  onSaveAndViewClick, 
+  onEditListClick, 
+  onDeleteListClick, 
+  onListClick,
+  onBackClick
+ }) => {
+  const [showListOptions, setShowListOptions] = useState(false);
+  
+  // Close dropdown when clicking outside
+  const dropdownRef = useRef(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowListOptions(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownRef]);
   return (
     <div className="unsaved-plan-view">
       <div className="back-link">
-        <a href="#">&lt; All plans</a>
+        <a href="#" onClick={(e) => { e.preventDefault(); onBackClick && onBackClick(); }}>&lt; All plans</a>
       </div>
       
       <div className="plan-header">
@@ -42,10 +95,36 @@ export const UnsavedPlanView = ({ selectedCreators, onNewListClick, onSaveAndVie
       <div className="lists-container">
         <div className="list-item">
           <div className="list-header">
-            <h3 className="list-title">List 1</h3>
-            <button className="list-menu-button">
-              <BsThreeDotsVertical size={14} />
-            </button>
+            <h3 className="list-title" onClick={onListClick}>List 1</h3>
+            <div className="dropdown-container" ref={dropdownRef}>
+              <button 
+                className="list-menu-button" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowListOptions(!showListOptions);
+                }}
+              >
+                <BsThreeDotsVertical size={14} />
+              </button>
+              {showListOptions && (
+                <div className="list-options-dropdown">
+                  <div className="list-option" onClick={(e) => {
+                    e.stopPropagation();
+                    setShowListOptions(false);
+                    onEditListClick();
+                  }}>
+                    <FiEdit size={14} className="option-icon" /> Edit List Details
+                  </div>
+                  <div className="list-option" onClick={(e) => {
+                    e.stopPropagation();
+                    setShowListOptions(false);
+                    onDeleteListClick();
+                  }}>
+                    <FiTrash2 size={14} className="option-icon" /> Delete List
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="influencer-count">
@@ -53,20 +132,6 @@ export const UnsavedPlanView = ({ selectedCreators, onNewListClick, onSaveAndVie
               <FiInstagram className="list-platform-icon" /> {selectedCreators.length} influencer
             </span>
           </div>
-          
-          {selectedCreators.map((creator) => (
-            <div className="creator-item" key={creator.id}>
-              <div className="creator-avatar">
-                <img src={creator.profileImg} alt={creator.name} />
-              </div>
-              <div className="creator-details">
-                <div className="creator-name">{creator.name}</div>
-                <div className="creator-handle">
-                  <FiInstagram size={12} className="platform-icon" /> {creator.handle}
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
       

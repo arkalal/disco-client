@@ -1,0 +1,136 @@
+.save-plan-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.save-plan-modal {
+  width: 400px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+  
+  .save-plan-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+    
+    .close-button {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: none;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6B7280;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background-color: #F3F4F6;
+      }
+    }
+  }
+  
+  .save-plan-content {
+    padding: 24px;
+    
+    .form-field {
+      margin-bottom: 20px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 8px;
+      }
+      
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 14px;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        transition: border-color 0.2s ease;
+        
+        &:focus {
+          outline: none;
+          border-color: #4F46E5;
+          box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+        
+        &::placeholder {
+          color: #9CA3AF;
+        }
+      }
+      
+      .search-input-wrapper {
+        position: relative;
+        
+        .search-icon {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #9CA3AF;
+        }
+        
+        input {
+          padding-left: 36px;
+        }
+      }
+    }
+  }
+  
+  .save-plan-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: flex-end;
+    
+    .save-button {
+      padding: 0 16px;
+      height: 40px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      background-color: #64748B;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: #4B5563;
+      }
+      
+      &.disabled {
+        background-color: #94A3B8;
+        cursor: not-allowed;
+      }
+    }
+  }
+}

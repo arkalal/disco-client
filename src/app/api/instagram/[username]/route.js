@@ -1,68 +1,44 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 
-// Profile cache schema
-let ProfileCache;
-try {
-  ProfileCache = mongoose.model("ProfileCache");
-} catch {
-  const ProfileCacheSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    data: { type: Object, required: true },
-    updatedAt: { type: Date, default: Date.now },
-  });
-
-  ProfileCache = mongoose.model("ProfileCache", ProfileCacheSchema);
-}
+// Note: Caching has been removed for now to simplify integration
 
 export async function GET(request, { params }) {
   // Properly await params before accessing properties
   const resolvedParams = await Promise.resolve(params);
   const username = resolvedParams.username;
 
-  // For testing without API, use static data
-  if (username === "demouser") {
-    return NextResponse.json(generateDemoData(username));
-  }
-
   try {
-    console.log("Connecting to database...");
-    // Direct database connection without the utility
-    if (!mongoose.connection.readyState) {
-      await mongoose.connect(process.env.MONGODB_URI);
-    }
+    // No DB connection or caching - fetch fresh data every time
 
-    console.log("Checking for cached data...");
-    // Check if we have cached data less than 24 hours old
-    const cachedProfile = await ProfileCache.findOne({
-      username,
-      updatedAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // 24 hours
-    });
-
-    if (cachedProfile) {
-      console.log("Returning cached profile data");
-      return NextResponse.json(cachedProfile.data);
-    }
-
-    console.log("Fetching from API...");
-    // No valid cache, fetch from API
-    const encodedUrl = encodeURIComponent(
-      `https://www.instagram.com/${username}/`
-    );
-    const apiUrl = `https://instagram-statistics-api.p.rapidapi.com/community?url=${encodedUrl}`;
+    console.log("Fetching from InsightIQ API...");
+    // No valid cache, fetch from InsightIQ API
+    const insightIQApiUrl =
+      "https://api.staging.insightiq.ai/v1/social/creators/profiles/analytics";
 
     // Log API request details (without sensitive info)
-    console.log(`Making request to: ${apiUrl}`);
+    console.log(`Making request to: ${insightIQApiUrl} for user ${username}`);
 
     try {
-      console.log("API Key present:", !!process.env.RAPIDAPI_KEY);
+      // Use environment variables for auth credentials in production
+      const authCredentials =
+        "NGY2ZmU2YzEtNjBlZi00MjE5LTlmODItM2NkOWZjMWJmN2NlOmRiNDZjM2JjLWQ0NWEtNDk4Ni05NWI1LWUxMzcxMjQ0YWVkNw==";
 
-      const response = await fetch(apiUrl, {
-        method: "GET",
+      // Instagram platform ID for work_platform_id
+      const instagramPlatformId = "9bb8913b-ddd9-430b-a66a-d74d846e6c66";
+
+      const requestBody = {
+        identifier: username,
+        work_platform_id: instagramPlatformId,
+      };
+
+      const response = await fetch(insightIQApiUrl, {
+        method: "POST",
         headers: {
-          "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-          "x-rapidapi-host": "instagram-statistics-api.p.rapidapi.com",
+          Accept: "application/json",
+          Authorization: `Basic ${authCredentials}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify(requestBody),
       });
 
       console.log("API Response status:", response.status);
@@ -78,29 +54,24 @@ export async function GET(request, { params }) {
           console.error("Could not read error response body");
         }
 
-        // Always use demo data for now while we debug API issues
-        console.log("Using demo data instead");
-        const demoData = generateDemoData(username);
-        return NextResponse.json(demoData);
+        return NextResponse.json(
+          { error: "Failed to fetch profile data" },
+          { status: response.status }
+        );
       }
 
       const rawData = await response.json();
 
       // Process data to match our UI requirements
-      const profileData = transformProfileData(rawData.data);
-
-      // Cache the data
-      await ProfileCache.findOneAndUpdate(
-        { username },
-        { data: profileData, updatedAt: new Date() },
-        { upsert: true }
-      );
+      const profileData = transformInsightIQData(rawData);
 
       return NextResponse.json(profileData);
     } catch (apiError) {
       console.error("API request failed:", apiError);
-      // For development, fall back to demo data
-      return NextResponse.json(generateDemoData(username));
+      return NextResponse.json(
+        { error: "API request failed" },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error("Error in Instagram profile route:", error);
@@ -108,134 +79,10 @@ export async function GET(request, { params }) {
   }
 }
 
-// Generate demo data for development/testing
-function generateDemoData(username) {
-  return {
-    username: username,
-    name:
-      username === "srkkingk555"
-        ? "Shah Rukh Khan"
-        : `${username.charAt(0).toUpperCase()}${username.slice(1)}`,
-    bio: "This is a demo profile with static data for development purposes.",
-    profilePicture: "https://via.placeholder.com/150",
-    verified: true,
-    influenceScore: "7.88",
-
-    // Metrics
-    followers: "1.2m",
-    followersCount: 1200000,
-    engagementRate: "1.33%",
-    avgLikes: "17.7k",
-    avgComments: "104",
-    estimatedReach: "174.7k",
-
-    // Content
-    recentPosts: [],
-    categories: ["Entertainment", "Movies", "Celebrities", "Acting"],
-
-    // Audience
-    audience: {
-      gender: { m: 0.65, f: 0.35 },
-      ages: [
-        { category: "0_18", m: 0.07, f: 0.06 },
-        { category: "18_24", m: 0.15, f: 0.12 },
-        { category: "25_34", m: 0.25, f: 0.15 },
-        { category: "35_44", m: 0.12, f: 0.04 },
-        { category: "45_100", m: 0.06, f: 0.02 },
-      ],
-      countries: [
-        { name: "India", percent: 0.35 },
-        { name: "United States", percent: 0.15 },
-        { name: "United Kingdom", percent: 0.08 },
-        { name: "Australia", percent: 0.06 },
-        { name: "Canada", percent: 0.05 },
-        { name: "Germany", percent: 0.04 },
-        { name: "France", percent: 0.03 },
-        { name: "Brazil", percent: 0.03 },
-        { name: "Japan", percent: 0.02 },
-        { name: "Spain", percent: 0.02 },
-      ],
-      cities: [
-        { name: "Mumbai", percent: 0.12 },
-        { name: "Delhi", percent: 0.08 },
-        { name: "New York", percent: 0.05 },
-        { name: "Bangalore", percent: 0.04 },
-        { name: "London", percent: 0.04 },
-        { name: "Chennai", percent: 0.03 },
-        { name: "Kolkata", percent: 0.03 },
-        { name: "Los Angeles", percent: 0.02 },
-        { name: "Sydney", percent: 0.02 },
-        { name: "Toronto", percent: 0.02 },
-      ],
-      states: [
-        { name: "Maharashtra", percent: 0.2 },
-        { name: "Delhi", percent: 0.12 },
-        { name: "Karnataka", percent: 0.1 },
-        { name: "Tamil Nadu", percent: 0.08 },
-        { name: "West Bengal", percent: 0.07 },
-        { name: "California", percent: 0.06 },
-        { name: "New York", percent: 0.05 },
-        { name: "Gujarat", percent: 0.04 },
-        { name: "Uttar Pradesh", percent: 0.03 },
-        { name: "Telangana", percent: 0.02 },
-      ],
-      languages: [
-        { name: "English", percent: 0.55 },
-        { name: "Hindi", percent: 0.18 },
-        { name: "Spanish", percent: 0.08 },
-        { name: "French", percent: 0.05 },
-        { name: "German", percent: 0.04 },
-        { name: "Bengali", percent: 0.03 },
-        { name: "Tamil", percent: 0.02 },
-        { name: "Marathi", percent: 0.02 },
-        { name: "Telugu", percent: 0.01 },
-        { name: "Kannada", percent: 0.01 },
-      ],
-      interests: [
-        { name: "Entertainment", percent: 0.25 },
-        { name: "Movies & Cinema", percent: 0.2 },
-        { name: "Fashion & Style", percent: 0.15 },
-        { name: "Music", percent: 0.12 },
-        { name: "Travel & Adventure", percent: 0.08 },
-        { name: "Food & Dining", percent: 0.06 },
-        { name: "Health & Fitness", percent: 0.05 },
-        { name: "Technology", percent: 0.04 },
-        { name: "Sports", percent: 0.03 },
-        { name: "Art & Culture", percent: 0.02 },
-      ],
-      credibility: "68.75%",
-    },
-
-    // Brand mentions
-    brandMentions: [
-      {
-        name: "Netflix India",
-        url: "https://instagram.com/netflix_in",
-        image: "https://via.placeholder.com/50?text=Netflix",
-      },
-      {
-        name: "Indian Super League",
-        url: "https://instagram.com/indiansuperleague",
-        image: "https://via.placeholder.com/50?text=ISL",
-      },
-    ],
-
-    // Growth metrics
-    growth: {
-      reachability: [
-        { name: "r0_500", percent: 0.55 },
-        { name: "r500_1000", percent: 0.2 },
-        { name: "r1000_1500", percent: 0.15 },
-        { name: "r1500_plus", percent: 0.1 },
-      ],
-      fakeFollowersPct: 0.15,
-    },
-  };
-}
-
-function transformProfileData(data) {
-  // Format numbers for display (e.g., 1.2M instead of 1200000)
+function transformInsightIQData(data) {
+  // Helper function to format numbers for display (e.g., 1.2M instead of 1200000)
   const formatNumber = (num) => {
+    if (!num && num !== 0) return "0";
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "m";
     }
@@ -245,442 +92,411 @@ function transformProfileData(data) {
     return num.toString();
   };
 
-  // Calculate estimated reach (usually 10-30% of followers)
-  const estimatedReach = Math.round(data.usersCount * 0.14);
+  // Extract main data - based on the API example payload
+  const profileData = data.profile || {};
+  // Audience can come from multiple places depending on the API version
+  let audienceData = (data.profile && data.profile.audience)
+    ? data.profile.audience
+    : (data.audience || {});
 
-  // Extract main categories from tags
-  const categories =
-    data.categories ||
-    data.tags?.slice(0, 4).map((tag) => tag.replace(/-/g, " ")) ||
-    [];
+  // Fallback to audience_likers (common in some responses) or audience_likes
+  if (!audienceData || Object.keys(audienceData).length === 0) {
+    if (data.audience_likers && Object.keys(data.audience_likers).length > 0) {
+      audienceData = data.audience_likers;
+    } else if (data.audience_likes && Object.keys(data.audience_likes).length > 0) {
+      audienceData = data.audience_likes;
+    }
+  }
+  const workPlatform = data.work_platform || {};
 
-  // Process brand mentions and replace potentially problematic image URLs
-  const processBrandMentions = (mentions) => {
-    if (!mentions || !Array.isArray(mentions)) return [];
+  // Extract key metrics
+  const followerCount = profileData.follower_count || 0;
+  const engagementRate = profileData.engagement_rate || 0;
 
-    return mentions.map((mention) => {
-      // Replace external images with placeholder
-      return {
-        ...mention,
-        image: mention.image
-          ? `https://via.placeholder.com/50?text=${encodeURIComponent(
-              mention.name || "Brand"
-            )}`
-          : `https://via.placeholder.com/50?text=Brand`,
-      };
+  // Do not synthesize estimated reach; if API does not provide it, keep blank
+
+  // Extract recent posts data
+  const recentPosts = [];
+  // Aggregators for recent VIDEO posts
+  let videoLikeSum = 0;
+  let videoCommentSum = 0;
+  let videoCount = 0;
+  if (profileData.recent_contents?.length > 0) {
+    profileData.recent_contents.forEach((post) => {
+      // Count video posts for averages
+      if (post?.type === "VIDEO") {
+        const likeCount = Number(post?.engagement?.like_count) || 0;
+        const commentCount = Number(post?.engagement?.comment_count) || 0;
+        videoLikeSum += likeCount;
+        videoCommentSum += commentCount;
+        videoCount += 1;
+      }
+      recentPosts.push({
+        type: post.type?.toLowerCase() || "image",
+        image: post.thumbnail_url,
+        caption: post.description,
+        likes: post.engagement?.like_count,
+        comments: post.engagement?.comment_count,
+        views: post.engagement?.play_count,
+        date: post.published_at,
+        url: post.url,
+      });
     });
+  }
+
+  // Compute averages for video posts
+  const avgVideoLikesRaw = videoCount > 0 ? Math.round(videoLikeSum / videoCount) : null;
+  const avgVideoCommentsRaw = videoCount > 0 ? Math.round(videoCommentSum / videoCount) : null;
+
+  // Compute posting frequency in the last 30 days
+  let postFrequencyLast30 = null;
+  if (profileData.recent_contents?.length > 0) {
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    postFrequencyLast30 = profileData.recent_contents.filter((p) => {
+      const ts = new Date(p.published_at).getTime();
+      return !isNaN(ts) && ts >= cutoff;
+    }).length;
+  }
+
+  // Generate categories with percentages only when real values exist
+  const categories = [];
+  if (profileData.top_hashtags?.length > 0) {
+    profileData.top_hashtags.forEach((tag, index) => {
+      if (index < 4 && typeof tag.value === "number" && tag.value >= 0) {
+        categories.push({
+          name:
+            tag.name.charAt(0).toUpperCase() +
+            tag.name.slice(1).replace(/_/g, " "),
+          percentage: Math.round(tag.value),
+        });
+      }
+    });
+  }
+
+  // Map audience age and gender data
+  const ageGenderData = {
+    gender: { m: 0, f: 0 }, // Initialize with zeros instead of defaults
+    ages: [],
   };
 
-  // Process cities data properly
-  const processCities = (cities) => {
-    if (!cities || !Array.isArray(cities)) return [];
+  // Process gender distribution from API
+  if (audienceData.gender_distribution) {
+    // Extract male and female percentages and convert to decimal (0-1 scale)
+    const maleValue =
+      audienceData.gender_distribution.find((g) => g.gender === "MALE")
+        ?.value || 0;
+    const femaleValue =
+      audienceData.gender_distribution.find((g) => g.gender === "FEMALE")
+        ?.value || 0;
 
-    return cities
-      .map((city) => ({
-        name: city.name || city.category,
-        percent: city.value || city.percent || 0,
-      }))
-      .sort((a, b) => b.percent - a.percent)
-      .slice(0, 10);
-  };
-
-  // Process countries data properly
-  const processCountries = (countries) => {
-    if (!countries || !Array.isArray(countries)) return [];
-
-    return countries
-      .map((country) => ({
-        name: country.name || country.category,
-        percent: country.value || country.percent || 0,
-      }))
-      .sort((a, b) => b.percent - a.percent)
-      .slice(0, 10);
-  };
-
-  // Derive states based on country and city information
-  // This is a fallback when states aren't provided directly
-  const deriveStates = (countries, cities) => {
-    // Map of countries to their major states/regions with cities
-    const countryStatesMap = {
-      India: [
-        { name: "Maharashtra", cities: ["Mumbai", "Pune"], percent: 0.2 },
-        { name: "Delhi", cities: ["Delhi", "New Delhi"], percent: 0.12 },
-        { name: "Karnataka", cities: ["Bengaluru", "Bangalore"], percent: 0.1 },
-        { name: "Tamil Nadu", cities: ["Chennai"], percent: 0.08 },
-        { name: "West Bengal", cities: ["Kolkata"], percent: 0.07 },
-        { name: "Gujarat", cities: ["Ahmedabad", "Surat"], percent: 0.04 },
-        { name: "Uttar Pradesh", cities: ["Lucknow", "Agra"], percent: 0.03 },
-        { name: "Telangana", cities: ["Hyderabad"], percent: 0.02 },
-      ],
-      "United States": [
-        {
-          name: "California",
-          cities: ["Los Angeles", "San Francisco"],
-          percent: 0.06,
-        },
-        { name: "New York", cities: ["New York City"], percent: 0.05 },
-        { name: "Texas", cities: ["Houston", "Dallas"], percent: 0.04 },
-        { name: "Florida", cities: ["Miami", "Orlando"], percent: 0.03 },
-        { name: "Illinois", cities: ["Chicago"], percent: 0.02 },
-      ],
-      "United Kingdom": [
-        { name: "Greater London", cities: ["London"], percent: 0.04 },
-        { name: "West Midlands", cities: ["Birmingham"], percent: 0.03 },
-        { name: "Greater Manchester", cities: ["Manchester"], percent: 0.02 },
-      ],
+    ageGenderData.gender = {
+      m: maleValue / 100,
+      f: femaleValue / 100,
     };
+  }
 
-    // Create a list of states based on the countries in the data
-    let states = [];
+  // If gender totals are still zero, derive from gender_age_distribution
+  if (
+    ageGenderData.gender.m === 0 &&
+    ageGenderData.gender.f === 0 &&
+    audienceData.gender_age_distribution?.length > 0
+  ) {
+    let maleTotal = 0;
+    let femaleTotal = 0;
+    audienceData.gender_age_distribution.forEach((item) => {
+      if (item.gender === "MALE") maleTotal += item.value || 0;
+      else if (item.gender === "FEMALE") femaleTotal += item.value || 0;
+    });
+    if (maleTotal + femaleTotal > 0) {
+      ageGenderData.gender = {
+        m: maleTotal / 100,
+        f: femaleTotal / 100,
+      };
+    }
+  }
 
-    // Try to map cities to states
-    const highestCountry =
-      countries && countries.length > 0 ? countries[0].name : null;
-    if (highestCountry && countryStatesMap[highestCountry]) {
-      states = countryStatesMap[highestCountry];
+  // Process audience age and gender distribution if available
+  if (audienceData.gender_age_distribution?.length > 0) {
+    const processedAges = {};
 
-      // Adjust percentages based on city data if available
-      if (cities && cities.length > 0) {
-        const cityNames = cities.map((c) => c.name);
-        states.forEach((state) => {
-          // Check if any cities in this state are in our city data
-          const matchingCities = state.cities.filter((c) =>
-            cityNames.includes(c)
-          );
-          if (matchingCities.length > 0) {
-            // Increase this state's percentage
-            state.percent = Math.min(state.percent * 1.5, 1.0);
+    // Process API age-gender data into our format
+    audienceData.gender_age_distribution.forEach((item) => {
+      // Extract age range from the API
+      const ageRange = item.age_range;
+      let category;
+
+      // Map the age ranges to our categories (support both 13-17 and 13-18)
+      if (ageRange === "13-17" || ageRange === "13-18") category = "0_18";
+      else if (ageRange === "18-24") category = "18_24";
+      else if (ageRange === "25-34") category = "25_34";
+      else if (ageRange === "35-44") category = "35_44";
+      else if (
+        ageRange === "45-54" ||
+        ageRange === "55-64" ||
+        ageRange === "65+"
+      )
+        category = "45_100";
+      else return; // Skip unknown age groups
+
+      // Initialize the category if not exists
+      if (!processedAges[category]) {
+        processedAges[category] = { m: 0, f: 0 };
+      }
+
+      // Add the percentages (convert from 0-100 to 0-1)
+      if (item.gender === "MALE") {
+        processedAges[category].m += item.value / 100;
+      } else if (item.gender === "FEMALE") {
+        processedAges[category].f += item.value / 100;
+      }
+    });
+
+    // Convert the processed ages object to an array
+    if (Object.keys(processedAges).length > 0) {
+      ageGenderData.ages = Object.entries(processedAges).map(
+        ([category, values]) => ({
+          category,
+          m: values.m,
+          f: values.f,
+        })
+      );
+    }
+  }
+
+  // Map countries and cities data
+  const countries = [];
+  const cities = [];
+
+  // Process countries from the API structure
+  if (audienceData.countries?.length > 0) {
+    audienceData.countries.forEach((country) => {
+      const code = (country.code || "").toUpperCase();
+      countries.push({
+        name: code, // Use uppercase country code for display
+        code: code,
+        percent: (country.value || 0) / 100, // Convert from 0-100 to 0-1 scale
+      });
+    });
+  }
+
+  // Process cities from the API structure
+  // We'll leave cities as an empty array per requirements
+  // This data can be used later if needed
+  if (audienceData.cities?.length > 0) {
+    audienceData.cities.forEach((city) => {
+      cities.push({
+        name: city.name,
+        percent: city.value / 100,
+        lat: city.latitude,
+        lng: city.longitude,
+      });
+    });
+  }
+
+  // Process languages from the API structure
+  const languages = [];
+  if (audienceData.languages?.length > 0) {
+    audienceData.languages.forEach((lang) => {
+      languages.push({
+        name: lang.code, // Language code as name
+        code: lang.code,
+        percent: lang.value / 100, // Convert from 0-100 to 0-1 scale
+      });
+    });
+  }
+
+  // Process interests from the API
+  const interests = [];
+  if (audienceData.interests?.length > 0) {
+    audienceData.interests.forEach((interest) => {
+      interests.push({
+        name: interest.name,
+        percent: (interest.value || 0) / 100,
+      });
+    });
+  }
+
+  // Process brand mentions from sponsored content
+  const brandMentions = [];
+
+  // First try to extract from sponsored content mentions
+  if (profileData.sponsored_contents?.length > 0) {
+    // Use a set to track unique brands
+    const brandSet = new Set();
+
+    profileData.sponsored_contents.forEach((content) => {
+      if (content.mentions?.length > 0) {
+        content.mentions.forEach((mention) => {
+          // Only add unique brands
+          if (!brandSet.has(mention.name)) {
+            brandSet.add(mention.name);
+
+            brandMentions.push({
+              name: mention.name,
+              url: `https://instagram.com/${mention.name}`,
+              image: `https://via.placeholder.com/50?text=${encodeURIComponent(
+                mention.name
+              )}`,
+            });
           }
         });
       }
-    } else {
-      // Fallback - create generic states with scaled percentages
-      states = [
-        { name: "State 1", percent: 0.25 },
-        { name: "State 2", percent: 0.2 },
-        { name: "State 3", percent: 0.15 },
-        { name: "State 4", percent: 0.1 },
-        { name: "State 5", percent: 0.08 },
-        { name: "State 6", percent: 0.07 },
-        { name: "State 7", percent: 0.05 },
-        { name: "State 8", percent: 0.04 },
-        { name: "State 9", percent: 0.03 },
-        { name: "State 10", percent: 0.03 },
-      ];
-    }
+    });
+  }
 
-    // Sort and limit to 10
-    return states.sort((a, b) => b.percent - a.percent).slice(0, 10);
-  };
+  // If no brand mentions found, use top mentions from profile
+  if (brandMentions.length === 0 && profileData.top_mentions?.length > 0) {
+    profileData.top_mentions.slice(0, 5).forEach((mention) => {
+      brandMentions.push({
+        name: mention.name,
+        url: `https://instagram.com/${mention.name}`,
+        image: `https://via.placeholder.com/50?text=${encodeURIComponent(
+          mention.name
+        )}`,
+      });
+    });
+  }
 
-  // Derive languages based on countries
-  const deriveLanguages = (countries) => {
-    // Map of common languages by country
-    const countryLanguageMap = {
-      India: [
-        { name: "English", percent: 0.4 },
-        { name: "Hindi", percent: 0.3 },
-        { name: "Bengali", percent: 0.08 },
-        { name: "Telugu", percent: 0.07 },
-        { name: "Marathi", percent: 0.07 },
-        { name: "Tamil", percent: 0.06 },
-        { name: "Urdu", percent: 0.05 },
-      ],
-      "United States": [
-        { name: "English", percent: 0.78 },
-        { name: "Spanish", percent: 0.16 },
-        { name: "Chinese", percent: 0.03 },
-        { name: "French", percent: 0.01 },
-        { name: "Vietnamese", percent: 0.01 },
-      ],
-      "United Kingdom": [
-        { name: "English", percent: 0.92 },
-        { name: "Polish", percent: 0.02 },
-        { name: "Punjabi", percent: 0.01 },
-        { name: "Urdu", percent: 0.01 },
-        { name: "Bengali", percent: 0.01 },
-      ],
-      Indonesia: [
-        { name: "Indonesian", percent: 0.8 },
-        { name: "Javanese", percent: 0.1 },
-        { name: "English", percent: 0.05 },
-        { name: "Sundanese", percent: 0.03 },
-        { name: "Balinese", percent: 0.02 },
-      ],
-    };
+  // As a final fallback, check for brand_affinity data
+  if (brandMentions.length === 0 && audienceData.brand_affinity?.length > 0) {
+    audienceData.brand_affinity.slice(0, 5).forEach((brand) => {
+      brandMentions.push({
+        name: brand.name,
+        url: `https://instagram.com/${brand.name
+          .toLowerCase()
+          .replace(/\s+/g, "")}`,
+        image: `https://via.placeholder.com/50?text=${encodeURIComponent(
+          brand.name
+        )}`,
+      });
+    });
+  }
 
-    // Start with default English-dominant profile
-    let languages = [
-      { name: "English", percent: 0.55 },
-      { name: "Spanish", percent: 0.1 },
-      { name: "French", percent: 0.08 },
-      { name: "German", percent: 0.07 },
-      { name: "Portuguese", percent: 0.05 },
-      { name: "Russian", percent: 0.05 },
-      { name: "Japanese", percent: 0.04 },
-      { name: "Arabic", percent: 0.03 },
-      { name: "Hindi", percent: 0.02 },
-      { name: "Chinese", percent: 0.01 },
-    ];
+  // Process growth data from reputation history
+  const growthData = { followers: [], engagement: [] };
+  if (profileData.reputation_history?.length > 0) {
+    profileData.reputation_history.forEach((history) => {
+      if (history.month && history.follower_count) {
+        // Parse the month (format: '2025-03')
+        const date = new Date(history.month + "-01");
+        growthData.followers.push({
+          date: date.toISOString().split("T")[0],
+          value: history.follower_count,
+        });
 
-    // If we have country data, create weighted language distribution
-    if (countries && countries.length > 0) {
-      const weightedLanguages = {};
-
-      // Process each country and add its languages with weighted percentages
-      countries.forEach((country) => {
-        const countryName = country.name;
-        const countryWeight = country.percent;
-
-        if (countryLanguageMap[countryName]) {
-          countryLanguageMap[countryName].forEach((lang) => {
-            const weightedPercent = lang.percent * countryWeight;
-            if (weightedLanguages[lang.name]) {
-              weightedLanguages[lang.name] += weightedPercent;
-            } else {
-              weightedLanguages[lang.name] = weightedPercent;
-            }
+        if (history.average_likes) {
+          growthData.engagement.push({
+            date: date.toISOString().split("T")[0],
+            value: history.average_likes,
           });
         }
-      });
-
-      // Convert weighted languages object to array and sort
-      const langArray = Object.entries(weightedLanguages).map(
-        ([name, percent]) => ({
-          name,
-          percent,
-        })
-      );
-
-      // If we got results, use them
-      if (langArray.length > 0) {
-        // Normalize percentages to ensure they sum to 1
-        const total = langArray.reduce((sum, lang) => sum + lang.percent, 0);
-        languages = langArray.map((lang) => ({
-          name: lang.name,
-          percent: total > 0 ? lang.percent / total : lang.percent,
-        }));
-      }
-    }
-
-    // Sort and limit to 10
-    return languages.sort((a, b) => b.percent - a.percent).slice(0, 10);
-  };
-
-  // Derive common interests based on profile categories and demographic data
-  const deriveInterests = (categories, gender, ages) => {
-    // General interest categories with default weightings
-    const commonInterests = [
-      { name: "Entertainment", percent: 0.25 },
-      { name: "Fashion & Style", percent: 0.15 },
-      { name: "Travel", percent: 0.12 },
-      { name: "Food & Dining", percent: 0.1 },
-      { name: "Technology", percent: 0.08 },
-      { name: "Sports", percent: 0.08 },
-      { name: "Health & Fitness", percent: 0.07 },
-      { name: "Music", percent: 0.06 },
-      { name: "Beauty", percent: 0.05 },
-      { name: "Business", percent: 0.04 },
-    ];
-
-    // If we have categories, use them to influence interests
-    if (categories && categories.length > 0) {
-      // Map of category keywords to interest domains
-      const categoryToInterestMap = {
-        entertainment: "Entertainment",
-        movie: "Entertainment",
-        film: "Entertainment",
-        cinema: "Entertainment",
-        actor: "Entertainment",
-        actress: "Entertainment",
-        fashion: "Fashion & Style",
-        style: "Fashion & Style",
-        model: "Fashion & Style",
-        travel: "Travel",
-        tourism: "Travel",
-        food: "Food & Dining",
-        restaurant: "Food & Dining",
-        tech: "Technology",
-        computer: "Technology",
-        sport: "Sports",
-        fitness: "Health & Fitness",
-        health: "Health & Fitness",
-        gym: "Health & Fitness",
-        music: "Music",
-        beauty: "Beauty",
-        business: "Business",
-        finance: "Business",
-        art: "Art & Culture",
-        design: "Art & Design",
-        photo: "Photography",
-        game: "Gaming",
-      };
-
-      // Check each category against our keywords
-      const boostedInterests = {};
-
-      categories.forEach((category) => {
-        const lowerCat = category.toLowerCase();
-
-        // Check for keyword matches
-        Object.entries(categoryToInterestMap).forEach(
-          ([keyword, interestName]) => {
-            if (lowerCat.includes(keyword)) {
-              boostedInterests[interestName] =
-                (boostedInterests[interestName] || 0) + 0.1;
-            }
-          }
-        );
-      });
-
-      // Apply the boosts to our common interests
-      commonInterests.forEach((interest) => {
-        if (boostedInterests[interest.name]) {
-          interest.percent += boostedInterests[interest.name];
-        }
-      });
-
-      // Normalize percentages after boosts
-      const total = commonInterests.reduce(
-        (sum, interest) => sum + interest.percent,
-        0
-      );
-      commonInterests.forEach((interest) => {
-        interest.percent = interest.percent / total;
-      });
-    }
-
-    // Sort and return
-    return commonInterests.sort((a, b) => b.percent - a.percent);
-  };
-
-  // Process age data to normalize categories and ensure no missing values
-  const processAges = (ageData) => {
-    if (!ageData || !Array.isArray(ageData) || ageData.length === 0) {
-      // Fallback age distribution
-      return [
-        { category: "0_18", m: 0.07, f: 0.06 },
-        { category: "18_24", m: 0.15, f: 0.12 },
-        { category: "25_34", m: 0.25, f: 0.15 },
-        { category: "35_44", m: 0.12, f: 0.04 },
-        { category: "45_100", m: 0.06, f: 0.02 },
-      ];
-    }
-
-    // Normalize age categories to match our UI categories
-    const categoriesMap = {
-      "0_18": "0_18",
-      "13_17": "0_18",
-      "18_21": "18_24",
-      "21_24": "18_24",
-      "24_27": "25_34",
-      "27_30": "25_34",
-      "30_35": "25_34",
-      "35_45": "35_44",
-      "45_100": "45_100",
-    };
-
-    // Grouped ages by our UI categories
-    const groupedAges = {
-      "0_18": { m: 0, f: 0 },
-      "18_24": { m: 0, f: 0 },
-      "25_34": { m: 0, f: 0 },
-      "35_44": { m: 0, f: 0 },
-      "45_100": { m: 0, f: 0 },
-    };
-
-    // Group the API age data into our UI categories
-    ageData.forEach((age) => {
-      const categoryKey = categoriesMap[age.category] || age.category;
-      if (groupedAges[categoryKey]) {
-        // Some APIs return null instead of 0, default to 0
-        groupedAges[categoryKey].m += age.m || 0;
-        groupedAges[categoryKey].f += age.f || 0;
       }
     });
+  }
 
-    // Convert back to array
-    return Object.entries(groupedAges).map(([category, values]) => ({
-      category,
-      m: values.m,
-      f: values.f,
-    }));
-  };
-
-  // Extract cities, countries from membersCities, membersCountries or cities, countries
-  const cityData = data.membersCities || data.cities || [];
-  const countryData = data.membersCountries || data.countries || [];
-
-  // Process cities and countries
-  const cities = processCities(cityData);
-  const countries = processCountries(countryData);
-
-  // Derive states from cities and countries
-  const states = deriveStates(countries, cities);
-
-  // Derive languages from countries
-  const languages = deriveLanguages(countries);
-
-  // Process age data
-  const ageData = data.membersGendersAges?.data || data.ages || [];
-  const processedAges = processAges(ageData);
-
-  // Get gender summary
-  const genderSummary = data.membersGendersAges?.summary || {
-    m: 0.65,
-    f: 0.35,
-  };
-
-  // Derive interests
-  const interests =
-    data.interests && data.interests.length > 0
-      ? data.interests
-      : deriveInterests(categories, genderSummary, processedAges);
-
+  // Return the transformed data
   return {
-    username: data.screenName,
-    name: data.name,
-    bio: data.description,
-    profilePicture: data.image || null,
-    verified: data.verified || false,
-    influenceScore: (data.qualityScore * 10).toFixed(2) || 7.5,
+    username: profileData.platform_username || "",
+    name: profileData.full_name || profileData.platform_username || "",
+    bio: profileData.introduction || "",
+    profilePicture: profileData.image_url || null,
+    verified: profileData.is_verified || false,
+    influenceScore:
+      audienceData.credibility_score !== undefined &&
+      audienceData.credibility_score !== null
+        ? (audienceData.credibility_score * 10).toFixed(1)
+        : null,
+    url: profileData.url,
+    platform: workPlatform.name || "Instagram",
+    platformLogo: workPlatform.logo_url,
 
     // Metrics
-    followers: formatNumber(data.usersCount),
-    followersCount: data.usersCount,
-    engagementRate: (data.avgER * 100).toFixed(2) + "%",
-    avgLikes: formatNumber(data.avgLikes || 0),
-    avgComments: formatNumber(data.avgComments || 0),
-    estimatedReach: formatNumber(estimatedReach),
+    followers: formatNumber(followerCount),
+    followersCount: followerCount,
+    following: profileData.following_count || 0,
+    engagementRate:
+      engagementRate !== undefined && engagementRate !== null
+        ? (engagementRate * 100).toFixed(2) + "%"
+        : null,
+    postsCount: profileData.content_count || 0,
+    postFrequency: postFrequencyLast30,
+    avgLikes: formatNumber(profileData.average_likes || 0),
+    avgComments: formatNumber(profileData.average_comments || 0),
+    // UI expects avgVideoViews; map from reels/views as available
+    avgVideoViews: formatNumber(
+      profileData.average_reels_views || profileData.average_views || 0
+    ),
+    // Raw numeric values for internal calculations
+    avgLikesRaw: profileData.average_likes || null,
+    avgCommentsRaw: profileData.average_comments || null,
+    avgVideoViewsRaw:
+      profileData.average_reels_views || profileData.average_views || null,
+    avgVideoLikesRaw: avgVideoLikesRaw,
+    avgVideoCommentsRaw: avgVideoCommentsRaw,
+    // Keep existing keys for backwards compatibility if referenced elsewhere
+    avgReelsViews: formatNumber(profileData.average_reels_views || 0),
+    avgViews: formatNumber(profileData.average_views || 0),
+    // estimatedReach intentionally omitted (no reliable value in API)
+    // Formatted video averages if available
+    avgVideoLikes:
+      avgVideoLikesRaw !== null ? formatNumber(avgVideoLikesRaw) : null,
+    avgVideoComments:
+      avgVideoCommentsRaw !== null ? formatNumber(avgVideoCommentsRaw) : null,
 
     // Content
-    recentPosts: [], // Avoid using external image URLs
-    categories: categories,
+    recentPosts: recentPosts,
+    categories: categories.map((cat) => cat.name),
+    categoryPercentages: categories,
+    location: profileData.location
+      ? {
+          city: profileData.location.city || "",
+          state: profileData.location.state || "",
+          country: profileData.location.country || "",
+        }
+      : null,
+
+    // Top hashtags and mentions
+    topHashtags: profileData.top_hashtags
+      ? profileData.top_hashtags.slice(0, 10).map((tag) => ({
+          name: tag.name,
+          count: tag.value,
+        }))
+      : [],
+    topMentions: profileData.top_mentions
+      ? profileData.top_mentions.slice(0, 10).map((mention) => ({
+          name: mention.name,
+          count: mention.value,
+        }))
+      : [],
 
     // Audience
     audience: {
-      gender: genderSummary,
-      ages: processedAges,
+      gender: ageGenderData.gender,
+      ages: ageGenderData.ages,
       countries: countries,
       cities: cities,
-      states: states,
+      states: [], // Leaving states blank as per requirements
       languages: languages,
       interests: interests,
       credibility:
-        ((1 - (data.pctFakeFollowers || 0.2)) * 100).toFixed(2) + "%",
+        audienceData.credibility_score !== undefined &&
+        audienceData.credibility_score !== null
+          ? (audienceData.credibility_score * 100).toFixed(0) + "%"
+          : null,
     },
 
     // Brand mentions
-    brandMentions: processBrandMentions(data.lastFromMentions),
-    brandSafety: data.brandSafety || {},
+    brandMentions: brandMentions,
 
     // Growth metrics
     growth: {
-      reachability: data.membersReachability || [],
-      fakeFollowersPct: data.pctFakeFollowers || 0,
+      fakeFollowersPct:
+        audienceData.credibility_score !== undefined &&
+        audienceData.credibility_score !== null
+          ? ((1 - audienceData.credibility_score) * 100).toFixed(1)
+          : null,
+      followerHistory: growthData.followers,
+      engagementHistory: growthData.engagement,
     },
-
-    // Raw data for advanced processing
-    rawData: data,
   };
 }

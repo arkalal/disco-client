@@ -27,11 +27,12 @@ import { FaRegUser } from "react-icons/fa";
 import PieChart from "./PieChart";
 
 const ProfileOverview = ({ profileData }) => {
-  // Use profile data or fallback to defaults for UI consistency
-  const influenceScore = profileData?.influenceScore || 7.2;
-  const percentage = (influenceScore / 10) * 100;
+  // Get influence score from profile data
+  const influenceScore = profileData?.influenceScore;
+  // Only calculate percentage if we have a score
+  const percentage = influenceScore ? (influenceScore / 10) * 100 : 0;
   const scoreGaugeStyle = {
-    background: `conic-gradient(#4338CA ${percentage}%, #e9e9e9 0%)`,
+    background: influenceScore ? `conic-gradient(#4338CA ${percentage}%, #e9e9e9 0%)` : '#e9e9e9',
   };
 
   // Helper function to format numbers
@@ -46,10 +47,10 @@ const ProfileOverview = ({ profileData }) => {
     return number.toString();
   };
 
-  // Helper function to safely get audience data with fallbacks
-  const getAudienceData = (path, fallback) => {
+  // Helper function to safely get audience data without fallbacks
+  const getAudienceData = (path) => {
     try {
-      if (!profileData || !profileData.audience) return fallback;
+      if (!profileData || !profileData.audience) return null;
 
       // Handle dot notation path like "gender.m"
       const parts = path.split(".");
@@ -57,13 +58,13 @@ const ProfileOverview = ({ profileData }) => {
 
       for (const part of parts) {
         value = value[part];
-        if (value === undefined || value === null) return fallback;
+        if (value === undefined || value === null) return null;
       }
 
       return value;
     } catch (e) {
       console.error(`Error accessing audience data: ${path}`, e);
-      return fallback;
+      return null;
     }
   };
 
@@ -166,51 +167,26 @@ const ProfileOverview = ({ profileData }) => {
 
   // Helper function to get geography data based on active tab
   const getGeographyData = (tab) => {
-    const defaultData = {
-      cities: [
-        { name: "Jakarta", percent: 0.136 },
-        { name: "Mumbai", percent: 0.1098 },
-        { name: "Kolkata", percent: 0.0787 },
-        { name: "Ahmedabad", percent: 0.0414 },
-        { name: "Pune", percent: 0.0373 },
-        { name: "Dhaka", percent: 0.0372 },
-        { name: "Delhi", percent: 0.035 },
-        { name: "Jaipur", percent: 0.032 },
-        { name: "Bengaluru", percent: 0.031 },
-        { name: "Chennai", percent: 0.029 },
-      ],
-      states: [
-        { name: "Maharashtra", percent: 0.2 },
-        { name: "West Bengal", percent: 0.15 },
-        { name: "Gujarat", percent: 0.12 },
-        { name: "Delhi", percent: 0.1 },
-        { name: "Karnataka", percent: 0.09 },
-        { name: "Rajasthan", percent: 0.08 },
-        { name: "Tamil Nadu", percent: 0.07 },
-        { name: "Uttar Pradesh", percent: 0.06 },
-        { name: "Kerala", percent: 0.05 },
-        { name: "Telangana", percent: 0.04 },
-      ],
-      countries: [
-        { name: "India", percent: 0.5699 },
-        { name: "Indonesia", percent: 0.17 },
-        { name: "Bangladesh", percent: 0.08 },
-        { name: "Pakistan", percent: 0.05 },
-        { name: "United States", percent: 0.04 },
-        { name: "United Kingdom", percent: 0.03 },
-        { name: "Australia", percent: 0.02 },
-        { name: "Canada", percent: 0.015 },
-        { name: "Germany", percent: 0.01 },
-        { name: "France", percent: 0.005 },
-      ],
-    };
-
-    // Get data from API or use default
-    let data = getAudienceData(tab, []);
-
-    // If no data from API, use default data
-    if (!data || data.length === 0) {
-      data = defaultData[tab] || [];
+    // Check if profile data and audience data exist
+    if (!profileData || !profileData.audience) {
+      return [];
+    }
+    
+    // Get the appropriate data based on the tab
+    let data = [];
+    switch(tab) {
+      case 'countries':
+        data = profileData.audience.countries || [];
+        break;
+      case 'cities':
+        data = profileData.audience.cities || [];
+        break;
+      case 'states':
+        // States will be empty per requirements
+        data = [];
+        break;
+      default:
+        return [];
     }
 
     // Limit to 10 items and sort by percentage (highest first)
@@ -219,7 +195,7 @@ const ProfileOverview = ({ profileData }) => {
 
   // Add proper mapping for age ranges to display values
   const AGE_DISPLAY_LABELS = {
-    "0_18": "13-17",
+    "0_18": "13-18",
     "18_24": "18-24",
     "25_34": "25-34",
     "35_44": "35-44",
@@ -228,7 +204,7 @@ const ProfileOverview = ({ profileData }) => {
   };
 
   const ageGroupMapping = {
-    "0_18": "13-17",
+    "0_18": "13-18",
     "18_24": "18-24",
     "25_34": "25-34",
     "35_44": "35-44",
@@ -243,15 +219,8 @@ const ProfileOverview = ({ profileData }) => {
     // Calculate total percentage for each age group (male + female)
     const getAgeGroupData = () => {
       if (!audienceData?.ages || audienceData.ages.length === 0) {
-        // Fallback data if no audience data available
-        return [
-          { category: "0_18", label: "13-17", total: 0.0239 },
-          { category: "18_24", label: "18-24", total: 0.275 },
-          { category: "25_34", label: "25-34", total: 0.5351 },
-          { category: "35_44", label: "35-44", total: 0.1377 },
-          { category: "45_100", label: "45-54", total: 0.0282 },
-          { category: "65+", label: "65+", total: 0.0002 },
-        ];
+        // Return empty array if no audience data available
+        return [];
       }
 
       // Map API data to display format
@@ -334,10 +303,10 @@ const ProfileOverview = ({ profileData }) => {
 
   // Update audience gender component to handle dynamic data
   function AudienceGender({ audienceData }) {
-    // Get gender data from API or use fallback
+    // Get gender data from API
     const getGenderData = () => {
       if (!audienceData?.gender) {
-        return { m: 0.6504, f: 0.3496 }; // Fallback
+        return null; // No synthetic fallback
       }
 
       // Make sure we have numbers and they sum to 1
@@ -345,7 +314,9 @@ const ProfileOverview = ({ profileData }) => {
       const female = parseFloat(audienceData.gender.f) || 0;
       const total = male + female;
 
-      if (total === 0) return { m: 0.6504, f: 0.3496 }; // Fallback
+      if (total === 0) {
+        return null; // No data
+      }
 
       // Normalize to ensure they sum to 1
       return {
@@ -358,13 +329,13 @@ const ProfileOverview = ({ profileData }) => {
 
     // Format percentages and ensure they're valid numbers
     const malePercent =
-      typeof genderData.m === "number"
+      genderData && typeof genderData.m === "number"
         ? (genderData.m * 100).toFixed(2)
-        : "65.00";
+        : "";
     const femalePercent =
-      typeof genderData.f === "number"
+      genderData && typeof genderData.f === "number"
         ? (genderData.f * 100).toFixed(2)
-        : "35.00";
+        : "";
 
     return (
       <div className="demographics-section">
@@ -393,7 +364,7 @@ const ProfileOverview = ({ profileData }) => {
                   fill="none"
                   stroke="#4f46e5"
                   strokeWidth="3"
-                  strokeDasharray={`${genderData.m * 100}, 100`}
+                  strokeDasharray={`${(genderData?.m || 0) * 100}, 100`}
                 />
                 <path
                   className="female-segment"
@@ -403,14 +374,14 @@ const ProfileOverview = ({ profileData }) => {
                   fill="none"
                   stroke="#ec4899"
                   strokeWidth="3"
-                  strokeDasharray={`${genderData.f * 100}, 100`}
-                  strokeDashoffset={`-${genderData.m * 100}`}
+                  strokeDasharray={`${(genderData?.f || 0) * 100}, 100`}
+                  strokeDashoffset={`-${(genderData?.m || 0) * 100}`}
                 />
               </svg>
               <div className="donut-text">
-                {malePercent}% Male
+                {malePercent ? `${malePercent}% Male` : ""}
                 <br />
-                Audience
+                {malePercent ? "Audience" : ""}
               </div>
             </div>
           </div>
@@ -496,17 +467,18 @@ const ProfileOverview = ({ profileData }) => {
 
   // Update audience language component to display dynamic language data
   function AudienceLanguage({ audienceData }) {
-    // Get language data or provide fallback
+    const colors = [
+      "#8b5cf6",
+      "#38bdf8",
+      "#4ade80",
+      "#f59e0b",
+      "#ef4444",
+      "#06b6d4",
+    ];
+    // Get language data without fallbacks
     const getLanguageData = () => {
       if (!audienceData?.languages || audienceData.languages.length === 0) {
-        // Fallback data
-        return [
-          { name: "English", percent: 0.65 },
-          { name: "Spanish", percent: 0.15 },
-          { name: "Hindi", percent: 0.1 },
-          { name: "French", percent: 0.05 },
-          { name: "German", percent: 0.05 },
-        ];
+        return [];
       }
 
       return audienceData.languages.slice(0, 5);
@@ -546,17 +518,10 @@ const ProfileOverview = ({ profileData }) => {
 
   // Update audience interests component to display dynamic interest data
   function AudienceInterests({ audienceData }) {
-    // Get interests data or provide fallback
+    // Get interests data without fallbacks
     const getInterestsData = () => {
       if (!audienceData?.interests || audienceData.interests.length === 0) {
-        // Fallback data
-        return [
-          { name: "Entertainment", percent: 0.3 },
-          { name: "Fashion & Style", percent: 0.25 },
-          { name: "Travel", percent: 0.2 },
-          { name: "Food & Dining", percent: 0.15 },
-          { name: "Technology", percent: 0.1 },
-        ];
+        return [];
       }
 
       return audienceData.interests.slice(0, 5);
@@ -700,7 +665,7 @@ const ProfileOverview = ({ profileData }) => {
             <div className="metric-card">
               <div className="metric-label">FOLLOWERS</div>
               <div className="metric-value">
-                {formatNumber(profileData?.followers || 0)}
+                {profileData?.followers || ""}
               </div>
             </div>
             <div className="metric-card">
@@ -708,19 +673,13 @@ const ProfileOverview = ({ profileData }) => {
                 ENGAGEMENT RATE <span className="info-icon">i</span>
               </div>
               <div className="metric-value">
-                {profileData?.engagementRate || "1.33%"}{" "}
+                {profileData?.engagementRate || ""}{" "}
                 <span className="badge">Average</span>
               </div>
             </div>
             <div className="metric-card">
               <div className="metric-label">ESTIMATED REACH</div>
-              <div className="metric-value">
-                {formatNumber(
-                  profileData?.estimatedReach ||
-                    profileData?.followers * 0.37 ||
-                    11500
-                )}
-              </div>
+              <div className="metric-value">{profileData?.estimatedReach || ""}</div>
             </div>
           </div>
         </div>
@@ -752,8 +711,8 @@ const ProfileOverview = ({ profileData }) => {
                   Moderately engaging audience
                 </div>
                 <div className="insight-description">
-                  {profileData?.engagementRate || "1.33%"} of the followers of
-                  this creator engages with their content.
+                  {profileData?.engagementRate || ""} of the followers of this
+                  creator engages with their content.
                 </div>
               </div>
             </div>
@@ -762,7 +721,20 @@ const ProfileOverview = ({ profileData }) => {
               <div className="insight-text">
                 <div className="insight-title">High reel viewership</div>
                 <div className="insight-description">
-                  This Creator generates 33.75 views per 100 followers.
+                  {(() => {
+                    if (
+                      profileData?.avgVideoViewsRaw &&
+                      profileData?.followersCount
+                    ) {
+                      const vr =
+                        (profileData.avgVideoViewsRaw /
+                          profileData.followersCount) * 100;
+                      return `This Creator generates ${vr.toFixed(
+                        2
+                      )} views per 100 followers.`;
+                    }
+                    return "";
+                  })()}
                 </div>
               </div>
             </div>
@@ -773,7 +745,21 @@ const ProfileOverview = ({ profileData }) => {
                   High ability to drive comments
                 </div>
                 <div className="insight-description">
-                  This creator drives 0.61 comments per 100 likes.
+                  {(() => {
+                    if (
+                      profileData?.avgCommentsRaw &&
+                      profileData?.avgLikesRaw &&
+                      profileData.avgLikesRaw > 0
+                    ) {
+                      const cr =
+                        (profileData.avgCommentsRaw /
+                          profileData.avgLikesRaw) * 100;
+                      return `This creator drives ${cr.toFixed(
+                        2
+                      )} comments per 100 likes.`;
+                    }
+                    return "";
+                  })()}
                 </div>
               </div>
             </div>
@@ -782,8 +768,9 @@ const ProfileOverview = ({ profileData }) => {
               <div className="insight-text">
                 <div className="insight-title">Posts content aggressively</div>
                 <div className="insight-description">
-                  This creator posts more than{" "}
-                  {profileData?.postFrequency || 68} times in last 30 days.
+                  {typeof profileData?.postFrequency === "number"
+                    ? `This creator posts more than ${profileData.postFrequency} times in last 30 days.`
+                    : ""}
                 </div>
               </div>
             </div>
@@ -791,16 +778,15 @@ const ProfileOverview = ({ profileData }) => {
               <div className="insight-icon">!</div>
               <div className="insight-text">
                 <div className="insight-title">
-                  Moderate{" "}
-                  {profileData?.audience?.countries?.[0]?.name || "Indian"}{" "}
-                  follower base
+                  Moderate {profileData?.audience?.countries?.[0]?.name || ""} follower base
                 </div>
                 <div className="insight-description">
-                  This creator has about{" "}
-                  {profileData?.audience?.countries?.[0]?.percentage ||
-                    "56.99%"}{" "}
-                  follower base from{" "}
-                  {profileData?.audience?.countries?.[0]?.name || "India"}.
+                  {(() => {
+                    const top = profileData?.audience?.countries?.[0];
+                    const pct = top && top.percent !== undefined ? `${(top.percent * 100).toFixed(2)}%` : "";
+                    const name = top?.name || "";
+                    return pct && name ? `This creator has about ${pct} follower base from ${name}.` : "";
+                  })()}
                 </div>
               </div>
             </div>
@@ -832,15 +818,11 @@ const ProfileOverview = ({ profileData }) => {
             <div className="engagement-stats">
               <div className="stat-item">
                 <div className="stat-label">AVG. LIKES</div>
-                <div className="stat-value">
-                  {formatNumber(profileData?.avgLikes || 17400)}
-                </div>
+                <div className="stat-value">{profileData?.avgLikes || ""}</div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">AVG. COMMENTS</div>
-                <div className="stat-value">
-                  {formatNumber(profileData?.avgComments || 124)}
-                </div>
+                <div className="stat-value">{profileData?.avgComments || ""}</div>
               </div>
             </div>
           </div>
@@ -903,27 +885,21 @@ const ProfileOverview = ({ profileData }) => {
             <div className="engagement-stats">
               <div className="stat-item">
                 <div className="stat-label">AVG. VIEWS</div>
-                <div className="stat-value">
-                  {formatNumber(profileData?.avgVideoViews || 397200)}
-                </div>
+                <div className="stat-value">{profileData?.avgVideoViews || ""}</div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">AVG. LIKES</div>
-                <div className="stat-value">
-                  {formatNumber(profileData?.avgVideoLikes || 28100)}
-                </div>
+                <div className="stat-value">{profileData?.avgVideoLikes || ""}</div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">AVG. COMMENTS</div>
                 <div className="stat-value">
-                  {formatNumber(profileData?.avgVideoComments || 141)}
+                  {profileData?.avgVideoComments || ""}
                 </div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">ENGAGEMENT RATE</div>
-                <div className="stat-value">
-                  {profileData?.engagementRate || "2.40%"}
-                </div>
+                <div className="stat-value">{profileData?.engagementRate || ""}</div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">VIEW RATE</div>
@@ -931,18 +907,15 @@ const ProfileOverview = ({ profileData }) => {
                   {(() => {
                     // Calculate view rate if possible
                     if (
-                      profileData?.avgVideoViews &&
+                      profileData?.avgVideoViewsRaw &&
                       profileData?.followersCount
                     ) {
                       return (
-                        (
-                          (profileData.avgVideoViews /
-                            profileData.followersCount) *
-                          100
-                        ).toFixed(2) + "%"
-                      );
+                        (Number(profileData.avgVideoViewsRaw) /
+                          Number(profileData.followersCount)) * 100
+                      ).toFixed(2) + "%";
                     }
-                    return "33.75%";
+                    return "";
                   })()}
                 </div>
               </div>
@@ -961,21 +934,23 @@ const ProfileOverview = ({ profileData }) => {
               <div className="metric-value">
                 {(() => {
                   // Calculate ratio if possible
-                  if (profileData?.avgLikes && profileData?.avgComments) {
+                  if (
+                    profileData?.avgLikesRaw &&
+                    profileData?.avgCommentsRaw &&
+                    profileData.avgLikesRaw > 0
+                  ) {
                     const ratio =
-                      parseFloat(profileData.avgComments) /
-                      parseFloat(profileData.avgLikes);
-                    return isNaN(ratio) ? "0.61" : ratio.toFixed(2);
+                      Number(profileData.avgCommentsRaw) /
+                      Number(profileData.avgLikesRaw);
+                    return isNaN(ratio) ? "" : ratio.toFixed(2);
                   }
-                  return "0.61";
+                  return "";
                 })()}
               </div>
               <div className="metric-badge">Average</div>
             </div>
 
-            <div className="metric-description">
-              Average ratio for similar influencers is around 0.96
-            </div>
+            <div className="metric-description"></div>
           </div>
 
           <div className="metric-section">
@@ -989,23 +964,21 @@ const ProfileOverview = ({ profileData }) => {
                 {(() => {
                   // Calculate reel views to followers ratio
                   if (
-                    profileData?.avgVideoViews &&
+                    profileData?.avgVideoViewsRaw &&
                     profileData?.followersCount
                   ) {
                     return (
-                      (profileData.avgVideoViews / profileData.followersCount) *
-                      100
-                    ).toFixed(2);
+                      (Number(profileData.avgVideoViewsRaw) /
+                        Number(profileData.followersCount)) * 100
+                    ).toFixed(2) + "%";
                   }
-                  return "33.75";
+                  return "";
                 })()}
               </div>
               <div className="metric-badge good">Good</div>
             </div>
 
-            <div className="metric-description">
-              Similar accounts generate around 24.65 views per 100 followers.
-            </div>
+            <div className="metric-description"></div>
           </div>
         </div>
       </div>
@@ -1037,7 +1010,7 @@ const ProfileOverview = ({ profileData }) => {
         <div className="content-posts-container">
           <div className="posts-wrapper">
             {(() => {
-              // Get posts from profile data or use placeholders
+              // Get posts from profile data
               const posts = profileData?.recentPosts || [];
 
               // Show all posts for testing the swiping functionality
@@ -1094,7 +1067,9 @@ const ProfileOverview = ({ profileData }) => {
                             <AiOutlineHeart />
                           </span>
                           <span className="count">
-                            {formatNumber(post.likes || 0)}
+                            {post.likes !== undefined && post.likes !== null
+                              ? formatNumber(post.likes)
+                              : ""}
                           </span>
                         </div>
                         {post.comments && (
@@ -1113,123 +1088,9 @@ const ProfileOverview = ({ profileData }) => {
                   );
                 });
               } else {
-                // Use placeholder data if no real posts - limit to 4 posts
-                const placeholderPosts = [
-                  {
-                    image:
-                      "https://via.placeholder.com/350x536?text=Indian+Flag",
-                    views: "2.3m",
-                    likes: "1.4k",
-                    date: "2024-08-15",
-                    type: "image",
-                  },
-                  {
-                    image: "https://via.placeholder.com/350x536?text=Flag+Post",
-                    views: "1.8m",
-                    likes: "1.2k",
-                    date: "2024-01-26",
-                    type: "image",
-                  },
-                  {
-                    image:
-                      "https://via.placeholder.com/350x536?text=TV+Appearance",
-                    views: "13.4m",
-                    likes: "1.7m",
-                    date: "2023-01-30",
-                    type: "video",
-                  },
-                  {
-                    image:
-                      "https://via.placeholder.com/350x536?text=Group+Photo",
-                    views: "1.7m",
-                    likes: "2.3k",
-                    date: "2024-06-04",
-                    type: "image",
-                  },
-                  {
-                    image:
-                      "https://via.placeholder.com/350x536?text=Award+Ceremony",
-                    views: "3.2m",
-                    likes: "4.5k",
-                    date: "2024-05-20",
-                    type: "image",
-                  },
-                  {
-                    image:
-                      "https://via.placeholder.com/350x536?text=Movie+Promo",
-                    views: "5.9m",
-                    likes: "7.8k",
-                    comments: "342",
-                    date: "2024-03-15",
-                    type: "video",
-                  },
-                  {
-                    image:
-                      "https://via.placeholder.com/350x536?text=Charity+Event",
-                    views: "1.4m",
-                    likes: "3.6k",
-                    date: "2024-04-10",
-                    type: "image",
-                  },
-                  {
-                    image: "https://via.placeholder.com/350x536?text=Interview",
-                    views: "2.8m",
-                    likes: "5.1k",
-                    comments: "217",
-                    date: "2024-02-22",
-                    type: "video",
-                  },
-                ];
-
-                return placeholderPosts
-                  .slice(0, displayCount)
-                  .map((post, index) => {
-                    // Format date
-                    const postDate = post.date
-                      ? new Date(post.date)
-                      : new Date();
-                    const formattedDate = postDate.toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "2-digit",
-                    });
-
-                    return (
-                      <div className="post-card" key={index}>
-                        <div className="post-image">
-                          <img src={post.image} alt="Post content" />
-                          <div className="post-overlay">
-                            <span className="post-type">
-                              <AiOutlineInstagram />
-                            </span>
-                          </div>
-                        </div>
-                        <div className="post-metrics">
-                          <div className="metric">
-                            <span className="icon">
-                              <AiOutlineEye />
-                            </span>
-                            <span className="count">{post.views}</span>
-                          </div>
-                          <div className="metric">
-                            <span className="icon">
-                              <AiOutlineHeart />
-                            </span>
-                            <span className="count">{post.likes}</span>
-                          </div>
-                          {post.comments && index !== 2 && (
-                            <div className="metric">
-                              <span className="icon">
-                                <AiOutlineComment />
-                              </span>
-                              <span className="count">{post.comments}</span>
-                            </div>
-                          )}
-                          <div className="post-date">{formattedDate}</div>
-                        </div>
-                      </div>
-                    );
-                  });
+                return (
+                  <div className="no-data-message">No recent posts available</div>
+                );
               }
             })()}
           </div>
@@ -1277,22 +1138,22 @@ const ProfileOverview = ({ profileData }) => {
             <div className="metric-item">Engagement Rate</div>
 
             <div className="metric-value">
-              {profileData?.followers || "1.2m"}
+              {profileData?.followers || ""}
             </div>
             <div className="metric-value">
-              {formatNumber(profileData?.avgLikes || 15600)}
+              {profileData?.avgLikes || ""}
             </div>
             <div className="metric-value">
-              {formatNumber(profileData?.avgComments || 96)}
+              {profileData?.avgComments || ""}
             </div>
             <div className="metric-value">
-              {formatNumber(profileData?.avgVideoViews || 397200)}
+              {profileData?.avgVideoViews || ""}
             </div>
             <div className="metric-value">
-              {formatNumber(profileData?.estimatedReach || 174700)}
+              {profileData?.estimatedReach || ""}
             </div>
             <div className="metric-value">
-              {profileData?.engagementRate || "1.33%"}
+              {profileData?.engagementRate || ""}
             </div>
           </div>
         </div>
@@ -1303,36 +1164,22 @@ const ProfileOverview = ({ profileData }) => {
           </div>
 
           <div className="content-categories">
-            <h4>CONTENT CATEGORIES</h4>
-            <div className="category-bar">
-              <div
-                className="category-bar-fill"
-                style={{
-                  width: "95.92%",
-                  backgroundColor: "#4338ca",
-                }}
-              ></div>
-            </div>
+          <h4>CONTENT CATEGORIES</h4>
 
             <div className="categories-list">
               {(() => {
-                // Get categories from the API or use fallback data
-                const categories = profileData?.categories || [];
+                // Get categories from the API with percentages if available
+                const categories = profileData?.categoryPercentages || [];
+                const categoriesList = profileData?.categories || [];
 
                 // Icons mapping based on category type
                 const getCategoryIcon = (category) => {
                   const lowerCat = category.toLowerCase();
-                  if (
-                    lowerCat.includes("art") ||
-                    lowerCat.includes("entertainment")
-                  )
+                  if (lowerCat.includes("art") || lowerCat.includes("entertainment"))
                     return "🎭";
                   if (lowerCat.includes("movie") || lowerCat.includes("film"))
                     return "🎬";
-                  if (
-                    lowerCat.includes("health") ||
-                    lowerCat.includes("fitness")
-                  )
+                  if (lowerCat.includes("health") || lowerCat.includes("fitness"))
                     return "🏋️";
                   if (lowerCat.includes("sport")) return "⚽";
                   if (lowerCat.includes("food")) return "🍔";
@@ -1342,100 +1189,49 @@ const ProfileOverview = ({ profileData }) => {
                   return "📱";
                 };
 
-                // Calculate percentages based on total count
-                const totalCategories = Math.max(categories.length, 1);
-
-                // If we have API data, use it
+                // If we have categoryPercentages data, use it
                 if (categories.length > 0) {
                   return categories.map((category, index) => {
-                    // Format category name
-                    const formattedName = category
-                      .split("-")
-                      .map(
-                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
-                      )
-                      .join(" ");
+                    // Get the name and percentage
+                    const name = category.name;
+                    const percentage = category.percentage;
 
-                    // Calculate percentage (decreasing for each subsequent category)
-                    const percentage = 95 - index * 5;
+                    // Determine color based on index
+                    const color = 
+                      index < 2 ? "#4338ca" : 
+                      index === 2 ? "#38bdf8" : 
+                      "#fb7185";
 
                     return (
                       <div className="category-item" key={index}>
                         <div className="category-icon">
-                          {getCategoryIcon(category)}
+                          {getCategoryIcon(name)}
                         </div>
                         <div className="category-details">
-                          <div className="category-name">{formattedName}</div>
+                          <div className="category-name">{name}</div>
                           <div className="category-bar">
                             <div
                               className="category-bar-fill"
                               style={{
                                 width: `${percentage}%`,
-                                backgroundColor:
-                                  index < 2
-                                    ? "#4338ca"
-                                    : index === 2
-                                    ? "#38bdf8"
-                                    : "#fb7185",
+                                backgroundColor: color,
                               }}
                             ></div>
                           </div>
                           <div className="category-percentage">
-                            {percentage.toFixed(2)}%
+                            {percentage}%
                           </div>
                         </div>
                       </div>
                     );
                   });
                 } else {
-                  // Fallback static data
-                  const fallbackCategories = [
-                    {
-                      name: "Arts & Entertainment",
-                      percentage: 95.92,
-                      icon: "🎭",
-                      color: "#4338ca",
-                    },
-                    {
-                      name: "Movies - Arts & Entertainment",
-                      percentage: 93.88,
-                      icon: "🎬",
-                      color: "#4338ca",
-                    },
-                    {
-                      name: "Health & Fitness",
-                      percentage: 2.04,
-                      icon: "🏋️",
-                      color: "#38bdf8",
-                    },
-                    {
-                      name: "Sports",
-                      percentage: 2.04,
-                      icon: "⚽",
-                      color: "#fb7185",
-                    },
-                  ];
-
-                  return fallbackCategories.map((category, index) => (
-                    <div className="category-item" key={index}>
-                      <div className="category-icon">{category.icon}</div>
-                      <div className="category-details">
-                        <div className="category-name">{category.name}</div>
-                        <div className="category-bar">
-                          <div
-                            className="category-bar-fill"
-                            style={{
-                              width: `${category.percentage}%`,
-                              backgroundColor: category.color,
-                            }}
-                          ></div>
-                        </div>
-                        <div className="category-percentage">
-                          {category.percentage}%
-                        </div>
-                      </div>
+                  // Return empty state if no data available
+                  return (
+                    <div className="no-data-message">
+                      No content category data available
                     </div>
-                  ));
+                  );
                 }
               })()}
             </div>
@@ -1457,68 +1253,44 @@ const ProfileOverview = ({ profileData }) => {
           <h2>AUDIENCE</h2>
         </div>
 
-        {/* Top location stats cards - updated to match image */}
+        {/* Top location stats cards - dynamic */}
         <div className="top-location-stats">
           <div className="location-stat-card">
             <div className="stat-header">TOP CITY</div>
-            <div className="stat-value">
-              {getAudienceData("cities", []).length > 0
-                ? getAudienceData("cities", [])[0]?.name || "Jakarta"
-                : "Jakarta"}
-            </div>
+            <div className="stat-value">{profileData?.audience?.cities?.[0]?.name || ""}</div>
             <div className="stat-details">
-              Audience from{" "}
-              {getAudienceData("cities", []).length > 0
-                ? getAudienceData("cities", [])[0]?.name || "Jakarta"
-                : "Jakarta"}{" "}
-              is{" "}
-              {getAudienceData("cities", []).length > 0
-                ? `${(getAudienceData("cities", [])[0]?.percent * 100).toFixed(
-                    1
-                  )}%`
-                : "13.6%"}
+              {(() => {
+                const top = profileData?.audience?.cities?.[0];
+                return top && top.percent !== undefined
+                  ? `Audience from ${top.name} is ${(top.percent * 100).toFixed(1)}%`
+                  : "";
+              })()}
             </div>
           </div>
 
           <div className="location-stat-card">
             <div className="stat-header">TOP STATE</div>
-            <div className="stat-value">
-              {getAudienceData("states", []).length > 0
-                ? getAudienceData("states", [])[0]?.name || "Maharashtra"
-                : "Maharashtra"}
-            </div>
+            <div className="stat-value">{profileData?.audience?.states?.[0]?.name || ""}</div>
             <div className="stat-details">
-              Audience from{" "}
-              {getAudienceData("states", []).length > 0
-                ? getAudienceData("states", [])[0]?.name || "Maharashtra"
-                : "Maharashtra"}{" "}
-              is{" "}
-              {getAudienceData("states", []).length > 0
-                ? `${(getAudienceData("states", [])[0]?.percent * 100).toFixed(
-                    1
-                  )}%`
-                : "20%"}
+              {(() => {
+                const top = profileData?.audience?.states?.[0];
+                return top && top.percent !== undefined
+                  ? `Audience from ${top.name} is ${(top.percent * 100).toFixed(1)}%`
+                  : "";
+              })()}
             </div>
           </div>
 
           <div className="location-stat-card">
             <div className="stat-header">TOP COUNTRY</div>
-            <div className="stat-value">
-              {getAudienceData("countries", []).length > 0
-                ? getAudienceData("countries", [])[0]?.name || "India"
-                : "India"}
-            </div>
+            <div className="stat-value">{profileData?.audience?.countries?.[0]?.name || ""}</div>
             <div className="stat-details">
-              Audience from{" "}
-              {getAudienceData("countries", []).length > 0
-                ? getAudienceData("countries", [])[0]?.name || "India"
-                : "India"}{" "}
-              is{" "}
-              {getAudienceData("countries", []).length > 0
-                ? `${(
-                    getAudienceData("countries", [])[0]?.percent * 100
-                  ).toFixed(2)}%`
-                : "56.99%"}
+              {(() => {
+                const top = profileData?.audience?.countries?.[0];
+                return top && top.percent !== undefined
+                  ? `Audience from ${top.name} is ${(top.percent * 100).toFixed(2)}%`
+                  : "";
+              })()}
             </div>
           </div>
         </div>
@@ -1528,23 +1300,22 @@ const ProfileOverview = ({ profileData }) => {
           <div className="demographic-stat-card">
             <div className="stat-header">TOP GENDER</div>
             <div className="stat-value">
-              {parseFloat(getAudienceData("gender.m", 0.65)) >
-              parseFloat(getAudienceData("gender.f", 0.35))
-                ? "Male"
-                : "Female"}
+              {(() => {
+                const m = getAudienceData("gender.m");
+                const f = getAudienceData("gender.f");
+                if (m === null || f === null) return "";
+                return parseFloat(m) > parseFloat(f) ? "Male" : "Female";
+              })()}
             </div>
             <div className="stat-details">
-              Total{" "}
-              {parseFloat(getAudienceData("gender.m", 0.65)) >
-              parseFloat(getAudienceData("gender.f", 0.35))
-                ? "male"
-                : "female"}{" "}
-              audience is{" "}
-              {parseFloat(getAudienceData("gender.m", 0.65)) >
-              parseFloat(getAudienceData("gender.f", 0.35))
-                ? (getAudienceData("gender.m", 0.65) * 100).toFixed(2)
-                : (getAudienceData("gender.f", 0.35) * 100).toFixed(2)}
-              %
+              {(() => {
+                const m = parseFloat(getAudienceData("gender.m"));
+                const f = parseFloat(getAudienceData("gender.f"));
+                if (isNaN(m) || isNaN(f)) return "";
+                const pct = (Math.max(m, f) * 100).toFixed(2);
+                const label = m >= f ? "male" : "female";
+                return `Total ${label} audience is ${pct}%`;
+              })()}
             </div>
           </div>
 
@@ -1552,55 +1323,25 @@ const ProfileOverview = ({ profileData }) => {
             <div className="stat-header">TOP AGE GROUP</div>
             <div className="stat-value">
               {(() => {
-                // Find the age group with highest percentage
-                const ages = getAudienceData("ages", []);
-                if (ages.length > 0) {
-                  // Calculate total percentage for each age group
-                  const ageGroups = ages.map((age) => ({
-                    category: age.category,
-                    total: age.m + age.f,
-                  }));
-
-                  // Sort by total and get the highest
-                  ageGroups.sort((a, b) => b.total - a.total);
-
-                  // Format the category name for display
-                  const topCategory = ageGroups[0]?.category;
-                  if (topCategory) {
-                    const categoryMap = {
-                      "0_18": "13-17",
-                      "18_24": "18-24",
-                      "25_34": "25-34",
-                      "35_44": "35-44",
-                      "45_100": "45-54",
-                    };
-                    return categoryMap[topCategory] || "25-34 Years";
-                  }
-                }
-                return "25-34 Years";
+                const ages = getAudienceData("ages") || [];
+                if (ages.length === 0) return "";
+                const top = [...ages]
+                  .map((a) => ({ category: a.category, total: (Number(a.m) || 0) + (Number(a.f) || 0) }))
+                  .sort((a, b) => b.total - a.total)[0];
+                if (!top) return "";
+                const categoryMap = { "0_18": "13-17", "18_24": "18-24", "25_34": "25-34", "35_44": "35-44", "45_100": "45-54" };
+                return categoryMap[top.category] || top.category;
               })()}
             </div>
             <div className="stat-details">
-              Total audience in this age group is{" "}
               {(() => {
-                // Calculate the percentage of the top age group
-                const ages = getAudienceData("ages", []);
-                if (ages.length > 0) {
-                  // Calculate total percentage for each age group
-                  const ageGroups = ages.map((age) => ({
-                    category: age.category,
-                    total: age.m + age.f,
-                  }));
-
-                  // Sort by total and get the highest
-                  ageGroups.sort((a, b) => b.total - a.total);
-
-                  // Return the percentage
-                  return (ageGroups[0]?.total * 100).toFixed(2);
-                }
-                return "53.51";
+                const ages = getAudienceData("ages") || [];
+                if (ages.length === 0) return "";
+                const top = [...ages]
+                  .map((a) => ({ total: (Number(a.m) || 0) + (Number(a.f) || 0) }))
+                  .sort((a, b) => b.total - a.total)[0];
+                return top ? `Total audience in this age group is ${(top.total * 100).toFixed(2)}%` : "";
               })()}
-              %
             </div>
           </div>
 
@@ -1610,9 +1351,7 @@ const ProfileOverview = ({ profileData }) => {
                 AUDIENCE CREDIBILITY <span className="beta-tag">Beta</span>
               </div>
             </div>
-            <div className="stat-value">
-              {getAudienceData("credibility", "68.75 %")}
-            </div>
+            <div className="stat-value">{getAudienceData("credibility") || ""}</div>
           </div>
         </div>
 
@@ -1677,30 +1416,10 @@ const ProfileOverview = ({ profileData }) => {
           </div>
 
           <div className="interest-list">
-            {/* Get interests data from API with proper fallback */}
+            {/* Get interests data from API without fallbacks */}
             {(() => {
-              // Get interests data
-              const interestsData = (() => {
-                const interestsFromApi = getAudienceData("interests", []);
-                if (interestsFromApi.length > 0) {
-                  return interestsFromApi;
-                }
-
-                // Fallback data if API data not available
-                return [
-                  { name: "Friends, Family & Relationships", percent: 0.092 },
-                  {
-                    name: "Clothes, Shoes, Handbags & Accessories",
-                    percent: 0.0833,
-                  },
-                  { name: "Camera & Photography", percent: 0.0822 },
-                  { name: "Television & Film", percent: 0.0638 },
-                  { name: "Beauty & Cosmetics", percent: 0.0532 },
-                  { name: "Travel & Tourism", percent: 0.0487 },
-                  { name: "Cars & Motorbikes", percent: 0.0462 },
-                  { name: "Electronics & Computers", percent: 0.0423 },
-                ];
-              })();
+              // Get interests data directly from audience data
+              const interestsData = getAudienceData("interests") || [];
 
               // Map through the data
               return interestsData.map((interest, index) => (
@@ -1740,8 +1459,8 @@ const ProfileOverview = ({ profileData }) => {
 
             <div className="language-list">
               {(() => {
-                // Process language data from API
-                const languageData = getAudienceData("languages", []);
+                // Process language data from API without fallback
+                const languageData = getAudienceData("languages") || [];
                 const colors = [
                   "#8b5cf6",
                   "#38bdf8",
@@ -1780,34 +1499,12 @@ const ProfileOverview = ({ profileData }) => {
                     );
                   });
                 } else {
-                  // Fallback static data
-                  const fallbackData = [
-                    { name: "English", percent: 55 },
-                    { name: "Indonesian", percent: 11.59 },
-                    { name: "Arabic", percent: 7.28 },
-                    { name: "Persian", percent: 5.91 },
-                    { name: "Russian", percent: 4.38 },
-                    { name: "Hindi", percent: 2.88 },
-                    { name: "Spanish", percent: 1.71 },
-                    { name: "Urdu", percent: 1.71 },
-                    { name: "Nepali", percent: 1.55 },
-                    { name: "Bengali", percent: 1.32 },
-                  ];
-
-                  return fallbackData.map((language, index) => (
-                    <div className="language-item" key={index}>
-                      <span
-                        className="lang-color"
-                        style={{
-                          backgroundColor: colors[index % colors.length],
-                        }}
-                      ></span>
-                      <span className="lang-name">{language.name}</span>
-                      <span className="lang-percentage">
-                        {language.percent}%
-                      </span>
+                  // Return empty state if no data available
+                  return (
+                    <div className="no-data-message">
+                      No language data available
                     </div>
-                  ));
+                  );
                 }
               })()}
             </div>
@@ -1943,101 +1640,11 @@ const ProfileOverview = ({ profileData }) => {
                       </>
                     );
                   } else {
-                    // Fallback static data with proper styling
-                    const staticData = [
-                      {
-                        category: "0_18",
-                        label: "13-17",
-                        percent: 2.39,
-                        height: 14,
-                      },
-                      {
-                        category: "18_24",
-                        label: "18-24",
-                        percent: 27.5,
-                        height: 138,
-                      },
-                      {
-                        category: "25_34",
-                        label: "25-34",
-                        percent: 53.51,
-                        height: 268,
-                      },
-                      {
-                        category: "35_44",
-                        label: "35-44",
-                        percent: 13.77,
-                        height: 69,
-                      },
-                      {
-                        category: "45_100",
-                        label: "45-54",
-                        percent: 2.82,
-                        height: 14,
-                      },
-                      {
-                        category: "65_plus",
-                        label: "65+",
-                        percent: 0.02,
-                        height: 1,
-                      },
-                    ];
-
+                    // Display empty state message
                     return (
-                      <>
-                        {staticData.map((age, index) => (
-                          <div
-                            className="age-bar-container"
-                            key={index}
-                            onMouseEnter={() => setHoveredAge(age)}
-                            onMouseLeave={() => setHoveredAge(null)}
-                          >
-                            <div className="percentage-label">
-                              {age.percent}%
-                            </div>
-                            <div className="bar-wrapper">
-                              <div
-                                className={`age-bar ${
-                                  hoveredAge &&
-                                  hoveredAge.category === age.category
-                                    ? "hovered"
-                                    : ""
-                                }`}
-                                style={{
-                                  height: `${age.height}px`,
-                                  backgroundColor:
-                                    hoveredAge &&
-                                    hoveredAge.category === age.category
-                                      ? "#4f46e5"
-                                      : "#1e1b4b",
-                                }}
-                              ></div>
-                            </div>
-                            <div className="age-label">{age.label}</div>
-                          </div>
-                        ))}
-
-                        {/* Tooltip for hovered age group */}
-                        {hoveredAge && (
-                          <div
-                            className="selected-age-tooltip"
-                            style={{
-                              left: `${
-                                staticData.findIndex(
-                                  (a) => a.category === hoveredAge.category
-                                ) *
-                                  (100 / staticData.length) +
-                                100 / staticData.length / 2
-                              }%`,
-                              top: "50%",
-                            }}
-                          >
-                            <div className="tooltip-content">
-                              {hoveredAge.label} years: {hoveredAge.percent}%
-                            </div>
-                          </div>
-                        )}
-                      </>
+                      <div className="no-data-message" style={{ padding: "20px 0", textAlign: "center", width: "100%" }}>
+                        No audience age data available
+                      </div>
                     );
                   }
                 })()}
@@ -2057,14 +1664,18 @@ const ProfileOverview = ({ profileData }) => {
                   <span className="circle-indicator female"></span>
                   <span className="gender-type">Female</span>
                   <span className="gender-value">
-                    - {(getAudienceData("gender.f", 0.35) * 100).toFixed(2)}%
+                    {getAudienceData("gender.f") !== null 
+                      ? `- ${(getAudienceData("gender.f") * 100).toFixed(2)}%` 
+                      : "- N/A"}
                   </span>
                 </div>
                 <div className="legend-item">
                   <span className="circle-indicator male"></span>
                   <span className="gender-type">Male</span>
                   <span className="gender-value">
-                    - {(getAudienceData("gender.m", 0.65) * 100).toFixed(2)}%
+                    {getAudienceData("gender.m") !== null 
+                      ? `- ${(getAudienceData("gender.m") * 100).toFixed(2)}%` 
+                      : "- N/A"}
                   </span>
                 </div>
               </div>
@@ -2072,16 +1683,16 @@ const ProfileOverview = ({ profileData }) => {
                 <div
                   className="gender-donut"
                   style={{
-                    background: `conic-gradient(#4f46e5 0%, #4f46e5 ${(
-                      getAudienceData("gender.m", 0.65) * 100
-                    ).toFixed(2)}%, #ec4899 ${(
-                      getAudienceData("gender.m", 0.65) * 100
-                    ).toFixed(2)}%, #ec4899 100%)`,
+                    background: getAudienceData("gender.m") !== null && getAudienceData("gender.f") !== null
+                      ? `conic-gradient(#4f46e5 0%, #4f46e5 ${(getAudienceData("gender.m") * 100).toFixed(2)}%, #ec4899 ${(getAudienceData("gender.m") * 100).toFixed(2)}%, #ec4899 100%)`
+                      : "conic-gradient(#4f46e5 0%, #4f46e5 50%, #ec4899 50%, #ec4899 100%)"
                   }}
                 >
                   <div className="donut-center">
                     <div className="percentage">
-                      {(getAudienceData("gender.m", 0.65) * 100).toFixed(2)}%
+                      {getAudienceData("gender.m") !== null
+                        ? (getAudienceData("gender.m") * 100).toFixed(2) + "%"
+                        : "N/A"}
                     </div>
                     <div className="audience-type">Male Audience</div>
                   </div>
@@ -2136,10 +1747,9 @@ const ProfileOverview = ({ profileData }) => {
             </div>
             <div className="metric-value">
               <span className="value">
-                {/* Since we don't have growth rate in API, we'll use engagement rate as a fallback */}
-                {profileData?.engagementRate || "8.33%"}
+                {profileData?.engagementRate ? profileData.engagementRate : "N/A"}
               </span>
-              <span className="label good">Good</span>
+              {profileData?.engagementRate && <span className="label good">Good</span>}
             </div>
           </div>
 

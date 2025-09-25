@@ -339,7 +339,7 @@ export default function Profile({ params }) {
                 <div className="metric-value">{profileData.followers}</div>
                 <div className="metric-value">{profileData.avgLikes}</div>
                 <div className="metric-value">{profileData.avgComments}</div>
-                <div className="metric-value">397.2k</div>
+                <div className="metric-value">{profileData.avgVideoViews}</div>
                 <div className="metric-value">{profileData.estimatedReach}</div>
                 <div className="metric-value">{profileData.engagementRate}</div>
               </div>
@@ -369,40 +369,94 @@ export default function Profile({ params }) {
             </div>
 
             <div className="categories-list">
-              {profileData.categories &&
-                profileData.categories.map((category, index) => (
-                  <div className="category-item" key={index}>
-                    <div className="category-icon">
-                      {index === 0
-                        ? "🎭"
-                        : index === 1
-                        ? "🎬"
-                        : index === 2
-                        ? "🏋️"
-                        : "⚽"}
-                    </div>
-                    <div className="category-details">
-                      <div className="category-name">{category}</div>
-                      <div className="category-bar">
-                        <div
-                          className="category-bar-fill"
-                          style={{
-                            width: `${95 - index * 30}%`,
-                            backgroundColor:
-                              index < 2
-                                ? "#4338ca"
-                                : index === 2
-                                ? "#38bdf8"
-                                : "#fb7185",
-                          }}
-                        ></div>
+              {(() => {
+                // Get categories with percentages if available
+                const categories = profileData.categoryPercentages || [];
+                const categoriesList = profileData.categories || [];
+                
+                // Helper function to get category icon
+                const getCategoryIcon = (name, index) => {
+                  const lowerName = name.toLowerCase();
+                  if (lowerName.includes("art") || lowerName.includes("entertainment")) return "🎭";
+                  if (lowerName.includes("movie") || lowerName.includes("film")) return "🎬";
+                  if (lowerName.includes("fitness") || lowerName.includes("health")) return "🏋️";
+                  if (lowerName.includes("sport")) return "⚽";
+                  if (lowerName.includes("celebrity") || lowerName.includes("famous")) return "🌟";
+                  if (lowerName.includes("fashion")) return "👗";
+                  if (lowerName.includes("food")) return "🍔";
+                  if (lowerName.includes("travel")) return "✈️";
+                  if (lowerName.includes("beauty")) return "💄";
+                  
+                  // Default icons based on index
+                  if (index === 0) return "🎭";
+                  if (index === 1) return "🎬";
+                  if (index === 2) return "🏋️";
+                  return "⚽";
+                };
+                
+                // If we have categoryPercentages, use those
+                if (categories && categories.length > 0) {
+                  return categories.map((category, index) => (
+                    <div className="category-item" key={index}>
+                      <div className="category-icon">
+                        {getCategoryIcon(category.name, index)}
                       </div>
-                      <div className="category-percentage">
-                        {95 - index * 30}%
+                      <div className="category-details">
+                        <div className="category-name">{category.name}</div>
+                        <div className="category-bar">
+                          <div
+                            className="category-bar-fill"
+                            style={{
+                              width: `${category.percentage}%`,
+                              backgroundColor:
+                                index < 2
+                                  ? "#4338ca"
+                                  : index === 2
+                                  ? "#38bdf8"
+                                  : "#fb7185",
+                            }}
+                          ></div>
+                        </div>
+                        <div className="category-percentage">
+                          {category.percentage}%
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ));
+                }
+                // Otherwise use the regular categories with calculated percentages
+                else if (categoriesList && categoriesList.length > 0) {
+                  return categoriesList.map((category, index) => (
+                    <div className="category-item" key={index}>
+                      <div className="category-icon">
+                        {getCategoryIcon(category, index)}
+                      </div>
+                      <div className="category-details">
+                        <div className="category-name">{category}</div>
+                        <div className="category-bar">
+                          <div
+                            className="category-bar-fill"
+                            style={{
+                              width: `${95 - index * 30}%`,
+                              backgroundColor:
+                                index < 2
+                                  ? "#4338ca"
+                                  : index === 2
+                                  ? "#38bdf8"
+                                  : "#fb7185",
+                            }}
+                          ></div>
+                        </div>
+                        <div className="category-percentage">
+                          {95 - index * 30}%
+                        </div>
+                      </div>
+                    </div>
+                  ));
+                }
+                // Empty state
+                return null;
+              })()}
             </div>
           </div>
         </div>

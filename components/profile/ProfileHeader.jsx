@@ -10,30 +10,33 @@ import { BiCopy, BiMessage, BiPhoneCall } from "react-icons/bi";
 import "./ProfileHeader.scss";
 
 const ProfileHeader = ({ profileData }) => {
-  // Extract the country name from the tags or default to a location
+  // Extract the country name from audience top country or profile.location
   const getLocation = () => {
     if (
       profileData.audience?.countries &&
       profileData.audience.countries.length > 0
     ) {
-      return profileData.audience.countries[0].name.replace(/^(\w)/, (m) =>
-        m.toUpperCase()
-      );
+      return profileData.audience.countries[0].name || "";
     }
-    return profileData.country || "Global";
+    if (profileData.location?.country) {
+      return profileData.location.country;
+    }
+    return "";
   };
 
   // Get categories as array
   const getCategories = () => {
     if (profileData.categories && profileData.categories.length > 0) {
       return profileData.categories.slice(0, 2).map((cat) =>
-        cat
-          .split("-")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ")
+        typeof cat === "string"
+          ? cat
+              .split("-")
+              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(" ")
+          : cat
       );
     }
-    return ["Arts & Entertainment", "Influencer"];
+    return [];
   };
 
   // State for the dropdown menu
@@ -127,7 +130,7 @@ const ProfileHeader = ({ profileData }) => {
           </div>
           <div className="profile-details">
             <h1 className="profile-name">
-              {profileData?.name || "Instagram User"}
+              {profileData?.name || ""}
               {profileData.verified && (
                 <span className="verified-badge" title="Verified Account">
                   ✓
@@ -141,9 +144,7 @@ const ProfileHeader = ({ profileData }) => {
                 </div>
               ))}
             </div>
-            <p className="profile-bio">
-              {profileData?.bio || "No bio available"}
-            </p>
+            <p className="profile-bio">{profileData?.bio || ""}</p>
             <div className="profile-meta">
               <div className="profile-location">
                 <IoLocationOutline className="location-icon" />

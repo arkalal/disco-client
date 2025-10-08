@@ -2279,10 +2279,20 @@ export default function FilterCreatorsUI() {
                   <div className="col followers">{influencer.followers}</div>
                   <div className="col avg-likes">{influencer.avgLikes}</div>
                   <div className="col avg-reel-views">
-                    {influencer.avgReelViews}
+                    {influencer.avgReelViews === "UNLOCK" ? (
+                      <button className="unlock-btn">UNLOCK</button>
+                    ) : (
+                      influencer.avgReelViews
+                    )}
                   </div>
                   <div className="col er">{influencer.er}</div>
-                  <div className="col location">{influencer.location}</div>
+                  <div className="col location">
+                    {influencer.location === "UNLOCK" ? (
+                      <button className="unlock-btn">UNLOCK</button>
+                    ) : (
+                      influencer.location
+                    )}
+                  </div>
                   <div className="col categories">
                     {influencer.categories.map((category, idx) => (
                       <span key={idx} className="category-badge">
@@ -2456,13 +2466,7 @@ export default function FilterCreatorsUI() {
               </div>
             )}
           </div>
-          {influencers.length > 0 && totalResults > 0 && (
-            <div className="results-count-container">
-              <div className="results-count">
-                Showing {Math.min(influencers.length, totalResults)} of {totalResults} creators
-              </div>
-            </div>
-          )}
+          {/* Pagination count container removed */}
         </div>
       </div>
 

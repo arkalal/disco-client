@@ -19,7 +19,7 @@ export async function GET(request) {
   // Get the search query from URL parameters
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") || "";
-  
+
   // Return empty results for empty queries
   if (!query || query.trim().length === 0) {
     return NextResponse.json({ data: [] });
@@ -46,7 +46,9 @@ export async function GET(request) {
 
     console.log("Fetching search results from API...");
     // No valid cache, fetch from API
-    const apiUrl = `https://instagram-statistics-api.p.rapidapi.com/search?q=${encodeURIComponent(query)}&page=1&perPage=5&socialTypes=INST`;
+    const apiUrl = `https://instagram-statistics-api.p.rapidapi.com/search?q=${encodeURIComponent(
+      query
+    )}&page=1&perPage=5&socialTypes=INST`;
 
     // Log API request details (without sensitive info)
     console.log(`Making search request to: ${apiUrl}`);
@@ -110,22 +112,27 @@ function processSearchResults(rawData) {
     return { data: [] };
   }
 
-  const processedResults = rawData.data.map(profile => ({
+  const processedResults = rawData.data.map((profile) => ({
     id: profile.cid || `INST:${profile.screenName}`,
     name: profile.name || "",
     username: profile.screenName || "",
-    image: profile.image || `https://via.placeholder.com/40?text=${encodeURIComponent(profile.screenName?.charAt(0) || "?")}`,
+    image:
+      profile.image ||
+      `https://via.placeholder.com/40?text=${encodeURIComponent(
+        profile.screenName?.charAt(0) || "?"
+      )}`,
     verified: profile.verified || false,
     followers: formatFollowers(profile.usersCount || 0),
     followersCount: profile.usersCount || 0,
     engagementRate: ((profile.avgER || 0) * 100).toFixed(2) + "%",
-    category: profile.tags && profile.tags.length > 0 ? profile.tags[0] : "influencer"
+    category:
+      profile.tags && profile.tags.length > 0 ? profile.tags[0] : "influencer",
   }));
 
   return {
     data: processedResults,
     meta: rawData.meta || { code: 200 },
-    pagination: rawData.pagination || { total: processedResults.length }
+    pagination: rawData.pagination || { total: processedResults.length },
   };
 }
 
@@ -147,59 +154,64 @@ function generateFallbackData(query) {
       id: "INST:dishapatani",
       name: "Disha Patani",
       username: "dishapatani",
-      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/358829864_1329124541019799_8223809761582188870_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=gwJa1dDdevYAX8oaHfj",
+      image:
+        "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/358829864_1329124541019799_8223809761582188870_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=gwJa1dDdevYAX8oaHfj",
       verified: true,
       followers: "54.1M",
       followersCount: 54100000,
       engagementRate: "1.82%",
-      category: "entertainment"
+      category: "entertainment",
     },
     {
       id: "INST:shreyaghoshal",
       name: "Shreya Ghoshal",
       username: "shreyaghoshal",
-      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/271653271_1188803521530192_5339978536922490664_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=VGBMf2TxgXMAX9bccPp",
+      image:
+        "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/271653271_1188803521530192_5339978536922490664_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=VGBMf2TxgXMAX9bccPp",
       verified: true,
       followers: "27.9M",
       followersCount: 27900000,
       engagementRate: "1.25%",
-      category: "music"
+      category: "music",
     },
     {
       id: "INST:anushkasen0408",
       name: "Anushka Sen",
       username: "anushkasen0408",
-      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/352389908_1337963533518195_1747282549727419475_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=CTntxiuyw0gAX80hLiB",
+      image:
+        "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/352389908_1337963533518195_1747282549727419475_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=CTntxiuyw0gAX80hLiB",
       verified: true,
       followers: "15.2M",
       followersCount: 15200000,
       engagementRate: "2.34%",
-      category: "entertainment"
+      category: "entertainment",
     },
     {
       id: "INST:manushi_chhillar",
       name: "Manushi Chhillar",
       username: "manushi_chhillar",
-      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/347305477_950551499515575_9174906832820045234_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=F06HfuHlLbQAX_fcpam",
+      image:
+        "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/347305477_950551499515575_9174906832820045234_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=F06HfuHlLbQAX_fcpam",
       verified: true,
       followers: "6.1M",
       followersCount: 6100000,
       engagementRate: "1.76%",
-      category: "entertainment"
+      category: "entertainment",
     },
     {
       id: "INST:manishmalhotra05",
       name: "Manish Malhotra",
       username: "manishmalhotra05",
-      image: "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/358080606_300350469257935_3103627363432794776_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=L__1nA36PXwAX9wvUmi",
+      image:
+        "https://instagram.fpnq13-1.fna.fbcdn.net/v/t51.2885-19/358080606_300350469257935_3103627363432794776_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fpnq13-1.fna.fbcdn.net&_nc_cat=1&_nc_ohc=L__1nA36PXwAX9wvUmi",
       verified: true,
       followers: "5.3M",
       followersCount: 5300000,
       engagementRate: "0.98%",
-      category: "fashion"
-    }
+      category: "fashion",
+    },
   ];
-  
+
   // Default profiles for other queries
   const defaultProfiles = [
     {
@@ -211,7 +223,7 @@ function generateFallbackData(query) {
       followers: "500M",
       followersCount: 500000000,
       engagementRate: "2.5%",
-      category: "sports"
+      category: "sports",
     },
     {
       id: "INST:leomessi",
@@ -222,7 +234,7 @@ function generateFallbackData(query) {
       followers: "350M",
       followersCount: 350000000,
       engagementRate: "3.2%",
-      category: "sports"
+      category: "sports",
     },
     {
       id: "INST:kyliejenner",
@@ -233,7 +245,7 @@ function generateFallbackData(query) {
       followers: "290M",
       followersCount: 290000000,
       engagementRate: "1.8%",
-      category: "fashion"
+      category: "fashion",
     },
     {
       id: "INST:selenagomez",
@@ -244,7 +256,7 @@ function generateFallbackData(query) {
       followers: "270M",
       followersCount: 270000000,
       engagementRate: "2.1%",
-      category: "entertainment"
+      category: "entertainment",
     },
     {
       id: "INST:therock",
@@ -255,31 +267,32 @@ function generateFallbackData(query) {
       followers: "260M",
       followersCount: 260000000,
       engagementRate: "1.9%",
-      category: "entertainment"
-    }
+      category: "entertainment",
+    },
   ];
-  
+
   // Check for featured query
-  if (query === 'featured' || query === 'popular') {
+  if (query === "featured" || query === "popular") {
     return {
       data: featuredInfluencers,
       meta: { code: 200 },
-      pagination: { total: featuredInfluencers.length }
+      pagination: { total: featuredInfluencers.length },
     };
   }
-  
+
   // For other queries, use the default profiles and filter by query if provided
   const profiles = defaultProfiles;
-  const filteredProfiles = query 
-    ? profiles.filter(p => 
-        p.name.toLowerCase().includes(query.toLowerCase()) || 
-        p.username.toLowerCase().includes(query.toLowerCase())
+  const filteredProfiles = query
+    ? profiles.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query.toLowerCase()) ||
+          p.username.toLowerCase().includes(query.toLowerCase())
       )
     : profiles;
 
   return {
     data: filteredProfiles,
     meta: { code: 200 },
-    pagination: { total: filteredProfiles.length }
+    pagination: { total: filteredProfiles.length },
   };
 }

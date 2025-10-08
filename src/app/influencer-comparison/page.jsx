@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { FiShare2 } from "react-icons/fi";
 import { BsInstagram } from "react-icons/bs";
-import { 
+import {
   AiOutlineYoutube,
   AiOutlineUser,
   AiOutlineHeart,
   AiOutlineClockCircle,
-  AiOutlinePicture, 
+  AiOutlinePicture,
 } from "react-icons/ai";
 import { RiVideoLine } from "react-icons/ri";
 import { VscGraph } from "react-icons/vsc";
@@ -23,12 +23,12 @@ import InfluencerCardSkeletonLoader from "../../../components/influencerComparis
 import MetricsSection from "../../../components/influencerComparison/MetricsSection";
 
 // Helper functions
-import { 
-  fetchInfluencerData, 
+import {
+  fetchInfluencerData,
   calculateEngagementMetrics,
   generateInsights,
   processContentCategories,
-  getPaidPartnershipMetrics 
+  getPaidPartnershipMetrics,
 } from "../../../utils/influencerComparisonHelpers";
 
 import "../../../components/layout/MainLayout.scss";
@@ -54,12 +54,22 @@ const InfluencerComparisonPage = () => {
   const [showAddInfluencerPopup, setShowAddInfluencerPopup] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [influencers, setInfluencers] = useState([null, null, null, null]);
-  
+
   // State for profile data
-  const [influencerData, setInfluencerData] = useState([null, null, null, null]);
-  const [loadingStates, setLoadingStates] = useState([false, false, false, false]);
+  const [influencerData, setInfluencerData] = useState([
+    null,
+    null,
+    null,
+    null,
+  ]);
+  const [loadingStates, setLoadingStates] = useState([
+    false,
+    false,
+    false,
+    false,
+  ]);
   const [metricsLoaded, setMetricsLoaded] = useState(false);
-  
+
   // Effect to fetch data when influencers change
   useEffect(() => {
     // Process each influencer to load its data
@@ -69,26 +79,26 @@ const InfluencerComparisonPage = () => {
       }
     });
   }, [influencers]);
-  
+
   // Function to fetch influencer profile data
   const fetchInfluencerProfile = async (username, slotIndex) => {
     // Update loading state for this slot
-    setLoadingStates(prev => {
+    setLoadingStates((prev) => {
       const newState = [...prev];
       newState[slotIndex] = true;
       return newState;
     });
-    
+
     try {
       // Fetch profile data
       const profileData = await fetchInfluencerData(username);
-      
+
       // Calculate additional metrics
       const engagement = calculateEngagementMetrics(profileData);
       const insights = generateInsights(profileData);
       const contentCategories = processContentCategories(profileData);
       const paidPartnerships = getPaidPartnershipMetrics(profileData);
-      
+
       // Create enhanced data object
       const enhancedData = {
         ...profileData,
@@ -96,16 +106,16 @@ const InfluencerComparisonPage = () => {
         insights,
         contentCategories,
         paidPartnerships,
-        audience: profileData.audience || {}
+        audience: profileData.audience || {},
       };
-      
+
       // Update data for this slot
-      setInfluencerData(prev => {
+      setInfluencerData((prev) => {
         const newData = [...prev];
         newData[slotIndex] = enhancedData;
         return newData;
       });
-      
+
       // Set metrics as loaded after a short delay for animation
       setTimeout(() => {
         setMetricsLoaded(true);
@@ -114,7 +124,7 @@ const InfluencerComparisonPage = () => {
       console.error(`Error loading profile for slot ${slotIndex}:`, error);
     } finally {
       // Update loading state
-      setLoadingStates(prev => {
+      setLoadingStates((prev) => {
         const newState = [...prev];
         newState[slotIndex] = false;
         return newState;
@@ -150,16 +160,16 @@ const InfluencerComparisonPage = () => {
       setShowAddInfluencerPopup(false);
     }
   };
-  
+
   // Remove influencer from a slot
   const handleRemoveInfluencer = (slotIndex) => {
     // Clear the influencer data
     const newInfluencers = [...influencers];
     const newInfluencerData = [...influencerData];
-    
+
     newInfluencers[slotIndex] = null;
     newInfluencerData[slotIndex] = null;
-    
+
     setInfluencers(newInfluencers);
     setInfluencerData(newInfluencerData);
   };
@@ -195,8 +205,8 @@ const InfluencerComparisonPage = () => {
                 loadingStates[slotIndex] ? (
                   <InfluencerCardSkeletonLoader />
                 ) : (
-                  <InfluencerCard 
-                    profile={influencers[slotIndex]} 
+                  <InfluencerCard
+                    profile={influencers[slotIndex]}
                     onRemove={() => handleRemoveInfluencer(slotIndex)}
                   />
                 )
@@ -205,7 +215,7 @@ const InfluencerComparisonPage = () => {
                   <div className="avatar-placeholder">
                     <AiOutlineUser className="user-icon" />
                   </div>
-                  <button 
+                  <button
                     className="add-influencer-button"
                     onClick={() => handleOpenAddInfluencerPopup(slotIndex)}
                   >
@@ -226,7 +236,7 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.overview}
             loading={!metricsLoaded}
-            onToggle={() => toggleSection('overview')}
+            onToggle={() => toggleSection("overview")}
           />
 
           {/* Engagements & Views Section */}
@@ -237,7 +247,7 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.engagements}
             loading={!metricsLoaded}
-            onToggle={() => toggleSection('engagements')}
+            onToggle={() => toggleSection("engagements")}
           />
 
           {/* Paid Partnerships - Engagements & Views Section */}
@@ -248,7 +258,7 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.paidPartnerships}
             loading={!metricsLoaded}
-            onToggle={() => toggleSection('paidPartnerships')}
+            onToggle={() => toggleSection("paidPartnerships")}
           />
 
           {/* Content Section */}
@@ -259,7 +269,7 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.content}
             loading={!metricsLoaded}
-            onToggle={() => toggleSection('content')}
+            onToggle={() => toggleSection("content")}
           />
 
           {/* Audience Section */}
@@ -270,14 +280,16 @@ const InfluencerComparisonPage = () => {
             influencersData={influencerData}
             isOpen={openSections.audience}
             loading={!metricsLoaded}
-            onToggle={() => toggleSection('audience')}
+            onToggle={() => toggleSection("audience")}
           />
 
           {/* Growth Section */}
-          <div className={`accordion-section ${openSections.growth ? 'open' : ''}`}>
-            <div 
-              className="section-header" 
-              onClick={() => toggleSection('growth')}
+          <div
+            className={`accordion-section ${openSections.growth ? "open" : ""}`}
+          >
+            <div
+              className="section-header"
+              onClick={() => toggleSection("growth")}
             >
               <div className="header-left">
                 <VscGraph className="section-icon" />
@@ -296,14 +308,14 @@ const InfluencerComparisonPage = () => {
                     {!metricsLoaded ? (
                       <div className="skeleton-metric"></div>
                     ) : influencer ? (
-                      '2.4%'
+                      "2.4%"
                     ) : (
-                      '-'
+                      "-"
                     )}
                   </div>
                 ))}
               </div>
-              
+
               <div className="metrics-row">
                 <div className="metric-label">
                   30d Followers Gain
@@ -314,9 +326,9 @@ const InfluencerComparisonPage = () => {
                     {!metricsLoaded ? (
                       <div className="skeleton-metric"></div>
                     ) : influencer ? (
-                      '+12.5k'
+                      "+12.5k"
                     ) : (
-                      '-'
+                      "-"
                     )}
                   </div>
                 ))}
@@ -325,10 +337,12 @@ const InfluencerComparisonPage = () => {
           </div>
 
           {/* Brands Section */}
-          <div className={`accordion-section ${openSections.brands ? 'open' : ''}`}>
-            <div 
-              className="section-header" 
-              onClick={() => toggleSection('brands')}
+          <div
+            className={`accordion-section ${openSections.brands ? "open" : ""}`}
+          >
+            <div
+              className="section-header"
+              onClick={() => toggleSection("brands")}
             >
               <div className="header-left">
                 <BsBarChart className="section-icon" />
@@ -348,12 +362,16 @@ const InfluencerComparisonPage = () => {
                       <div className="skeleton-metric"></div>
                     ) : influencer && influencer.brandMentions ? (
                       <div className="brand-list">
-                        {influencer.brandMentions.slice(0, 3).map((brand, i) => (
-                          <div key={i} className="brand-item">{brand.name}</div>
-                        ))}
+                        {influencer.brandMentions
+                          .slice(0, 3)
+                          .map((brand, i) => (
+                            <div key={i} className="brand-item">
+                              {brand.name}
+                            </div>
+                          ))}
                       </div>
                     ) : (
-                      '-'
+                      "-"
                     )}
                   </div>
                 ))}
@@ -363,9 +381,9 @@ const InfluencerComparisonPage = () => {
         </div>
       </main>
       {/* Add Influencer Popup */}
-      <AddInfluencerPopup 
-        isOpen={showAddInfluencerPopup} 
-        onClose={handleCloseAddInfluencerPopup} 
+      <AddInfluencerPopup
+        isOpen={showAddInfluencerPopup}
+        onClose={handleCloseAddInfluencerPopup}
         onAddInfluencer={handleAddInfluencer}
       />
     </div>

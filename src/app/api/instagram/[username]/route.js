@@ -95,15 +95,19 @@ function transformInsightIQData(data) {
   // Extract main data - based on the API example payload
   const profileData = data.profile || {};
   // Audience can come from multiple places depending on the API version
-  let audienceData = (data.profile && data.profile.audience)
-    ? data.profile.audience
-    : (data.audience || {});
+  let audienceData =
+    data.profile && data.profile.audience
+      ? data.profile.audience
+      : data.audience || {};
 
   // Fallback to audience_likers (common in some responses) or audience_likes
   if (!audienceData || Object.keys(audienceData).length === 0) {
     if (data.audience_likers && Object.keys(data.audience_likers).length > 0) {
       audienceData = data.audience_likers;
-    } else if (data.audience_likes && Object.keys(data.audience_likes).length > 0) {
+    } else if (
+      data.audience_likes &&
+      Object.keys(data.audience_likes).length > 0
+    ) {
       audienceData = data.audience_likes;
     }
   }
@@ -145,8 +149,10 @@ function transformInsightIQData(data) {
   }
 
   // Compute averages for video posts
-  const avgVideoLikesRaw = videoCount > 0 ? Math.round(videoLikeSum / videoCount) : null;
-  const avgVideoCommentsRaw = videoCount > 0 ? Math.round(videoCommentSum / videoCount) : null;
+  const avgVideoLikesRaw =
+    videoCount > 0 ? Math.round(videoLikeSum / videoCount) : null;
+  const avgVideoCommentsRaw =
+    videoCount > 0 ? Math.round(videoCommentSum / videoCount) : null;
 
   // Compute posting frequency in the last 30 days
   let postFrequencyLast30 = null;

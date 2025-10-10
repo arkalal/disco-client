@@ -1652,71 +1652,102 @@
 
             .tooltip-date {
               color: #94a3b8;
-              font-size: 12px;
-              white-space: nowrap;
             }
           }
         }
+      }
+    }
+  }
+}
 
-        .chart-area {
-          width: 100%;
-          height: 85%;
-          position: relative;
-          background: linear-gradient(
-            180deg,
-            rgba(224, 242, 254, 0.4) 0%,
-            rgba(224, 242, 254, 0) 100%
-          );
-          border-radius: 4px;
-          cursor: crosshair;
+.interest-percentage {
+  font-size: 0.8rem;
+  color: #666;
+  white-space: nowrap;
+  text-align: right;
+  width: 50px;
+}
 
-          &:before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-              180deg,
-              rgba(186, 230, 253, 0.4) 0%,
-              rgba(186, 230, 253, 0) 100%
-            );
-            clip-path: polygon(
-              0 90%,
-              20% 75%,
-              40% 65%,
-              60% 40%,
-              80% 30%,
-              100% 10%,
-              100% 100%,
-              0 100%
-            );
-          }
+.derived-interests-note {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 12px;
+  font-style: italic;
+}
 
-          &:after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-top: 1px dashed #cbd5e1;
-            border-bottom: 1px dashed #cbd5e1;
-          }
-        }
+.interest-tag-count {
+  font-size: 0.8rem;
+  color: #666;
+  margin-left: auto;
+}
 
-        .chart-dates {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 16px;
-          padding: 0 12px;
+.no-data-message {
+  color: #666;
+  font-style: italic;
+  padding: 10px 0;
+}
 
-          span {
-            font-size: 12px;
-            color: #64748b;
-          }
-        }
+.growth-chart-container {
+  .growth-chart {
+    position: relative;
+    
+    .chart-area {
+      width: 100%;
+      height: 85%;
+      position: relative;
+      background: linear-gradient(
+        180deg,
+        rgba(224, 242, 254, 0.4) 0%,
+        rgba(224, 242, 254, 0) 100%
+      );
+      border-radius: 4px;
+      cursor: crosshair;
+
+      &:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(186, 230, 253, 0.4) 0%,
+          rgba(186, 230, 253, 0) 100%
+        );
+        clip-path: polygon(
+          0 90%,
+          20% 75%,
+          40% 65%,
+          60% 40%,
+          80% 30%,
+          100% 10%,
+          100% 100%,
+          0 100%
+        );
+      }
+
+      &:after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-top: 1px dashed #cbd5e1;
+        border-bottom: 1px dashed #cbd5e1;
+      }
+    }
+
+    .chart-dates {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding: 0 12px;
+
+      span {
+        font-size: 12px;
+        color: #64748b;
       }
     }
   }
@@ -2219,4 +2250,24 @@
       max-width: 100%;
     }
   }
+}
+
+/* Audience interests derived from hashtags */
+.derived-interests-note {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.interest-tag-count {
+  font-size: 0.8rem;
+  color: #666;
+  margin-left: auto;
+}
+
+.no-data-message {
+  color: #666;
+  font-style: italic;
+  padding: 10px 0;
 }

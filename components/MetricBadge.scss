@@ -1,0 +1,89 @@
+.metric-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-left: 6px;
+  position: relative;
+  cursor: help;
+  
+  .info-icon {
+    font-size: 0.75rem;
+    margin-left: 3px;
+    opacity: 0.7;
+  }
+  
+  // Badge types
+  &.badge-exact {
+    background-color: #34d399;
+    color: #064e3b;
+  }
+  
+  &.badge-estimated {
+    background-color: #fbbf24;
+    color: #78350f;
+  }
+  
+  &.badge-modelled {
+    background-color: #93c5fd;
+    color: #1e3a8a;
+  }
+  
+  &.badge-good {
+    background-color: #34d399;
+    color: #064e3b;
+  }
+  
+  &.badge-average {
+    background-color: #fbbf24;
+    color: #78350f;
+  }
+  
+  &.badge-excellent {
+    background-color: #a855f7;
+    color: #581c87;
+  }
+  
+  // Tooltip
+  .metric-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+    background-color: #1e293b;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    animation: fadeIn 0.2s ease-in-out forwards;
+    
+    // Arrow
+    &:after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #1e293b transparent transparent transparent;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px);
+  }
+}

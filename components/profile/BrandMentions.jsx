@@ -80,7 +80,7 @@ const BrandMentions = () => {
             <div key={brand.id} className="brand-card">
               <div className="brand-logo">
                 <img
-                  src={brand.logo}
+                  src={brand.logo && brand.logo.trim() !== "" ? brand.logo : "https://via.placeholder.com/60?text=Brand"}
                   alt={brand.name}
                   onError={(e) => {
                     e.target.onerror = null;

@@ -47,9 +47,13 @@ const ContentPreview = () => {
           <div key={post.id} className="post-card">
             <div className="post-image-container">
               <img
-                src={post.image}
+                src={post.image && post.image.trim() !== "" ? post.image : `https://placehold.co/300x300/jpeg?text=Post+${post.id}`}
                 alt={`Post ${post.id}`}
                 className="post-image"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = `https://placehold.co/300x300/jpeg?text=Post+${post.id}`;
+                }}
               />
             </div>
             <div className="post-details">

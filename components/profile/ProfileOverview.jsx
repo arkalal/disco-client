@@ -1,9 +1,34 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+
+// Helper function to get a valid image URL from multiple sources
+function getValidImageUrl(post) {
+  // Try each possible image source
+  const candidates = [
+    post.image,
+    post.thumbnail, 
+    post.cover,
+    post.thumbnailUrl,
+    post.imageUrl,
+    post.display_url
+  ];
+  
+  // Return the first non-empty URL
+  for (const candidate of candidates) {
+    if (candidate && typeof candidate === 'string' && candidate.trim() !== '') {
+      return candidate;
+    }
+  }
+  
+  return null;
+}
+
 import { FaInstagram } from "react-icons/fa";
 import { RiHeartLine } from "react-icons/ri";
 import { BsInfoCircle } from "react-icons/bs";
+import MetricBadge from "../MetricBadge";
 import { VscGraph } from "react-icons/vsc";
 import {
   AiOutlineInstagram,
@@ -666,6 +691,9 @@ const ProfileOverview = ({ profileData }) => {
               <div className="metric-label">FOLLOWERS</div>
               <div className="metric-value">
                 {profileData?.followers || ""}
+                {profileData?.dataProvenance?.followers && (
+                  <MetricBadge type={profileData.dataProvenance.followers} />
+                )}
               </div>
             </div>
             <div className="metric-card">
@@ -673,13 +701,22 @@ const ProfileOverview = ({ profileData }) => {
                 ENGAGEMENT RATE <span className="info-icon">i</span>
               </div>
               <div className="metric-value">
-                {profileData?.engagementRate || ""}{" "}
-                <span className="badge">Average</span>
+                {profileData?.engagementRate || ""}
+                {profileData?.dataProvenance?.engagement ? (
+                  <MetricBadge type={profileData.dataProvenance.engagement} />
+                ) : (
+                  <MetricBadge type="AVERAGE" />
+                )}
               </div>
             </div>
             <div className="metric-card">
               <div className="metric-label">ESTIMATED REACH</div>
-              <div className="metric-value">{profileData?.estimatedReach || ""}</div>
+              <div className="metric-value">
+                {profileData?.estimatedReach || ""}
+                {profileData?.dataProvenance?.reach && (
+                  <MetricBadge type={profileData.dataProvenance.reach} />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -885,7 +922,12 @@ const ProfileOverview = ({ profileData }) => {
             <div className="engagement-stats">
               <div className="stat-item">
                 <div className="stat-label">AVG. VIEWS</div>
-                <div className="stat-value">{profileData?.avgVideoViews || ""}</div>
+                <div className="stat-value">
+                  {profileData?.avgVideoViews || ""}
+                  {profileData?.dataProvenance?.reelViews && (
+                    <MetricBadge type={profileData.dataProvenance.reelViews} />
+                  )}
+                </div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">AVG. LIKES</div>
@@ -946,8 +988,8 @@ const ProfileOverview = ({ profileData }) => {
                   }
                   return "";
                 })()}
+                <MetricBadge type="AVERAGE" />
               </div>
-              <div className="metric-badge">Average</div>
             </div>
 
             <div className="metric-description"></div>
@@ -974,8 +1016,8 @@ const ProfileOverview = ({ profileData }) => {
                   }
                   return "";
                 })()}
+                <MetricBadge type="GOOD" />
               </div>
-              <div className="metric-badge good">Good</div>
             </div>
 
             <div className="metric-description"></div>
@@ -1026,24 +1068,26 @@ const ProfileOverview = ({ profileData }) => {
                     month: "short",
                     year: "2-digit",
                   });
+                  
+                  // Generate a stable unique key for this post
+                  const postKey = post.url || post.date || index.toString();
+                  
+                  // Get image URL using our helper function
+                  const imageUrl = getValidImageUrl(post);
+                  const fallbackSrc = `https://placehold.co/350x536?text=Post+${index + 1}`;
 
                   return (
-                    <div className="post-card" key={index}>
-                      <div className="post-image">
+                    <div className="post-card" key={postKey}>
+                      <div className="post-image" style={{ aspectRatio: '4 / 5', overflow: 'hidden', background: '#f6f6f6' }}>
                         <img
-                          src={
-                            post.image ||
-                            `https://via.placeholder.com/350x536?text=Post+${
-                              index + 1
-                            }`
-                          }
+                          src={imageUrl || fallbackSrc}
                           alt="Post content"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = `https://via.placeholder.com/350x536?text=Post+${
-                              index + 1
-                            }`;
+                            e.target.src = fallbackSrc;
                           }}
+                          loading="eager" // Eagerly load visible post images
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                         <div className="post-overlay">
                           <span className="post-type">
@@ -1148,6 +1192,9 @@ const ProfileOverview = ({ profileData }) => {
             </div>
             <div className="metric-value">
               {profileData?.avgVideoViews || ""}
+              {profileData?.dataProvenance?.reelViews && (
+                <MetricBadge type={profileData.dataProvenance.reelViews} />
+              )}
             </div>
             <div className="metric-value">
               {profileData?.estimatedReach || ""}
@@ -1407,7 +1454,7 @@ const ProfileOverview = ({ profileData }) => {
           </div>
         </div>
 
-        {/* Audience Interest - Updated to dynamically use API data */}
+        {/* Audience Interest - Updated to handle empty data */}
         <div className="audience-interest">
           <div className="section-header">
             <div className="title">
@@ -1416,28 +1463,97 @@ const ProfileOverview = ({ profileData }) => {
           </div>
 
           <div className="interest-list">
-            {/* Get interests data from API without fallbacks */}
+            {/* Get interests data from API or derive from hashtags */}
             {(() => {
               // Get interests data directly from audience data
               const interestsData = getAudienceData("interests") || [];
-
-              // Map through the data
-              return interestsData.map((interest, index) => (
-                <div className="interest-item" key={index}>
-                  <div className="interest-name">{interest.name}</div>
-                  <div className="interest-bar-container">
-                    <div
-                      className="interest-bar"
-                      style={{
-                        width: `${(interest.percent * 100).toFixed(1)}%`,
-                      }}
-                    ></div>
+              
+              // If we have provider-supplied interests data, use it
+              if (interestsData && interestsData.length > 0) {
+                return interestsData.map((interest, index) => (
+                  <div className="interest-item" key={index}>
+                    <div className="interest-name">{interest.name}</div>
+                    <div className="interest-bar-container">
+                      <div
+                        className="interest-bar"
+                        style={{
+                          width: `${(interest.percent * 100).toFixed(1)}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div className="interest-percentage">
+                      {(interest.percent * 100).toFixed(1)}%
+                    </div>
                   </div>
-                  <div className="interest-percentage">
-                    {(interest.percent * 100).toFixed(1)}%
-                  </div>
-                </div>
-              ));
+                ));
+              }
+              
+              // Otherwise derive interests from hashtags in posts (as mentioned in requirements)
+              // Extract interests from post captions and hashtags
+              const derivedInterests = [];
+              const posts = profileData?.recentPosts || [];
+              const hashtagRegex = /#([a-zA-Z0-9_]+)/g;
+              const interestCategories = {
+                'fashion': ['fashion', 'style', 'clothing', 'outfit', 'model'],
+                'travel': ['travel', 'trip', 'vacation', 'wanderlust', 'journey', 'adventure', 'explore'],
+                'food & dining': ['food', 'recipe', 'cooking', 'chef', 'meal', 'eat', 'restaurant', 'dining'],
+                'fitness': ['fitness', 'workout', 'gym', 'exercise', 'health', 'training', 'yoga', 'sports'],
+                'technology': ['tech', 'technology', 'gadget', 'digital', 'computer', 'smartphone', 'app'],
+                'beauty': ['beauty', 'makeup', 'skincare', 'cosmetics', 'hair'],
+                'lifestyle': ['lifestyle', 'life', 'daily', 'inspiration'],
+                'entertainment': ['entertainment', 'movie', 'music', 'cinema', 'film', 'tv', 'show']
+              };
+              
+              // Extract hashtags and categorize them
+              const hashtagCounts = {};
+              posts.forEach(post => {
+                const text = post.text || post.caption || '';
+                const matches = text.match(hashtagRegex) || [];
+                
+                matches.forEach(tag => {
+                  const cleanTag = tag.slice(1).toLowerCase();
+                  
+                  // Categorize the tag
+                  let category = null;
+                  for (const [cat, keywords] of Object.entries(interestCategories)) {
+                    if (keywords.some(keyword => cleanTag.includes(keyword))) {
+                      category = cat;
+                      break;
+                    }
+                  }
+                  
+                  // If categorized, count it
+                  if (category) {
+                    hashtagCounts[category] = (hashtagCounts[category] || 0) + 1;
+                  }
+                });
+              });
+              
+              // Convert to array and sort
+              const sortedInterests = Object.entries(hashtagCounts)
+                .map(([name, count]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5); // Top 5 interests
+              
+              // If we have derived interests from hashtags, show them with a note
+              if (sortedInterests.length > 0) {
+                return (
+                  <>
+                    <div className="derived-interests-note">
+                      <em>Interests derived from content hashtags (no percentage data available)</em>
+                    </div>
+                    {sortedInterests.map((interest, index) => (
+                      <div className="interest-item" key={index}>
+                        <div className="interest-name">{interest.name}</div>
+                        <div className="interest-tag-count">{interest.count} hashtags</div>
+                      </div>
+                    ))}
+                  </>
+                );
+              }
+              
+              // If no data at all, show a message
+              return <div className="no-data-message">No interest data available from provider</div>;
             })()}
           </div>
         </div>
@@ -1529,16 +1645,38 @@ const ProfileOverview = ({ profileData }) => {
                 {(() => {
                   // Process age data from API
                   const ageData = getAudienceData("ages", []);
-
-                  // Define age categories and their labels
-                  const ageCategories = [
-                    { category: "0_18", label: "13-17" },
-                    { category: "18_24", label: "18-24" },
-                    { category: "25_34", label: "25-34" },
-                    { category: "35_44", label: "35-44" },
-                    { category: "45_100", label: "45-54" },
-                    { category: "65_plus", label: "65+" },
-                  ];
+                  
+                  // Define provider bucket categories that we need to render
+                  // We'll use the actual buckets from the API instead of forcing our own
+                  let ageCategories = [];
+                  
+                  if (ageData && ageData.length > 0) {
+                    // Get unique categories from the actual data
+                    const uniqueCategories = [...new Set(ageData.map(item => item.category))];
+                    
+                    // Map provider's buckets to display labels
+                    ageCategories = uniqueCategories.map(category => {
+                      // Create a display label from the category
+                      let label = category;
+                      
+                      // Convert category formats like "0_18" to display format "0-18"
+                      if (category.includes('_')) {
+                        label = category.replace('_', '-');
+                      }
+                      
+                      return { category, label };
+                    });
+                  } else {
+                    // Fallback categories if no data
+                    ageCategories = [
+                      { category: "0_18", label: "13-17" },
+                      { category: "18_24", label: "18-24" },
+                      { category: "25_34", label: "25-34" },
+                      { category: "35_44", label: "35-44" },
+                      { category: "45_100", label: "45-54" },
+                      { category: "65_plus", label: "65+" },
+                    ];
+                  }
 
                   // If we have API data, process it
                   if (ageData.length > 0) {
@@ -1547,11 +1685,23 @@ const ProfileOverview = ({ profileData }) => {
 
                     // Process API data into a map
                     ageData.forEach((age) => {
-                      ageMap[age.category] = {
-                        total: age.m + age.f,
-                        m: age.m,
-                        f: age.f,
-                      };
+                      // Handle both data formats: 
+                      // 1. {category, m, f} format from membersGendersAges
+                      // 2. {name, percent} format from ages array
+                      if (age.m !== undefined && age.f !== undefined) {
+                        ageMap[age.category] = {
+                          total: parseFloat(age.m || 0) + parseFloat(age.f || 0),
+                          m: parseFloat(age.m || 0),
+                          f: parseFloat(age.f || 0),
+                        };
+                      } else if (age.percent !== undefined || age.value !== undefined) {
+                        const percent = parseFloat(age.percent || age.value || 0);
+                        ageMap[age.category || age.name] = {
+                          total: percent,
+                          m: percent * 0.5, // Split evenly if gender breakdown not available
+                          f: percent * 0.5,
+                        };
+                      }
                     });
 
                     // Add a small value for 65+ if not present
@@ -1588,7 +1738,7 @@ const ProfileOverview = ({ profileData }) => {
                               onMouseLeave={() => setHoveredAge(null)}
                             >
                               <div className="percentage-label">
-                                {(data.total * 100).toFixed(2)}%
+                                {!isNaN(data.total) ? (data.total * 100).toFixed(2) : "0.00"}%
                               </div>
                               <div className="bar-wrapper">
                                 <div
@@ -1723,7 +1873,7 @@ const ProfileOverview = ({ profileData }) => {
               <span className="value">
                 {profileData?.audience?.credibility || "83.29%"}
               </span>
-              <span className="label excellent">Excellent</span>
+              <MetricBadge type="EXCELLENT" />
             </div>
           </div>
 
@@ -1734,9 +1884,11 @@ const ProfileOverview = ({ profileData }) => {
             </div>
             <div className="metric-value">
               <span className="value">
-                {(profileData?.growth?.fakeFollowersPct * 100).toFixed(2)}%
+                {typeof profileData?.growth?.fakeFollowersPct === 'number' ? 
+                  (profileData.growth.fakeFollowersPct * 100).toFixed(2) + '%' : 
+                  profileData?.growth?.fakeFollowersPct || "16.71%"}
               </span>
-              <span className="label good">Good</span>
+              <MetricBadge type="GOOD" />
             </div>
           </div>
 
@@ -1749,7 +1901,7 @@ const ProfileOverview = ({ profileData }) => {
               <span className="value">
                 {profileData?.engagementRate ? profileData.engagementRate : "N/A"}
               </span>
-              {profileData?.engagementRate && <span className="label good">Good</span>}
+              {profileData?.engagementRate && <MetricBadge type="GOOD" />}
             </div>
           </div>
 
@@ -1767,6 +1919,9 @@ const ProfileOverview = ({ profileData }) => {
                   ) || 97200
                 )}
               </span>
+              {profileData?.dataProvenance?.growth && (
+                <MetricBadge type={profileData.dataProvenance.growth} />
+              )}
             </div>
           </div>
         </div>

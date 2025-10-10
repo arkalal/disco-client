@@ -105,7 +105,7 @@ const ProfileHeader = ({ profileData }) => {
       <div className="header-main">
         <div className="left-content">
           <div className="profile-avatar">
-            {profileData.profilePicture ? (
+            {profileData.profilePicture && profileData.profilePicture.trim() !== "" ? (
               <div className="avatar-wrapper">
                 <Image
                   src={profileData.profilePicture}
@@ -137,6 +137,9 @@ const ProfileHeader = ({ profileData }) => {
                 </span>
               )}
             </h1>
+            <div className="profile-handle">
+              @{profileData?.handle || profileData?.screenName || ""}
+            </div>
             <div className="profile-categories">
               {getCategories().map((category, index) => (
                 <div className="category-tag" key={index}>

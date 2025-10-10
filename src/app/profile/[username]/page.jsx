@@ -36,6 +36,11 @@ import ProfileHeader from "../../../../components/profile/ProfileHeader";
 import ProfileNavigation from "../../../../components/profile/ProfileNavigation";
 import ProfileOverview from "../../../../components/profile/ProfileOverview";
 import ProfileSkeletonLoader from "../../../../components/profile/ProfileSkeletonLoader";
+import MetricBadge from "../../../../components/MetricBadge";
+
+// Utilities
+import { processProfileData } from "../../../../utils/profileDataProcessing";
+import { normalizeTagsWithGpt5, mapLanguagesFromCountries, generateGrowthInsights } from "../../../../utils/gpt5Processing";
 
 // Styles
 import "../profile-styles.scss";
@@ -55,15 +60,60 @@ export default function Profile({ params }) {
     async function fetchProfileData() {
       try {
         setLoading(true);
-        const response = await fetch(`/api/instagram/${username}`);
+        
+        // Fetch data from Instagram Statistics API
+        const response = await fetch(`/api/instagram-statistics/${username}`);
 
         if (!response.ok) {
-          throw new Error("Failed to fetch profile data");
+          // Removed fallback to legacy API as per requirement
+          // We now solely depend on the Instagram Statistics API
+          /*
+          // Fall back to existing API if new one fails
+          console.warn("Instagram Statistics API failed, falling back to legacy API");
+          const legacyResponse = await fetch(`/api/instagram/${username}`);
+          
+          if (!legacyResponse.ok) {
+            throw new Error("Failed to fetch profile data");
+          }
+          
+          const legacyData = await legacyResponse.json();
+          setProfileData(legacyData);
+          setLoading(false);
+          return;
+          */
+          throw new Error("Failed to fetch profile data from Instagram Statistics API");
         }
 
-        const data = await response.json();
-        setProfileData(data);
+        // Process the raw API data
+        const apiData = await response.json();
+        console.log('Instagram Statistics API Response:', apiData);
+        
+        const processedData = processProfileData(apiData);
+        
+        // Log specific metrics to help with debugging
+        console.log('Key profile metrics:', {
+          followers: processedData.followers + ' (' + processedData.followersCount + ')',
+          avgLikes: processedData.avgLikes,
+          avgComments: processedData.avgComments,
+          avgInteractions: processedData.avgInteractions,
+          avgVideoViews: processedData.avgVideoViews,
+          engagementRate: processedData.engagementRate,
+          estimatedReach: processedData.estimatedReach,
+          influenceScore: processedData.influenceScore
+        });
+        
+        console.log('Processed Profile Data:', processedData);
+        
+        // Set profile data immediately to speed up loading
+        setProfileData(processedData);
         setLoading(false);
+        
+        // Then load LLM enhancements asynchronously in the background
+        enhanceProfileDataWithLLM(processedData).catch(error => {
+          console.error("Error enhancing profile data with LLM:", error);
+        });
+        
+        // Already set profile data earlier for faster loading
       } catch (err) {
         console.error("Error loading profile:", err);
         setError(err.message);
@@ -73,6 +123,59 @@ export default function Profile({ params }) {
 
     fetchProfileData();
   }, [username]);
+
+  // Function to enhance profile data with LLM features
+  async function enhanceProfileDataWithLLM(baseProfileData) {
+    try {
+      // Clone the profile data to avoid direct mutations
+      const enhancedData = { ...baseProfileData };
+      
+      // Process tags if available
+      if (enhancedData.categoryPercentages && enhancedData.categoryPercentages.length > 0) {
+        const tagsData = await normalizeTagsWithGpt5(
+          enhancedData.categoryPercentages,
+          enhancedData.topHashtags || []
+        );
+        
+        if (tagsData && tagsData.normalized_tags) {
+          enhancedData.categoryPercentages = tagsData.normalized_tags;
+          enhancedData.categorySummary = tagsData.summary;
+        }
+      }
+      
+      // Process languages from countries
+      if (enhancedData.audience && enhancedData.audience.countries && enhancedData.audience.countries.length > 0) {
+        const languageData = await mapLanguagesFromCountries(enhancedData.audience.countries);
+        
+        if (languageData && languageData.languages) {
+          enhancedData.audience.languages = languageData.languages;
+          enhancedData.audience.languageSummary = languageData.summary;
+        }
+      }
+      
+      // Generate growth insights
+      const growthMetrics = {
+        followers: enhancedData.followersCount,
+        engagementRate: enhancedData.engagementRate,
+        avgLikes: enhancedData.avgLikesRaw,
+        postsPerMonth: enhancedData.postFrequency,
+        avgComments: enhancedData.avgCommentsRaw
+      };
+      
+      const growthInsights = await generateGrowthInsights(growthMetrics);
+      if (growthInsights) {
+        enhancedData.growth.insights = growthInsights.insights || [];
+        enhancedData.growth.forecast = growthInsights.forecast || '';
+      }
+      
+      // Update the profile data state with the enhanced data
+      setProfileData(enhancedData);
+      return enhancedData;
+    } catch (error) {
+      console.error("Error during LLM processing:", error);
+      return null;
+    }
+  }
 
   // Handle tab change
   const handleTabChange = (tab) => {
@@ -487,9 +590,9 @@ export default function Profile({ params }) {
                 {profileData.brandMentions &&
                   profileData.brandMentions.map((brand, index) => (
                     <div className="brand-card" key={index}>
-                      <div className="brand-logo">
+                        <div className="brand-logo">
                         <img
-                          src={brand.image}
+                          src={brand.image && brand.image.trim() !== "" ? brand.image : "https://via.placeholder.com/60?text=Brand"}
                           alt={brand.name}
                           onError={(e) => {
                             e.target.onerror = null;
@@ -611,7 +714,7 @@ export default function Profile({ params }) {
                 <div className="tab-icon instagram-icon">
                   <FaInstagram />
                 </div>
-                <span>@{profileData.username}</span>
+                <span>@{profileData?.handle || profileData?.screenName || ""}</span>
               </div>
             </div>
           </div>

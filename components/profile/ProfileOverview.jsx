@@ -207,8 +207,7 @@ const ProfileOverview = ({ profileData }) => {
         data = profileData.audience.cities || [];
         break;
       case 'states':
-        // States will be empty per requirements
-        data = [];
+        data = profileData.audience.states || [];
         break;
       default:
         return [];

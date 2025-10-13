@@ -48,6 +48,11 @@ export function processProfileData(apiData) {
   const estimatedAvgReelViews = calculateEstimatedReelViews(data);
   const growthData = generateGrowthData(data);
   const reelAvgs = deriveReelAverages(data, estimatedAvgReelViews);
+  const audienceCountriesComputed = processCountries(data);
+  const audienceCitiesComputed = processCities(data);
+  const audienceAgesComputed = processAgeData(data);
+  const audienceStatesComputed = deriveStatesFromCities(audienceCitiesComputed, audienceCountriesComputed);
+  const topAgeGroupComputed = computeTopAgeGroup(audienceAgesComputed);
 
   // Map API fields to UI metrics according to specification
   return {
@@ -104,11 +109,13 @@ export function processProfileData(apiData) {
     // Audience data
     audience: {
       gender: processGenderData(data),
-      ages: processAgeData(data),
-      countries: processCountries(data),
-      cities: processCities(data),
+      ages: audienceAgesComputed,
+      countries: audienceCountriesComputed,
+      cities: audienceCitiesComputed,
+      states: audienceStatesComputed,
       languages: processLanguages(data),
       interests: processInterests(data),
+      topAgeGroup: topAgeGroupComputed,
       credibility: computeAudienceCredibility(data),
     },
 
@@ -556,7 +563,7 @@ function processCategories(data) {
 
   // If we have tags, map them to the expected structure
   if (tags.length > 0) {
-    return tags.map((tag) => {
+    const mapped = tags.map((tag) => {
       const name =
         typeof tag === "string" ? tag : tag.name || tag.tagID || "Category";
       const pct =
@@ -572,9 +579,209 @@ function processCategories(data) {
         percentage: pct,
       };
     });
+
+    // If provider did not include percentages, fall back to posts-derived categories
+    const hasAnyPct = mapped.some((m) => Number.isFinite(m.percentage));
+    if (hasAnyPct) return mapped;
+
+    const fallback = buildContentCategoriesFromPosts(data);
+    if (fallback.length > 0) return fallback;
+    return mapped; // return names-only if no fallback possible
   }
 
-  return [];
+  // No provider categories; try deriving from posts
+  const fallback = buildContentCategoriesFromPosts(data);
+  return fallback.length > 0 ? fallback : [];
+}
+
+/**
+ * Derive states distribution from cities distribution using a curated city->state map.
+ * Input cities are expected as [{ name, percent }], where percent is a fraction (0..1).
+ */
+function deriveStatesFromCities(cities, countries) {
+  try {
+    if (!Array.isArray(cities) || cities.length === 0) return [];
+
+    // Minimal curated mapping; expandable safely without fabricating percentages
+    const map = {
+      // India
+      "mumbai": "Maharashtra",
+      "thane": "Maharashtra",
+      "pune": "Maharashtra",
+      "nagpur": "Maharashtra",
+      "delhi": "Delhi",
+      "new delhi": "Delhi",
+      "bengaluru": "Karnataka",
+      "bangalore": "Karnataka",
+      "kolkata": "West Bengal",
+      "chennai": "Tamil Nadu",
+      "hyderabad": "Telangana",
+      "ahmedabad": "Gujarat",
+      "surat": "Gujarat",
+      "jaipur": "Rajasthan",
+      "lucknow": "Uttar Pradesh",
+      "kanpur": "Uttar Pradesh",
+      "noida": "Uttar Pradesh",
+      "gurgaon": "Haryana",
+      "gurugram": "Haryana",
+      "chandigarh": "Chandigarh",
+      "bhopal": "Madhya Pradesh",
+      "indore": "Madhya Pradesh",
+      "patna": "Bihar",
+      "kochi": "Kerala",
+      "thiruvananthapuram": "Kerala",
+      "trivandrum": "Kerala",
+      "coimbatore": "Tamil Nadu",
+      "visakhapatnam": "Andhra Pradesh",
+
+      // USA
+      "new york": "New York",
+      "los angeles": "California",
+      "san francisco": "California",
+      "san diego": "California",
+      "chicago": "Illinois",
+      "houston": "Texas",
+      "dallas": "Texas",
+      "austin": "Texas",
+      "miami": "Florida",
+      "seattle": "Washington",
+      "boston": "Massachusetts",
+      "atlanta": "Georgia",
+
+      // UK
+      "london": "England",
+      "manchester": "England",
+      "birmingham": "England",
+
+      // UAE
+      "dubai": "Dubai",
+      "abu dhabi": "Abu Dhabi",
+      "sharjah": "Sharjah",
+    };
+
+    const totals = {};
+    for (const c of cities) {
+      const name = (c?.name || "").toString().trim().toLowerCase();
+      const pct = Number(c?.percent);
+      if (!name || !Number.isFinite(pct) || pct <= 0) continue;
+      const state = map[name];
+      if (!state) continue; // skip unmapped to avoid inventing
+      totals[state] = (totals[state] || 0) + pct;
+    }
+
+    return Object.entries(totals)
+      .map(([name, percent]) => ({ name, percent }))
+      .sort((a, b) => b.percent - a.percent)
+      .slice(0, 20);
+  } catch (_) {
+    return [];
+  }
+}
+
+/**
+ * Compute top age group from audience ages array.
+ * Supports both formats: [{category, m, f}] and [{category, percent}].
+ */
+function computeTopAgeGroup(ages) {
+  try {
+    if (!Array.isArray(ages) || ages.length === 0) return null;
+    let best = null;
+    for (const a of ages) {
+      const total = Number.isFinite(a?.percent)
+        ? Number(a.percent)
+        : (Number(a?.m) || 0) + (Number(a?.f) || 0);
+      if (!Number.isFinite(total) || total <= 0) continue;
+      if (!best || total > best.total) {
+        best = { category: a.category, total };
+      }
+    }
+    return best; // {category, total} with total as fraction (0..1)
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * Build content categories from recent posts by hashtag taxonomy; fallback to post type distribution.
+ * Returns [{ name, percentage }] where percentage is 0..100.
+ */
+function buildContentCategoriesFromPosts(data) {
+  try {
+    const posts = processRecentPosts(data) || [];
+    if (posts.length === 0) return [];
+
+    const taxonomy = {
+      Beauty: ["beauty", "makeup", "skincare", "cosmetic", "lipstick", "foundation"],
+      Fashion: ["fashion", "style", "ootd", "outfit", "streetstyle", "lookbook"],
+      Fitness: ["fitness", "gym", "workout", "fit", "yoga", "health"],
+      Travel: ["travel", "wanderlust", "trip", "vacation", "tour", "journey"],
+      Food: ["food", "foodie", "recipe", "cooking", "eat", "yummy"],
+      Entertainment: ["movie", "film", "music", "entertainment", "bollywood", "hollywood"],
+      Sports: ["sport", "football", "cricket", "basketball", "tennis"],
+    };
+
+    const hashtagToCategory = {};
+    Object.entries(taxonomy).forEach(([cat, tags]) => {
+      tags.forEach((t) => (hashtagToCategory[t] = cat));
+    });
+
+    const catCounts = {};
+    let taggedPosts = 0;
+
+    for (const p of posts) {
+      const caption = (p?.caption || "").toString().toLowerCase();
+      const tags = caption.match(/#[a-z0-9_]+/g) || [];
+      const words = caption.split(/\s+/g).map((w) => w.replace(/[^a-z0-9_#]/g, ""));
+      const tokens = new Set([
+        ...tags.map((t) => t.replace(/^#/, "")),
+        ...words.filter((w) => w && w.length >= 3),
+      ]);
+
+      const matched = new Set();
+      tokens.forEach((t) => {
+        const cat = hashtagToCategory[t];
+        if (cat) matched.add(cat);
+      });
+      if (matched.size > 0) {
+        taggedPosts += 1;
+        matched.forEach((cat) => (catCounts[cat] = (catCounts[cat] || 0) + 1));
+      }
+    }
+
+    // If we mapped categories from hashtags
+    if (taggedPosts > 0) {
+      const result = Object.entries(catCounts)
+        .map(([name, count]) => ({ name, percentage: Math.round((count / taggedPosts) * 100) }))
+        .sort((a, b) => b.percentage - a.percentage)
+        .slice(0, 6);
+      return result;
+    }
+
+    // Fallback to post-type distribution if no hashtags mapped
+    const typeCounts = { Image: 0, Video: 0, Carousel: 0 };
+    let totalTyped = 0;
+    posts.forEach((p) => {
+      const t = (p?.type || "").toLowerCase();
+      let key = null;
+      if (t.includes("carousel")) key = "Carousel";
+      else if (t.includes("reel") || t.includes("video")) key = "Video";
+      else if (t.includes("image") || t.includes("photo")) key = "Image";
+      if (key) {
+        typeCounts[key] += 1;
+        totalTyped += 1;
+      }
+    });
+    if (totalTyped > 0) {
+      return Object.entries(typeCounts)
+        .map(([name, count]) => ({ name, percentage: Math.round((count / totalTyped) * 100) }))
+        .filter((x) => x.percentage > 0)
+        .sort((a, b) => b.percentage - a.percentage);
+    }
+
+    return [];
+  } catch (_) {
+    return [];
+  }
 }
 
 /**

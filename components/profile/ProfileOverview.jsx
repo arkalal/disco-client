@@ -1041,12 +1041,6 @@ const ProfileOverview = ({ profileData }) => {
 
         <div className="content-header">
           <div className="content-title">CONTENT</div>
-          <div className="content-view-all">View All</div>
-          <div className="content-tabs">
-            <button className="content-tab active">Top Posts</button>
-            <button className="content-tab">Recent Posts</button>
-            <button className="content-tab">Brand Posts</button>
-          </div>
         </div>
 
         <div className="content-posts-container">
@@ -1077,7 +1071,12 @@ const ProfileOverview = ({ profileData }) => {
                   const fallbackSrc = `https://placehold.co/350x536?text=Post+${index + 1}`;
 
                   return (
-                    <div className="post-card" key={postKey}>
+                    <div 
+                      className="post-card" 
+                      key={postKey} 
+                      onClick={() => post.url ? window.open(post.url, '_blank') : null}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className="post-image" style={{ aspectRatio: '4 / 5', overflow: 'hidden', background: '#f6f6f6' }}>
                         <img
                           src={imageUrl || fallbackSrc}
@@ -1096,7 +1095,7 @@ const ProfileOverview = ({ profileData }) => {
                         </div>
                       </div>
                       <div className="post-metrics">
-                        {post.views && (
+                        {post.views > 0 && (
                           <div className="metric">
                             <span className="icon">
                               <AiOutlineEye />
@@ -1106,17 +1105,17 @@ const ProfileOverview = ({ profileData }) => {
                             </span>
                           </div>
                         )}
-                        <div className="metric">
-                          <span className="icon">
-                            <AiOutlineHeart />
-                          </span>
-                          <span className="count">
-                            {post.likes !== undefined && post.likes !== null
-                              ? formatNumber(post.likes)
-                              : ""}
-                          </span>
-                        </div>
-                        {post.comments && (
+                        {post.likes > 0 && (
+                          <div className="metric">
+                            <span className="icon">
+                              <AiOutlineHeart />
+                            </span>
+                            <span className="count">
+                              {formatNumber(post.likes)}
+                            </span>
+                          </div>
+                        )}
+                        {post.comments > 0 && (
                           <div className="metric">
                             <span className="icon">
                               <AiOutlineComment />
@@ -1166,7 +1165,7 @@ const ProfileOverview = ({ profileData }) => {
           <div className="instagram-icon">
             <FaInstagram size={22} />
           </div>
-          <div className="platform-username">@{profileData.username}</div>
+          <div className="platform-username">@{profileData?.handle || profileData?.screenName || profileData?.username}</div>
           <div className="platform-influence-score">
             {profileData.influenceScore}
           </div>
@@ -1219,9 +1218,10 @@ const ProfileOverview = ({ profileData }) => {
                 const categories = profileData?.categoryPercentages || [];
                 const categoriesList = profileData?.categories || [];
 
-                // Icons mapping based on category type
+                // Icons mapping based on category type (safe against undefined)
                 const getCategoryIcon = (category) => {
-                  const lowerCat = category.toLowerCase();
+                  const text = typeof category === 'string' ? category : (category && category.name) ? category.name : '';
+                  const lowerCat = (text || '').toString().toLowerCase();
                   if (lowerCat.includes("art") || lowerCat.includes("entertainment"))
                     return "🎭";
                   if (lowerCat.includes("movie") || lowerCat.includes("film"))
@@ -1666,16 +1666,6 @@ const ProfileOverview = ({ profileData }) => {
                       
                       return { category, label };
                     });
-                  } else {
-                    // Fallback categories if no data
-                    ageCategories = [
-                      { category: "0_18", label: "13-17" },
-                      { category: "18_24", label: "18-24" },
-                      { category: "25_34", label: "25-34" },
-                      { category: "35_44", label: "35-44" },
-                      { category: "45_100", label: "45-54" },
-                      { category: "65_plus", label: "65+" },
-                    ];
                   }
 
                   // If we have API data, process it
@@ -1704,14 +1694,7 @@ const ProfileOverview = ({ profileData }) => {
                       }
                     });
 
-                    // Add a small value for 65+ if not present
-                    if (!ageMap["65_plus"]) {
-                      ageMap["65_plus"] = {
-                        total: 0.0002,
-                        m: 0.0001,
-                        f: 0.0001,
-                      };
-                    }
+                    // Do not inject synthetic buckets; render only actual provider data
 
                     // Generate JSX for each age category
                     return (
@@ -1871,7 +1854,7 @@ const ProfileOverview = ({ profileData }) => {
             </div>
             <div className="metric-value">
               <span className="value">
-                {profileData?.audience?.credibility || "83.29%"}
+                {profileData?.audience?.credibility ?? "N/A"}
               </span>
               <MetricBadge type="EXCELLENT" />
             </div>
@@ -1884,9 +1867,11 @@ const ProfileOverview = ({ profileData }) => {
             </div>
             <div className="metric-value">
               <span className="value">
-                {typeof profileData?.growth?.fakeFollowersPct === 'number' ? 
-                  (profileData.growth.fakeFollowersPct * 100).toFixed(2) + '%' : 
-                  profileData?.growth?.fakeFollowersPct || "16.71%"}
+                {typeof profileData?.growth?.fakeFollowersPct === 'number'
+                  ? (profileData.growth.fakeFollowersPct * 100).toFixed(2) + '%'
+                  : (typeof profileData?.growth?.fakeFollowersPct === 'string' && profileData.growth.fakeFollowersPct !== '')
+                  ? `${profileData.growth.fakeFollowersPct}%`
+                  : 'N/A'}
               </span>
               <MetricBadge type="GOOD" />
             </div>
@@ -1911,14 +1896,7 @@ const ProfileOverview = ({ profileData }) => {
               <span className="info-icon">ⓘ</span>
             </div>
             <div className="metric-value">
-              <span className="value">
-                {/* Calculate approximate followers gain (5-10% of total followers) */}
-                {formatNumber(
-                  Math.floor(
-                    profileData?.followersCount * (Math.random() * 0.05 + 0.05)
-                  ) || 97200
-                )}
-              </span>
+              <span className="value">N/A</span>
               {profileData?.dataProvenance?.growth && (
                 <MetricBadge type={profileData.dataProvenance.growth} />
               )}
@@ -2026,19 +2004,12 @@ const ProfileOverview = ({ profileData }) => {
           <span className="icon">
             <RiShoppingBag3Line />
           </span>
-          BRANDS
+          MENTIONS
         </h2>
 
         <div className="brand-mentions">
           <div className="mentions-title">
-            BRAND MENTIONS <BsInfoCircle />
-          </div>
-
-          <div className="brand-filter-tabs">
-            <button className="brand-filter active">All</button>
-            <button className="brand-filter">Beverages</button>
-            <button className="brand-filter">Entertainment</button>
-            <button className="brand-filter">Sports</button>
+            MENTIONS <BsInfoCircle />
           </div>
 
           <div className="brands-container">
@@ -2065,9 +2036,7 @@ const ProfileOverview = ({ profileData }) => {
                     {brand.url?.split("instagram.com/")[1] ||
                       brand.name.toLowerCase().replace(/\s+/g, "")}
                   </div>
-                  <div className="brand-post-count">
-                    {Math.floor(Math.random() * 10) + 1} posts
-                  </div>
+                  <div className="brand-post-count">N/A</div>
                 </div>
               ))}
 

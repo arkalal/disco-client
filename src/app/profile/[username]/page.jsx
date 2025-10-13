@@ -40,7 +40,7 @@ import MetricBadge from "../../../../components/MetricBadge";
 
 // Utilities
 import { processProfileData } from "../../../../utils/profileDataProcessing";
-import { normalizeTagsWithGpt5, mapLanguagesFromCountries, generateGrowthInsights } from "../../../../utils/gpt5Processing";
+import { processTags, mapLanguagesFromCountriesFallback } from "../../../../utils/gpt5Processing";
 
 // Styles
 import "../profile-styles.scss";
@@ -124,7 +124,7 @@ export default function Profile({ params }) {
     fetchProfileData();
   }, [username]);
 
-  // Function to enhance profile data with LLM features
+  // Function to enhance profile data WITHOUT AI
   async function enhanceProfileDataWithLLM(baseProfileData) {
     try {
       // Clone the profile data to avoid direct mutations
@@ -132,40 +132,28 @@ export default function Profile({ params }) {
       
       // Process tags if available
       if (enhancedData.categoryPercentages && enhancedData.categoryPercentages.length > 0) {
-        const tagsData = await normalizeTagsWithGpt5(
-          enhancedData.categoryPercentages,
-          enhancedData.topHashtags || []
-        );
-        
-        if (tagsData && tagsData.normalized_tags) {
-          enhancedData.categoryPercentages = tagsData.normalized_tags;
-          enhancedData.categorySummary = tagsData.summary;
-        }
+        const tagsData = processTags(enhancedData.categoryPercentages);
+        enhancedData.categoryPercentages = tagsData.normalized_tags || enhancedData.categoryPercentages;
+        enhancedData.categorySummary = tagsData.summary || '';
       }
       
-      // Process languages from countries
-      if (enhancedData.audience && enhancedData.audience.countries && enhancedData.audience.countries.length > 0) {
-        const languageData = await mapLanguagesFromCountries(enhancedData.audience.countries);
-        
-        if (languageData && languageData.languages) {
+      // Ensure audience languages dynamically without AI
+      if (
+        enhancedData.audience &&
+        (!enhancedData.audience.languages || enhancedData.audience.languages.length === 0) &&
+        enhancedData.audience.countries && enhancedData.audience.countries.length > 0
+      ) {
+        const languageData = mapLanguagesFromCountriesFallback(enhancedData.audience.countries);
+        if (languageData && Array.isArray(languageData.languages)) {
           enhancedData.audience.languages = languageData.languages;
-          enhancedData.audience.languageSummary = languageData.summary;
-        }
+          enhancedData.audience.languageSummary = languageData.summary || '';
+      }
       }
       
-      // Generate growth insights
-      const growthMetrics = {
-        followers: enhancedData.followersCount,
-        engagementRate: enhancedData.engagementRate,
-        avgLikes: enhancedData.avgLikesRaw,
-        postsPerMonth: enhancedData.postFrequency,
-        avgComments: enhancedData.avgCommentsRaw
-      };
-      
-      const growthInsights = await generateGrowthInsights(growthMetrics);
-      if (growthInsights) {
-        enhancedData.growth.insights = growthInsights.insights || [];
-        enhancedData.growth.forecast = growthInsights.forecast || '';
+      // Skip AI-based growth insights for now
+      if (enhancedData.growth) {
+        enhancedData.growth.insights = enhancedData.growth.insights || [];
+        enhancedData.growth.forecast = enhancedData.growth.forecast || '';
       }
       
       // Update the profile data state with the enhanced data
@@ -477,9 +465,10 @@ export default function Profile({ params }) {
                 const categories = profileData.categoryPercentages || [];
                 const categoriesList = profileData.categories || [];
                 
-                // Helper function to get category icon
+                // Helper function to get category icon (safe against undefined)
                 const getCategoryIcon = (name, index) => {
-                  const lowerName = name.toLowerCase();
+                  const text = typeof name === 'string' ? name : (name && name.name) ? name.name : '';
+                  const lowerName = (text || '').toString().toLowerCase();
                   if (lowerName.includes("art") || lowerName.includes("entertainment")) return "🎭";
                   if (lowerName.includes("movie") || lowerName.includes("film")) return "🎬";
                   if (lowerName.includes("fitness") || lowerName.includes("health")) return "🏋️";
@@ -510,7 +499,9 @@ export default function Profile({ params }) {
                           <div
                             className="category-bar-fill"
                             style={{
-                              width: `${category.percentage}%`,
+                              width: Number.isFinite(category.percentage)
+                                ? `${category.percentage}%`
+                                : '0%',
                               backgroundColor:
                                 index < 2
                                   ? "#4338ca"
@@ -521,7 +512,7 @@ export default function Profile({ params }) {
                           ></div>
                         </div>
                         <div className="category-percentage">
-                          {category.percentage}%
+                          {Number.isFinite(category.percentage) ? `${category.percentage}%` : 'N/A'}
                         </div>
                       </div>
                     </div>
@@ -540,7 +531,7 @@ export default function Profile({ params }) {
                           <div
                             className="category-bar-fill"
                             style={{
-                              width: `${95 - index * 30}%`,
+                              width: '0%',
                               backgroundColor:
                                 index < 2
                                   ? "#4338ca"
@@ -551,7 +542,7 @@ export default function Profile({ params }) {
                           ></div>
                         </div>
                         <div className="category-percentage">
-                          {95 - index * 30}%
+                          N/A
                         </div>
                       </div>
                     </div>

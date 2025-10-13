@@ -9,34 +9,9 @@
  * @param {Array} topHashtags - Top hashtags from posts
  * @returns {Promise<Object>} - Normalized tags with categories and summary
  */
-export async function normalizeTagsWithGpt5(tagsRaw, topHashtags) {
-  try {
-    const response = await fetch('/api/openrouter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        task: 'LLM_NORMALIZE_TAGS',
-        data: {
-          tagsRaw,
-          topHashtags
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error normalizing tags with GPT-5:', errorText);
-      return { normalized_tags: tagsRaw, summary: '' };
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Error normalizing tags with GPT-5:', error);
-    return { normalized_tags: tagsRaw, summary: '' };
-  }
+export function normalizeTagsWithGpt5(tagsRaw, topHashtags) {
+  // Use deterministic local processing only
+  return processTags(tagsRaw || []);
 }
 
 /**
@@ -45,33 +20,9 @@ export async function normalizeTagsWithGpt5(tagsRaw, topHashtags) {
  * @param {Array} countries - Countries data with percentages
  * @returns {Promise<Object>} - Languages data with percentages and summary
  */
-export async function mapLanguagesFromCountries(countries) {
-  try {
-    const response = await fetch('/api/openrouter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        task: 'LLM_MAP_LANG_FROM_COUNTRIES',
-        data: {
-          countries
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error mapping languages with GPT-5:', errorText);
-      return { languages: [], summary: '' };
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Error mapping languages with GPT-5:', error);
-    return { languages: [], summary: '' };
-  }
+export function mapLanguagesFromCountries(countries) {
+  // Delegate to deterministic fallback only
+  return mapLanguagesFromCountriesFallback(countries || []);
 }
 
 /**
@@ -81,32 +32,8 @@ export async function mapLanguagesFromCountries(countries) {
  * @returns {Promise<Object>} - Growth insights
  */
 export async function generateGrowthInsights(metrics) {
-  try {
-    const response = await fetch('/api/openrouter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        task: 'LLM_GENERATE_GROWTH_INSIGHTS',
-        data: {
-          metrics
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error generating growth insights with GPT-5:', errorText);
-      return null;
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Error generating growth insights with GPT-5:', error);
-    return null;
-  }
+  // AI disabled: return null to skip insights generation
+  return null;
 }
 
 /**

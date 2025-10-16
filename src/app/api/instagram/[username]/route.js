@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 
-// Note: Caching has been removed for now to simplify integration
-
 export async function GET(request, { params }) {
   // Properly await params before accessing properties
   const resolvedParams = await Promise.resolve(params);
